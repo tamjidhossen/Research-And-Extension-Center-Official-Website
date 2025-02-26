@@ -1,0 +1,113 @@
+{
+    "project_number": "number",
+    "part_a": {
+        "project_director": {
+            "name_bn": "string",
+            "name_en": "string",
+            "mobile": "string",
+            "email": "string"
+        },
+        "designation": "string",
+        "department": "string",
+        "faculty": "string",
+        "project_title": {
+            "title_bn": "string",
+            "title_en": "string"
+        },
+        "research_location": "string",
+        "project_details": {
+            "approx_pages": "number",
+            "approx_words": "number"
+        },
+        "signatures": {
+            "project_director": {
+                "signature": "string",
+                "date": "string"
+            },
+            "department_head": {
+                "signature": "string",
+                "date": "string",
+                "recommendation": "string"
+            },
+            "dean": {
+                "signature": "string",
+                "date": "string",
+                "recommendation": "string"
+            }
+        }
+    },
+    "part_b": {
+        "project_title": {
+            "title_bn": "string",
+            "title_en": "string"
+        },
+        "research_problem_objectives": "string",
+        "literature_review_rationale": "string",
+        "expected_outcomes": "string",
+        "national_relevance": "string",
+        "research_methodology": "string",
+        "data_collection": "string",
+        "research_experimentation": "string",
+        "institutional_facilities": "string",
+        "previous_research_funding": [
+            {
+                "project_title": "string",
+                "fiscal_year": "string",
+                "grant_amount": "number",
+                "final_report_submission_date": "string"
+            }
+        ],
+        "ongoing_research_status": "string",
+        "external_funded_research": [
+            {
+                "project_title": "string",
+                "funding_organization": "string",
+                "grant_amount": "number",
+                "completion_date": "string"
+            }
+        ],
+        "degree_relevance": [
+            {
+                "degree_details": "string"
+            }
+        ],
+        "budget_details": {
+            "project_director_salary": "number",
+            "co_author_salary": "number",
+            "research_assistant_grant": "number",
+            "communication_cost": "number",
+            "research_material_cost": "number",
+            "data_collection_cost": "number",
+            "travel_expense": "number",
+            "miscellaneous": "number",
+            "report_preparation_cost": "number",
+            "conference_publication_cost": "number",
+            "total_project_cost_numeric": "number",
+            "total_project_cost_words": "string"
+        },
+        "project_timeline": [
+            {
+                "task": "string",
+                "start_date": "string",
+                "end_date": "string",
+                "status": "string"
+            }
+        ]
+    },
+    "part_c": {
+        "part_a_url": "string",
+        "reviewer": [
+            {
+                "name": "string",
+                "email": "string",
+                "password": "string",
+                "mark": {
+                    "first": "number",
+                    "second": "number",
+                    "third": "number",
+                    "total": "number"
+                }
+            }
+        ]
+    }
+}

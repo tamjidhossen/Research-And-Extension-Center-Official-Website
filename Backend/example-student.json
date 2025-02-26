@@ -1,0 +1,114 @@
+{
+    "project_number": 202501,
+    "part_a": {
+        "project_director": {
+            "name_bn": "ড. মো. রফিকুল ইসলাম",
+            "name_en": "Dr. Md. Rafiqul Islam",
+            "mobile": "017xxxxxxxx",
+            "email": "rafiqul.islam@example.com"
+        },
+        "department": "Computer Science & Engineering",
+        "faculty": "Engineering Faculty",
+        "session": "2023-2024",
+        "roll_no": "CSE-2021001",
+        "cgpa_honours": 3.85,
+        "supervisor": {
+            "name": "Dr. A. B. Siddique",
+            "designation": "Professor"
+        },
+        "project_title": {
+            "title_bn": "কৃত্রিম বুদ্ধিমত্তা ব্যবহার করে চিকিৎসা সহায়তা",
+            "title_en": "MEDICAL SUPPORT USING ARTIFICIAL INTELLIGENCE"
+        },
+        "project_details": {
+            "approx_pages": 120,
+            "approx_words": 25000
+        },
+        "signatures": {
+            "project_director": {
+                "signature": "Signed",
+                "date": "2025-03-01"
+            },
+            "department_head": {
+                "signature": "Signed",
+                "date": "2025-03-02",
+                "recommendation": "Recommended"
+            },
+            "dean": {
+                "signature": "Signed",
+                "date": "2025-03-05",
+                "recommendation": "Approved"
+            }
+        }
+    },
+    "part_b": {
+        "project_title": {
+            "title_bn": "কৃত্রিম বুদ্ধিমত্তা ব্যবহার করে চিকিৎসা সহায়তা",
+            "title_en": "MEDICAL SUPPORT USING ARTIFICIAL INTELLIGENCE"
+        },
+        "research_problem_objectives": "The project aims to develop an AI-based system to assist doctors in diagnosing diseases efficiently.",
+        "literature_review_rationale": "Various AI-based healthcare solutions exist, but there is a lack of an integrated, explainable AI system for rural healthcare.",
+        "expected_outcomes": "A machine-learning-based tool to assist in disease detection with high accuracy.",
+        "national_relevance": "This research aligns with the government's digital health initiative and aims to improve healthcare accessibility.",
+        "research_methodology": "The research follows a data-driven approach using machine learning models trained on patient records.",
+        "data_collection": "Data will be collected from hospitals and publicly available datasets.",
+        "research_experimentation": "Experiments will be conducted using deep learning techniques on medical images and patient data.",
+        "institutional_facilities": "The university provides high-performance computing resources and AI research labs.",
+        "previous_research_funding": [
+            {
+                "project_title": "AI for Smart Agriculture",
+                "fiscal_year": "2022-2023",
+                "grant_amount": 100000,
+                "final_report_submission_date": "2023-12-15"
+            }
+        ],
+        "ongoing_research_status": "Data collection phase is complete; model training is in progress.",
+        "external_funded_research": [
+            {
+                "project_title": "AI-Based Cancer Detection",
+                "funding_organization": "XYZ Foundation",
+                "grant_amount": 200000,
+                "completion_date": "2026-06-30"
+            }
+        ],
+        "degree_relevance": [
+            {
+                "degree_details": "This research will be submitted as part of a Ph.D. dissertation."
+            }
+        ],
+        "budget_details": {
+            "student_researcher_grant": 50000,
+            "supervisor_honorarium": 10000,
+            "seminar_cost": 5000,
+            "total_project_cost_numeric": 60000,
+            "total_project_cost_words": "Sixty thousand taka only"
+        }
+    },
+    "part_c": {
+        "part_a_url": "https://university-research.edu.bd/project-202501",
+        "reviewer": [
+            {
+                "name": "Dr. M. Karim",
+                "email": "karim.reviewer@example.com",
+                "password": "securepassword123",
+                "mark": {
+                    "first": 25,
+                    "second": 20,
+                    "third": 18,
+                    "total": 63
+                }
+            },
+            {
+                "name": "Dr. S. Rahman",
+                "email": "srahman.reviewer@example.com",
+                "password": "anothersecurepass",
+                "mark": {
+                    "first": 22,
+                    "second": 21,
+                    "third": 20,
+                    "total": 63
+                }
+            }
+        ]
+    }
+}

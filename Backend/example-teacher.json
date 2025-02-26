@@ -1,0 +1,141 @@
+{
+    "project_number": 202526,
+    "part_a": {
+        "project_director": {
+            "name_bn": "ড. মো. আব্দুল করিম",
+            "name_en": "Dr. Md. Abdul Karim",
+            "mobile": "01712345678",
+            "email": "abdul.karim@example.com"
+        },
+        "department": "কম্পিউটার বিজ্ঞান ও প্রকৌশল",
+        "faculty": "ইঞ্জিনিয়ারিং অনুষদ",
+        "session": "2023-2024",
+        "roll_no": "CSE2021001",
+        "cgpa_honours": 3.75,
+        "supervisor": {
+            "name": "ড. হাসান মিয়া",
+            "designation": "প্রফেসর"
+        },
+        "project_title": {
+            "title_bn": "কৃত্রিম বুদ্ধিমত্তা ব্যবহার করে ভাষা প্রক্রিয়াকরণ",
+            "title_en": "Natural Language Processing using Artificial Intelligence"
+        },
+        "project_details": {
+            "approx_pages": 150,
+            "approx_words": 30000
+        },
+        "signatures": {
+            "project_director": {
+                "signature": "সই",
+                "date": "2025-03-10"
+            },
+            "department_head": {
+                "signature": "সই",
+                "date": "2025-03-12",
+                "recommendation": "প্রস্তাবিত"
+            },
+            "dean": {
+                "signature": "সই",
+                "date": "2025-03-15",
+                "recommendation": "অনুমোদিত"
+            }
+        }
+    },
+    "part_b": {
+        "project_title": {
+            "title_bn": "কৃত্রিম বুদ্ধিমত্তা ব্যবহার করে ভাষা প্রক্রিয়াকরণ",
+            "title_en": "Natural Language Processing using Artificial Intelligence"
+        },
+        "research_problem_objectives": "গবেষণার উদ্দেশ্য হলো বাংলা ভাষার প্রক্রিয়াকরণে কৃত্রিম বুদ্ধিমত্তার প্রয়োগ বৃদ্ধি করা এবং বিভিন্ন সমস্যার সমাধান প্রদান করা।",
+        "literature_review_rationale": "বর্তমান সময়ে বাংলা ভাষার জন্য পর্যাপ্ত গবেষণা না থাকায়, এই প্রকল্পটি একটি নতুন দৃষ্টিভঙ্গি প্রদান করবে।",
+        "expected_outcomes": "একটি কার্যকরী বাংলা NLP মডেল যা বিভিন্ন ভাষাগত প্রয়োগে ব্যবহার করা যাবে।",
+        "national_relevance": "এই গবেষণা দেশের ডিজিটাল ইনক্লুশনের সাথে সামঞ্জস্যপূর্ণ।",
+        "research_methodology": "মেশিন লার্নিং এবং ডিপ লার্নিং পদ্ধতির মাধ্যমে গবেষণা করা হবে।",
+        "data_collection": "অনলাইনে এবং অফলাইনে বিভিন্ন উৎস থেকে তথ্য সংগ্রহ করা হবে।",
+        "research_experimentation": "পরীক্ষামূলক মডেল তৈরির জন্য বিভিন্ন সিমুলেশন এবং বাস্তবায়ন পরীক্ষা করা হবে।",
+        "institutional_facilities": "বিশ্ববিদ্যালয়ের গবেষণা ল্যাব এবং কম্পিউটার সেন্টারের সহায়তা থাকবে।",
+        "previous_research_funding": [
+            {
+                "project_title": "বাংলা ভাষার প্রক্রিয়াকরণে AI প্রয়োগ",
+                "fiscal_year": "2022-2023",
+                "grant_amount": 100000,
+                "final_report_submission_date": "2023-12-01"
+            }
+        ],
+        "ongoing_research_status": "ডেটা সংগ্রহ সম্পন্ন এবং মডেল উন্নয়নের প্রাথমিক ধাপ চলছে।",
+        "external_funded_research": [
+            {
+                "project_title": "AI ভিত্তিক ভাষা বিশ্লেষণ",
+                "funding_organization": "ICT Division",
+                "grant_amount": 200000,
+                "completion_date": "2026-06-30"
+            }
+        ],
+        "degree_relevance": [
+            {
+                "degree_details": "গবেষণার ফলাফল পিএইচডি থিসিস হিসেবে ব্যবহার করা হবে।"
+            }
+        ],
+        "budget_details": {
+            "project_director_salary": 120000,
+            "co_author_salary": 80000,
+            "research_assistant_grant": 40000,
+            "communication_cost": 10000,
+            "research_material_cost": 50000,
+            "data_collection_cost": 30000,
+            "travel_expense": 20000,
+            "miscellaneous": 5000,
+            "report_preparation_cost": 6000,
+            "conference_publication_cost": 70000,
+            "total_project_cost_numeric": 400000,
+            "total_project_cost_words": "চার লক্ষ টাকা"
+        },
+        "project_timeline": [
+            {
+                "task": "Data Collection",
+                "start_date": "2025-04-01",
+                "end_date": "2025-06-30",
+                "status": "Completed"
+            },
+            {
+                "task": "Model Development",
+                "start_date": "2025-07-01",
+                "end_date": "2025-11-30",
+                "status": "In Progress"
+            },
+            {
+                "task": "Final Report Preparation",
+                "start_date": "2025-12-01",
+                "end_date": "2025-12-31",
+                "status": "Pending"
+            }
+        ]
+    },
+    "part_c": {
+        "part_a_url": "http://university.edu/research/202526",
+        "reviewer": [
+            {
+                "name": "Dr. Shamsul Haque",
+                "email": "shamsul.haque@example.com",
+                "password": "securepass123",
+                "mark": {
+                    "first": 26,
+                    "second": 22,
+                    "third": 20,
+                    "total": 68
+                }
+            },
+            {
+                "name": "Dr. Nurul Alam",
+                "email": "nurul.alam@example.com",
+                "password": "anothersecurepass",
+                "mark": {
+                    "first": 24,
+                    "second": 23,
+                    "third": 21,
+                    "total": 68
+                }
+            }
+        ]
+    }
+}
