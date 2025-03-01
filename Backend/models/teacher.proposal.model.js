@@ -68,6 +68,7 @@ teacherProposalSchema.methods.generateUpdateToken = function () {
         { expiresIn: '7d' }
     );
 };
+
 teacherProposalSchema.methods.generateReviewerToken = function (name_, email_) {
     if (!name_ || !email_) throw new Error("Name and Email are required for token generation.");
 

@@ -205,14 +205,26 @@ https://localhost:4000/v1
 ```
 
 ---
-### Update Research Proposal
-**Route:** `PUT /api/research-proposal/{token}/update`
+### Update Research Proposal(teacher)
+**Route:** `PUT /api/research-proposal/teacher/update`
 - **Authentication:** Yes (applicant authentication required)
 - **Description:** Allows the applicant to update their proposal after an update request.
 - **Form Data:**
   - `partA`: PDF file (Optional)
   - `partB`: PDF file (Optional)
-  - `proposal_data`: JSON object (Optional)
+  - `updates`: JSON object (Optional)
+
+---
+
+---
+### Update Research Proposal(student)
+**Route:** `PUT /api/research-proposal/student/update`
+- **Authentication:** Yes (applicant authentication required)
+- **Description:** Allows the applicant to update their proposal after an update request.
+- **Form Data:**
+  - `partA`: PDF file (Optional)
+  - `partB`: PDF file (Optional)
+  - `updates`: JSON object (Optional)
 
 ---
 ## Status Codes
