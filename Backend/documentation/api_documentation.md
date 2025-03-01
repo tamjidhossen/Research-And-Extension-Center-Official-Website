@@ -127,6 +127,25 @@ https://localhost:4000/v1
 
 ## Admin Routes
 
+### Upload Document
+**Route:** `POST /api/admin/research-proposal/upload`
+- **Authentication:** Yes (admin authentication required)
+- **Description:** Upload proposal document.
+- **Request Body:**
+```json
+{
+    "fiscal_year": "2024-2025",
+    "student_partA_en": "file",
+    "student_partA_bn": "file",
+    "student_partB_en": "file",
+    "student_partB_bn": "file",
+    "teacher_partA_en": "file",
+    "teacher_partA_bn": "file",
+    "teacher_partB_en": "file",
+    "teacher_partB_bn": "file"
+}
+```
+
 ### Send Email Notification
 **Route:** `POST /api/admin/research-proposal/{id}/notify`
 - **Authentication:** Yes (admin authentication required)

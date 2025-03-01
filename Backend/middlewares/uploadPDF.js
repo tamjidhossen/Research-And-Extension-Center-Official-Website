@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const uploadDir = 'uploads/';
+const uploadDir = 'uploads/proposal';
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -23,8 +23,6 @@ const fileFilter = (req, file, cb) => {
         cb(new Error('Only PDF files are allowed!'), false);
     }
 };
-
-// Multer instance
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
