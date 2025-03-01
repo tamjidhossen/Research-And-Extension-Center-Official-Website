@@ -1,4 +1,3 @@
-// src/Layout.jsx
 import Footer from "./components/Footer/Footer";
 import Navbar from "./components/Header/Navbar/Navbar";
 import { Outlet } from "react-router-dom";

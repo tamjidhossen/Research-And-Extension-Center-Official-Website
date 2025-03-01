@@ -1,4 +1,3 @@
-// src/components/Footer/Footer.jsx
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { FaFacebook, FaEnvelope, FaMapMarkerAlt, FaPhone } from "react-icons/fa";

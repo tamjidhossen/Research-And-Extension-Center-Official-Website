@@ -1,4 +1,3 @@
-// src/components/Home/Home.jsx
 import { ArrowRight, BookOpen, FileText, Users, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,7 +20,7 @@ export default function Home() {
               Submit Research Proposal
               <ArrowRight size={16} className="ml-2" />
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-emerald-800">
+            <Button size="lg" variant="outline" className="border-white text-white bg-emerald-800 hover:bg-white">
               Learn More
             </Button>
           </div>
@@ -50,11 +49,6 @@ export default function Home() {
               icon: <Users className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />,
               title: "Collaboration",
               description: "Connect with researchers and experts from various disciplines."
-            },
-            {
-              icon: <Download className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />,
-              title: "Resource Access",
-              description: "Access a wide range of research resources, tools, and datasets."
             }
           ].map((service, index) => (
             <Card key={index} className="border-emerald-100 dark:border-emerald-900/50 hover:shadow-md transition-shadow">
