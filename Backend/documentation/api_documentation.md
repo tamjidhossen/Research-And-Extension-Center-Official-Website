@@ -194,7 +194,7 @@ https://localhost:4000/v1
 ## Proposal Update Request
 
 ### Request Update from Applicant
-**Route:** `POST /api/admin/research-proposal/{id}/request-update`
+**Route:** `POST /api/research-proposal/{id}/request-update`
 - **Authentication:** Yes (admin authentication required)
 - **Description:** Generates an update link for the applicant to modify their proposal.
 - **Response:**

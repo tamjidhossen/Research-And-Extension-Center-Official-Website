@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 
 const teacherProposalSchema = new mongoose.Schema(
     {
+        proposal_type: { type: String, required: true },
         fiscal_year: { type: String, required: true },
         project_director: {
             name_bn: { type: String, required: true },

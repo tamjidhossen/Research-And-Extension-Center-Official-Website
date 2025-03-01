@@ -16,6 +16,7 @@ const submitProposal = async (req, res) => {
             cgpa_honours, supervisor, project_title, project_details, total_budget
         } = req.body;
         const proposal = new StudentProposal({
+            proposal_type: "teacher",
             fiscal_year: firstDocument.fiscal_year,
             project_director: JSON.parse(project_director),
             department,
