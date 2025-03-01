@@ -69,7 +69,7 @@ studentProposalSchema.methods.generateUpdateToken = function () {
 };
 
 studentProposalSchema.methods.generateReviewerToken = function (name_, email_) {
-    const token = jwt.sign({ id: this._id, proposal: "student", name: name_, email: email_ }, process.env.SECRET_KEY_REVIEWER, { expiresIn: '7d' });
+    const token = jwt.sign({ id: this._id, proposal_type: "student", name: name_, email: email_ }, process.env.SECRET_KEY_REVIEWER, { expiresIn: '7d' });
     return token;
 };
 

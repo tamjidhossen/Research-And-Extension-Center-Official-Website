@@ -20,5 +20,6 @@ router.post('/research-proposal/upload', upload.fields([
 router.get('/research-proposal/', adminMiddileware.authAdmin, adminController.getProposal);
 router.post('/research-proposal/request-reset-password', adminController.requestPasswordReset);
 router.post('/research-proposal/reset-password', adminController.resetPassword);
+router.post('/research-proposal/sent-to-reviewer', adminMiddileware.authAdmin, adminController.sentToReviewer);
 
 module.exports = router;

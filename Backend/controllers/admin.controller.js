@@ -1,4 +1,5 @@
 const fs = require('fs');
+const mongoose = require("mongoose");
 const ProposalDocument = require('../models/proposal.document.model.js');
 const ProposalUpdateRequest = require('../models/update.request.model.js');
 const { TeacherProposal } = require('../models/teacher.proposal.model.js');
@@ -7,7 +8,7 @@ const Admin = require('../models/admin.model.js');
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { sendPasswordResetMail } = require("../config/emailConfig.js");
+const { sendPasswordResetMail, sendMailToReviewer } = require("../config/emailConfig.js");
 const registerAdmin = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -125,8 +126,6 @@ const resetPassword = async (req, res) => {
     });
 
     if (!user) return res.status(400).json({ message: "Invalid or expired token" });
-
-    // Hash new password
     user.password = newPassword;
     // Clear reset token fields
     user.resetPasswordToken = undefined;
@@ -249,6 +248,32 @@ const getProposal = async (req, res) => {
 };
 
 
+const sentToReviewer = async (req, res) => {
+    const { name, email, proposal_id, proposal_type } = req.body;
+    console.log(req.body);
+    if (!mongoose.Types.ObjectId.isValid(proposal_id)) {
+        throw new Error("Invalid Proposal ID format");
+    }
+    const proposalId = new mongoose.Types.ObjectId(proposal_id);
+    let proposal;
+    if (proposal_type === "teacher") {
+        proposal = await TeacherProposal.findById(proposalId);
+    }
+    else if (proposal_type === "student") {
+        proposal = await StudentProposal.findById(proposalId);
+    }
+    if (!proposal) return res.status(404).json({ success: flase, message: "Proposal not found" });
+
+    const token = proposal.generateReviewerToken(name, email);
+    proposal.reviewer.push({ name: name, email: email, mark: [] });
+    await proposal.save();
+    await sendMailToReviewer(email, name, token);
+
+    res.status(200).json({ success: true, message: "Sent Email to reviewer!" });
+};
+
+
 module.exports = {
-    updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword
+    updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
+    sentToReviewer
 };

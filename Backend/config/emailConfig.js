@@ -75,7 +75,7 @@ const sendPasswordResetMail = async (to, resetLink) => {
         const htmlContent = createResponsiveEmailTemplate(emailContent);
 
         const mailOptions = {
-            from: `"CSE Alumni Community - JKKNIU" <${process.env.EMAIL_USERNAME}>`,
+            from: `"RESEARCH EXTENSION CENTER" <${process.env.EMAIL_USERNAME}>`,
             to,
             subject: "Password Reset Request",
             text: `Dear User, \n\nYou have requested to reset your password. Please use the following link: ${resetLink} \n\nIf you did not request this, please ignore this email. This link will expire in 1 hour.`,
@@ -90,6 +90,51 @@ const sendPasswordResetMail = async (to, resetLink) => {
     }
 };
 
+const sendMailToReviewer = async (to, name, token) => {
+    try {
+        // Construct the review link
+        const reviewLink = `${process.env.FRONTEND_URL}/review?token=${token}`;
+
+        const emailContent = `
+      <div style="background-color: #1565C0; color: white; padding: 25px; text-align: center;">
+        <h1 style="margin: 0; font-size: 24px;">Research Proposal Review Request</h1>
+      </div>
+      <div style="padding: 30px; color: #333;">
+        <p style="font-size: 16px; line-height: 1.5;">Dear ${name},</p>
+        <p style="font-size: 16px; line-height: 1.5;">You have been assigned to review a research proposal. Please click the button below to provide your evaluation:</p>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${reviewLink}" style="background-color: #1565C0; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Review Proposal</a>
+        </div>
+        <p style="font-size: 16px; line-height: 1.5;">This link will expire in 24 hours.</p>
+      </div>
+      <div style="background-color: #f1f1f1; padding: 25px; text-align: center;">
+        <p style="margin: 0 0 15px 0;">For any inquiries, please contact us at:<br/>
+        <a href="mailto:alumnijkkniucse@gmail.com" style="color: #1565C0; text-decoration: none;">alumnijkkniucse@gmail.com</a></p>
+        <p style="margin: 0;">Best regards,<br/>
+        <strong>RESEARCH EXTENSION CENTER</strong><br/>
+        <span style="font-size: 14px;">Jatiya Kabi Kazi Nazrul Islam University</span></p>
+      </div>
+    `;
+
+        const htmlContent = createResponsiveEmailTemplate(emailContent);
+
+        const mailOptions = {
+            from: `"RESEARCH EXTENSION CENTER" <${process.env.EMAIL_USERNAME}>`,
+            to,
+            subject: "Research Proposal Review Request",
+            text: `Dear ${name},\n\nYou have been assigned to review a research proposal. Please use the following link: ${reviewLink} \n\nThis link will expire in 24 hours.`,
+            html: htmlContent,
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        return info;
+    } catch (error) {
+        console.error("Error sending reviewer email:", error);
+        throw error;
+    }
+};
+
 module.exports = {
     sendPasswordResetMail,
+    sendMailToReviewer
 };

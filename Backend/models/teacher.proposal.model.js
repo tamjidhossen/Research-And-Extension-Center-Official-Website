@@ -47,7 +47,6 @@ const teacherProposalSchema = new mongoose.Schema(
                 {
                     name: { type: String, required: true },
                     email: { type: String, required: true },
-                    password: { type: String, select: false }, // Hide password by default
                     mark: [
                         {
                             part_name: { type: String, required: true },
@@ -74,7 +73,7 @@ teacherProposalSchema.methods.generateReviewerToken = function (name_, email_) {
     if (!name_ || !email_) throw new Error("Name and Email are required for token generation.");
 
     return jwt.sign(
-        { id: this._id, proposal: "teacher", name: name_, email: email_ },
+        { id: this._id, proposal_type: "teacher", name: name_, email: email_ },
         process.env.SECRET_KEY_REVIEWER,
         { expiresIn: '7d' }
     );
