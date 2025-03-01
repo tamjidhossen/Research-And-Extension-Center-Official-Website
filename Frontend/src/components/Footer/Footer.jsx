@@ -1,100 +1,103 @@
+// src/components/Footer/Footer.jsx
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { FaFacebook, FaEnvelope } from "react-icons/fa"; // Importing icons from react-icons
+import { FaFacebook, FaEnvelope, FaMapMarkerAlt, FaPhone } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="p-4 py-8 mt-auto border-t-2 dark:bg-gradient-to-b dark:from-green-950/20 dark:backdrop-blur-sm backdrop-blur-xs border-gray-200/50 dark:border-gray-800/20">
-      <div className="container mx-auto flex flex-col md:flex-row justify-between gap-6 px-4">
-        <div className="footer-section mb-6 md:mb-0">
-          <h3 className="text-lg font-semibold mb-2 dark:text-gray-100 text-gray-800">
-            About Us
+    <footer className="py-12 mt-auto border-t border-emerald-200/30 dark:border-emerald-800/30 bg-gradient-to-b from-white to-emerald-50/30 dark:from-green-950/30 dark:to-green-900/5 dark:backdrop-blur-sm">
+      <div className="container mx-auto flex flex-col md:flex-row justify-between gap-10 px-6">
+        <div className="footer-section md:max-w-xs">
+          <h3 className="text-xl font-semibold mb-4 text-emerald-800 dark:text-emerald-400">
+            About JKKNIU REC
           </h3>
-          <p className="text-sm md:text-base dark:text-gray-300 text-gray-600">
-            REC
+          <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+            The Research and Extension Center at JKKNIU promotes academic excellence 
+            through collaborative research initiatives and knowledge exchange between 
+            faculty, students, and external stakeholders.
           </p>
         </div>
-        <div className="footer-section mb-6 md:mb-0">
-          <h3 className="text-lg font-semibold mb-2 ">Links</h3>
-          <ul className="list-none space-y-2">
-            <li className="text-sm md:text-base">
-              <NavLink
-                to="/"
-                className={({ isActive }) =>
-                  isActive ? "text-green-400" : "text-gray-400 hover:text-gray-500"
-                }
-              >
-                Home
-              </NavLink>
-            </li>
-            <li className="text-sm md:text-base">
-              <NavLink
-                to="/registration"
-                className={({ isActive }) =>
-                  isActive ? "text-green-400" : "text-gray-400 hover:text-gray-500"
-                }
-              >
-                Registration
-              </NavLink>
-            </li>
-            <li className="text-sm md:text-base">
-              <NavLink
-                to="/announcements"
-                className={({ isActive }) =>
-                  isActive ? "text-green-400" : "text-gray-400 hover:text-gray-500"
-                }
-              >
-                Announcements
-              </NavLink>
-            </li>
-            <li className="text-sm md:text-base">
-              <NavLink
-                to="/developer-info"
-                className={({ isActive }) =>
-                  isActive ? "text-green-400" : "text-gray-400 hover:text-gray-500"
-                }
-              >
-                Developer Info
-              </NavLink>
-            </li>
+        
+        <div className="footer-section">
+          <h3 className="text-xl font-semibold mb-4 text-emerald-800 dark:text-emerald-400">
+            Quick Links
+          </h3>
+          <ul className="list-none space-y-3">
+            {[
+              { to: "/", label: "Home" },
+              { to: "/registration", label: "Registration" },
+              { to: "/announcements", label: "Announcements" },
+              { to: "/developer-info", label: "Developer Info" },
+            ].map((link) => (
+              <li key={link.label} className="text-sm md:text-base">
+                <NavLink
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `flex items-center transition-colors duration-200 ${
+                      isActive 
+                      ? "text-emerald-600 font-medium dark:text-emerald-400" 
+                      : "text-gray-600 hover:text-emerald-700 dark:text-gray-400 dark:hover:text-emerald-300"
+                    }`
+                  }
+                >
+                  <span className="border-b border-transparent hover:border-current">
+                    {link.label}
+                  </span>
+                </NavLink>
+              </li>
+            ))}
           </ul>
         </div>
+        
         <div className="footer-section">
-          <h3 className="text-lg font-semibold mb-2 ">
+          <h3 className="text-xl font-semibold mb-4 text-emerald-800 dark:text-emerald-400">
             Contact Us
           </h3>
-          <p className="text-sm md:text-base ">
-            Email:{" "}
-            <a
-              href="mailto:info@example.com"
-              className="text-gray-400 hover:text-gray-500"
-            >
-              habiburfbjkkniu@gmail.com
-            </a>
-          </p>
-          <p className="text-sm md:text-base ">
-            Phone: <span className="text-gray-400">012345678910</span>
-          </p>
-          <div className="flex space-x-4 mt-2">
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-gray-500"
-            >
-              <FaFacebook size={24} />
-            </a>
-            <a
-              href="mailto:msujanali@gmail.com"
-              className="text-gray-400 hover:text-gray-500"
-            >
-              <FaEnvelope size={24} />
-            </a>
+          <div className="space-y-3">
+            <p className="flex items-center gap-2 text-sm md:text-base text-gray-600 dark:text-gray-300">
+              <FaEnvelope className="text-emerald-600 dark:text-emerald-400" />
+              <a
+                href="mailto:habiburfbjkkniu@gmail.com"
+                className="hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors duration-200"
+              >
+                habiburfbjkkniu@gmail.com
+              </a>
+            </p>
+            <p className="flex items-center gap-2 text-sm md:text-base text-gray-600 dark:text-gray-300">
+              <FaPhone className="text-emerald-600 dark:text-emerald-400" />
+              <span>012345678910</span>
+            </p>
+            <p className="flex items-center gap-2 text-sm md:text-base text-gray-600 dark:text-gray-300">
+              <FaMapMarkerAlt className="text-emerald-600 dark:text-emerald-400" />
+              <span>JKKNIU Campus, Trishal, Mymensingh</span>
+            </p>
+            
+            <div className="flex space-x-4 mt-4">
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-emerald-100 dark:bg-emerald-900/40 p-2.5 rounded-full text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 transition-colors duration-200"
+                aria-label="Facebook"
+              >
+                <FaFacebook size={20} />
+              </a>
+              <a
+                href="mailto:habiburfbjkkniu@gmail.com"
+                className="bg-emerald-100 dark:bg-emerald-900/40 p-2.5 rounded-full text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 transition-colors duration-200"
+                aria-label="Email"
+              >
+                <FaEnvelope size={20} />
+              </a>
+            </div>
           </div>
         </div>
       </div>
-      <div className="text-center mt-6 text-sm md:text-base">
-        &copy; 2025 JKKNIU REC. All rights reserved.
+      
+      <div className="container mx-auto mt-10 pt-6 border-t border-emerald-100 dark:border-emerald-800/30">
+        <div className="text-center text-sm md:text-base text-gray-600 dark:text-gray-400">
+          &copy; {new Date().getFullYear()} JKKNIU Research and Extension Center. All rights reserved.
+        </div>
       </div>
     </footer>
   );

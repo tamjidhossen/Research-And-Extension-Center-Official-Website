@@ -1,11 +1,107 @@
+// src/components/Home/Home.jsx
+import { ArrowRight, BookOpen, FileText, Users, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
 export default function Home() {
   return (
-    <div className="relative min-h-screen">
-      <h1 className="text-4xl font-bold text-center mt-10">Welcome to the Research and Extension Center</h1>
-      <p className="text-center mt-4 text-lg">
-        Our mission is to provide high-quality research and extension services to improve the lives of our community.
-      </p>
-      Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsa soluta eligendi, ipsam asperiores vitae minus nemo? Omnis laudantium blanditiis cumque eveniet a deserunt asperiores exercitationem nesciunt, sed officia consectetur quisquam mollitia, eos nulla! Laborum adipisci quidem ducimus est, itaque optio corporis unde fuga! Quia magnam eum ipsum ipsa? Mollitia ipsam sunt soluta velit eveniet a possimus esse nam reiciendis aperiam, dignissimos qui ducimus, porro similique quae! Commodi quos ex et fuga officia nihil fugiat maiores inventore tenetur. Sequi fugiat qui quam accusantium itaque accusamus ex quibusdam culpa esse magnam praesentium modi non sunt, autem saepe obcaecati enim consequuntur, fuga eos hic optio, rem iste earum. Voluptatibus quod sit vero aspernatur ipsum, ea dignissimos explicabo facilis ab odio unde consectetur officia cum! Eum quod ex facere, sed corporis iste hic nostrum accusantium doloribus quo ratione optio maiores, numquam necessitatibus neque ad eius fugit cumque minus. Assumenda placeat cum necessitatibus quos harum? Mollitia minima molestias repellat quaerat eos, neque explicabo. Placeat itaque nemo est asperiores harum minus, magni enim sit ipsa cum. Nobis eveniet dolore sint veniam aut commodi omnis distinctio. Officiis quisquam quidem, inventore id repellat alias voluptas? Officia labore repellendus voluptatem eius illo qui ipsa illum. Dolorem totam nulla at, repudiandae officia voluptate sapiente! Nulla eaque sunt ullam, quaerat ratione dignissimos tempore sit! Exercitationem quidem tenetur odio asperiores quia ex similique corrupti quod beatae at tempora doloremque dolore cum excepturi amet, maxime officia ipsa consequuntur necessitatibus nostrum deleniti odit fugit optio molestias. Cupiditate odio nihil iusto praesentium accusamus quaerat doloribus laudantium molestiae vel, labore saepe cum modi possimus reprehenderit corporis quod tempore quae incidunt vero quo exercitationem! Et minus at soluta expedita consequatur vero sunt culpa in quod! Consectetur sit temporibus vero exercitationem quasi voluptatum nostrum accusantium nobis iusto consequuntur, iste, error, nemo officiis eaque voluptatem aut quaerat. Dolorum repellendus mollitia dolore impedit error. Accusamus incidunt odit accusantium dolore voluptate voluptatibus atque voluptates dolores quos facilis sapiente, voluptatum repudiandae, quaerat commodi repellendus? Illo quam ipsam et maiores autem modi amet, sunt placeat? Possimus velit, eveniet doloremque quis quod exercitationem quisquam ea dolores molestias assumenda. Possimus, laboriosam dolorum at sint voluptas nihil soluta repudiandae fugiat harum. Dolor animi sequi ut. Quos voluptatibus eaque amet tenetur et vero. Est alias ipsa asperiores! Minima vel laborum iste praesentium in doloremque ex delectus. Deserunt iusto, placeat voluptas alias repellat eveniet mollitia ipsa eius, ipsam quis laborum nihil molestias. Recusandae veniam natus vero. Reprehenderit id voluptatibus dolore quos veniam, amet cumque, dicta odit quisquam a illum quasi neque accusamus praesentium itaque dolorem porro autem at ea quae, numquam voluptatum repellat odio. Itaque, perferendis incidunt fugiat assumenda nostrum cumque doloremque dolorum ab, necessitatibus, voluptatum reiciendis sint. Reprehenderit sunt eligendi voluptas accusantium quod quaerat, facere nostrum sed, exercitationem nulla consequatur provident consequuntur voluptatem recusandae veritatis magnam ad inventore dolorem voluptatibus culpa omnis modi quibusdam repudiandae? Consectetur dolor officiis quia numquam blanditiis eos. Unde adipisci qui eveniet id repudiandae eaque, minus quod maiores ratione autem, quibusdam illum recusandae itaque eum. Tempora repudiandae hic ut quidem quas itaque saepe? Id quas nemo impedit dolore quis, rem distinctio. Sunt libero officia voluptatibus amet eum, accusantium recusandae quisquam vero natus corporis qui ea voluptas error laborum modi facilis adipisci iusto possimus sit provident explicabo quod minima? Vel sunt perferendis officiis nisi vero, reprehenderit veniam aliquam sapiente quibusdam temporibus quo, dignissimos dicta officia, doloremque adipisci reiciendis harum distinctio maxime impedit dolor ullam tenetur? Ullam quia aliquam ex accusamus sed dolorum laboriosam incidunt tempora explicabo suscipit nostrum, dolorem provident odit. Corrupti ipsam quia praesentium, voluptatum consectetur expedita ad est fuga voluptatibus animi vitae dolores eaque rem itaque natus numquam similique excepturi, voluptas quae laboriosam totam reprehenderit ea! Quidem autem ipsam enim adipisci, sint pariatur. Optio, nemo incidunt architecto atque mollitia aut eaque reiciendis tempora. Debitis voluptatum officia dignissimos aspernatur veritatis veniam aliquam, fuga incidunt nulla, totam tempora at, cumque corrupti inventore maxime itaque modi iure nobis. Perferendis optio excepturi aut ea facilis corporis. Ut nobis dolorum tempora, officia facere at, rerum ullam cupiditate iste esse quia, quibusdam fugiat aliquid animi facilis magni repellat ex earum perspiciatis recusandae omnis! Ut rerum nesciunt debitis, eveniet sed autem neque. Culpa ipsam assumenda fugiat officia omnis tempore voluptate dicta deleniti maxime animi molestiae laboriosam aspernatur, obcaecati eveniet minima illum ducimus ex quia, quae numquam facilis? Ad sit recusandae reiciendis dicta. Quae iusto nobis voluptates mollitia nihil velit voluptas. Optio eligendi nisi, esse cumque commodi delectus laudantium libero maxime nesciunt, fugit voluptatem iusto officiis at impedit. Eum aliquam, sapiente quibusdam molestiae adipisci impedit porro ex tempore, cum quas explicabo eos autem expedita ipsa corporis provident modi nam repellat a cupiditate vero dicta, maxime sed recusandae. Velit quae natus reiciendis dolores placeat, molestias, facere perspiciatis ratione accusamus ipsa at recusandae perferendis quos aperiam! Qui dolores sed eos recusandae labore repudiandae ipsum est autem illo, dolore voluptatibus ex soluta, officiis cum delectus perferendis reiciendis culpa! Amet veritatis dolorem possimus qui quod ducimus expedita dicta animi aperiam, quaerat aliquam ad totam obcaecati aut fugiat odit molestiae at quibusdam rerum molestias saepe quidem corporis? Debitis, natus et soluta reiciendis itaque laboriosam excepturi commodi perferendis aperiam quia quas eum aspernatur mollitia explicabo vero provident sed beatae, accusantium facere voluptatibus officia animi ab corporis. Earum, aperiam vel, nostrum fuga culpa voluptates nulla ab tempora laudantium odit perspiciatis sed ipsa incidunt eum fugiat mollitia harum blanditiis temporibus error hic quaerat ea doloribus corporis. Provident ipsum inventore reiciendis reprehenderit repellendus saepe officia minus repellat, perspiciatis tempore consectetur minima magni animi! Nihil adipisci voluptatum placeat facere unde quam vero numquam architecto. Laborum non ducimus repellat explicabo fugiat earum consequatur ipsam saepe minus maxime neque quibusdam incidunt ipsum quasi, sit optio rem nobis facilis pariatur tempore corrupti atque doloribus, et esse. Totam quasi, enim blanditiis voluptatem accusantium placeat iste, asperiores fuga facere deserunt adipisci debitis harum fugiat quidem? Esse molestias ex et praesentium quos, recusandae quasi pariatur neque rem aspernatur fuga, deleniti illo minima, aperiam distinctio quam debitis ea nobis! Aliquam qui quisquam, quaerat consequatur reiciendis modi excepturi, atque blanditiis quia labore recusandae deserunt cupiditate quos et!
+    <div className="space-y-12 py-4">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-900 to-emerald-700 dark:from-emerald-950 dark:to-emerald-800 text-white p-8 md:p-12">
+        <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
+        <div className="relative z-10 max-w-3xl">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+            Welcome to the Research & Extension Center
+          </h1>
+          <p className="text-lg md:text-xl text-emerald-100 mb-8 leading-relaxed">
+            Empowering innovative research, fostering academic excellence, and facilitating knowledge exchange at JKKNIU.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Button size="lg" className="bg-white text-emerald-800 hover:bg-emerald-50">
+              Submit Research Proposal
+              <ArrowRight size={16} className="ml-2" />
+            </Button>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-emerald-800">
+              Learn More
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section>
+        <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">
+          Our Services
+        </h2>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            {
+              icon: <BookOpen className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />,
+              title: "Research Proposals",
+              description: "Submit your research proposals online for review by our expert panel."
+            },
+            {
+              icon: <FileText className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />,
+              title: "Publication Support",
+              description: "Get assistance for publishing your research in reputed journals."
+            },
+            {
+              icon: <Users className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />,
+              title: "Collaboration",
+              description: "Connect with researchers and experts from various disciplines."
+            },
+            {
+              icon: <Download className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />,
+              title: "Resource Access",
+              description: "Access a wide range of research resources, tools, and datasets."
+            }
+          ].map((service, index) => (
+            <Card key={index} className="border-emerald-100 dark:border-emerald-900/50 hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="mb-4">{service.icon}</div>
+                <CardTitle>{service.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-base">{service.description}</CardDescription>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="md:w-1/2 space-y-4">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">About REC</h2>
+            <p className="text-gray-700 dark:text-gray-300">
+              The Research and Extension Center (REC) at Jatiya Kabi Kazi Nazrul Islam University (JKKNIU) 
+              was established with the aim to foster a culture of research excellence and innovation.
+            </p>
+            <p className="text-gray-700 dark:text-gray-300">
+              Our mission is to provide high-quality research and extension services to improve 
+              the quality of academic output and contribute to society through innovative research solutions.
+            </p>
+            <Button variant="outline" className="mt-2">
+              Learn More About Us
+            </Button>
+          </div>
+          <div className="md:w-1/2 bg-emerald-200/50 dark:bg-emerald-800/30 rounded-lg flex items-center justify-center">
+            <div className="p-8 text-center">
+              <h3 className="text-xl font-semibold mb-4 text-emerald-800 dark:text-emerald-300">Research Focus Areas</h3>
+              <ul className="space-y-2 text-left list-disc list-inside">
+                <li>Sustainable Development</li>
+                <li>Information Technology</li>
+                <li>Environmental Science</li>
+                <li>Social Sciences</li>
+                <li>Arts and Humanities</li>
+                <li>Basic Sciences</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,7 +1,4 @@
-// To keep the header and footer same for every page.
-// Outlet is used to render the child routes.
-// Outlet is a placeholder for the child routes to render.
-
+// src/Layout.jsx
 import Footer from "./components/Footer/Footer";
 import Navbar from "./components/Header/Navbar/Navbar";
 import { Outlet } from "react-router-dom";
@@ -13,28 +10,35 @@ function Layout() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <ScrollToTop />
-      {/* Add the light beam and grid effects */}
-      <div className="fixed left-0 top-0 -z-10 h-full w-full">
-        <div className="absolute top-0 z-[-2] h-screen w-screen bg-[radial-gradient(ellipse_80%_80%_at_50%_-40%,rgba(255,255,255,0.15),rgba(255,255,255,0))]" />
+      {/* Background effects */}
+      <div className="fixed left-0 top-0 -z-10 h-full w-full overflow-hidden">
+        {/* Light beam gradient effect - different for dark/light modes */}
+        <div className="absolute top-0 z-[-2] h-screen w-screen bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,255,214,0.1),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(30,130,100,0.3),rgba(0,30,20,0))]" />
+        
+        {/* Accent blob for light mode */}
+        <div className="absolute -left-20 top-32 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl dark:hidden" />
+        <div className="absolute right-20 -bottom-32 h-96 w-96 rounded-full bg-emerald-100/20 blur-3xl dark:hidden" />
+        
+        {/* Accent blob for dark mode */}
+        <div className="absolute -left-20 top-32 h-72 w-72 rounded-full bg-emerald-900/30 blur-3xl hidden dark:block" />
+        <div className="absolute right-20 -bottom-32 h-96 w-96 rounded-full bg-emerald-800/20 blur-3xl hidden dark:block" />
+        
         {/* Background Grid Pattern */}
         <div
-          className="fixed inset-0 z-0 opacity-[0.15]"
+          className="fixed inset-0 z-0 opacity-[0.015] dark:opacity-[0.1]"
           style={{
             backgroundImage: `
-linear-gradient(to right, #8882 1px, transparent 1px),
-          linear-gradient(to bottom, #8882 1px, transparent 1px)
-      `,
-            backgroundSize: "6rem 6rem",
+              linear-gradient(to right, #22c55e22 1px, transparent 1px),
+              linear-gradient(to bottom, #22c55e22 1px, transparent 1px)
+            `,
+            backgroundSize: "4rem 4rem",
           }}
         />
       </div>
+      
       <div className="flex flex-col min-h-screen">
-        {" "}
-        {/* Added flex container */}
         <Navbar />
-        <main className="flex-grow">
-          {" "}
-          {/* Added flex-grow to main */}
+        <main className="flex-grow container mx-auto px-4 py-8 md:py-12 max-w-7xl">
           <Outlet />
         </main>
         <Toaster />
