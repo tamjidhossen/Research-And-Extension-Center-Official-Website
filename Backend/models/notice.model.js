@@ -5,6 +5,7 @@ const noticeSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
     date: { type: Date, default: Date.now },
+    files: [{ name: { type: String }, url: { type: String } }], // Fixed 'string' -> 'String'
     link: { type: String, default: "" },
 }, { timestamps: true });
 
