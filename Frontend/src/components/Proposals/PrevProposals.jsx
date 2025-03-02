@@ -42,6 +42,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import api from "@/lib/api";
 
 // Mock data - replace with actual API fetch
 const generateMockProjects = () => {
@@ -121,20 +122,25 @@ export default function PrevProposals() {
   });
 
   useEffect(() => {
-    // Simulating API fetch with timeout
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        // Replace with actual API call
-        // const response = await axios.get(`${API_URL}/api/proposals`);
-
-        // When replacing with real API, remove setTimeout and use:
-        // const mockProjects = response.data;
+        
+        // Uncomment to use actual API
+        // const response = await api.get("/api/research-proposal/all");
+        // const realProjects = response.data;
+        // setProjects(realProjects);
+        
+        // Extract unique filter options
+        // const faculties = [...new Set(realProjects.map(p => p.faculty))];
+        // ... handle other filter options from real data
+        
+        // DUMMY DATA - Comment out when using actual API
         setTimeout(() => {
           const mockProjects = generateMockProjects();
           setProjects(mockProjects);
 
-          // Extract unique filter options
+          // Extract unique filter options from mock data
           const faculties = [...new Set(mockProjects.map((p) => p.faculty))];
           const departments = {};
           faculties.forEach((faculty) => {
@@ -153,9 +159,10 @@ export default function PrevProposals() {
           setFilterOptions({ faculties, departments, fiscalYears });
           setLoading(false);
         }, 1000);
+        
       } catch (err) {
         console.error("API fetch error:", err);
-        setError("Failed to fetch projects. Please try again later.");
+        setError(err.response?.data?.message || "Failed to load proposals");
         setLoading(false);
       }
     };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -38,11 +38,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import api from "@/lib/api";
 
 // Form validation schema
 const formSchema = z.object({
   // Project Director
-  project_director_name_bn: z.string().min(1, "Name in Bengali is required"),
   project_director_name_en: z.string().min(1, "Name in English is required"),
   project_director_mobile: z
     .string()
@@ -87,14 +87,18 @@ export default function StudentSubmission() {
   });
 
   const [fiscalYear, setFiscalYear] = useState("2025-2026");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("personal");
+
+  // refs for scroll targets
+  const personalTabRef = useRef(null);
+  const academicTabRef = useRef(null);
+  const projectTabRef = useRef(null);
 
   // Initialize form
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      project_director_name_bn: "",
       project_director_name_en: "",
       project_director_mobile: "",
       project_director_email: "",
@@ -111,7 +115,61 @@ export default function StudentSubmission() {
       approx_words: "",
       total_budget: "",
     },
+    mode: "onSubmit",
   });
+
+  const checkForErrorsAndNavigate = (errors) => {
+    if (Object.keys(errors).length === 0) return;
+
+    // Define which fields belong to which tabs
+    const personalFields = [
+      "project_director_name_en",
+      "project_director_mobile",
+      "project_director_email",
+    ];
+
+    const academicFields = [
+      "department",
+      "faculty",
+      "session",
+      "roll_no",
+      "cgpa_honours",
+      "supervisor_name",
+      "supervisor_designation",
+    ];
+
+    const projectFields = [
+      "project_title_bn",
+      "project_title_en",
+      "approx_pages",
+      "approx_words",
+      "total_budget",
+    ];
+
+    // Get all error field names
+    const errorFields = Object.keys(errors);
+
+    // Check which tab has errors and navigate to it
+    if (errorFields.some((field) => personalFields.includes(field))) {
+      setActiveTab("personal");
+      setTimeout(
+        () => personalTabRef.current?.scrollIntoView({ behavior: "smooth" }),
+        100
+      );
+    } else if (errorFields.some((field) => academicFields.includes(field))) {
+      setActiveTab("academic");
+      setTimeout(
+        () => academicTabRef.current?.scrollIntoView({ behavior: "smooth" }),
+        100
+      );
+    } else if (errorFields.some((field) => projectFields.includes(field))) {
+      setActiveTab("project");
+      setTimeout(
+        () => projectTabRef.current?.scrollIntoView({ behavior: "smooth" }),
+        100
+      );
+    }
+  };
 
   const handleFileChange = (part, e) => {
     const file = e.target.files[0];
@@ -150,6 +208,7 @@ export default function StudentSubmission() {
   };
 
   const onSubmit = async (data) => {
+    console.log("eihne");
     if (!files.partA || !files.partB) {
       toast({
         title: "Missing files",
@@ -161,40 +220,63 @@ export default function StudentSubmission() {
 
     setIsSubmitting(true);
 
-    // Prepare form data for API
-    const formData = {
-      project_director: {
-        name_bn: data.project_director_name_bn,
+    // Create FormData object for file upload
+    const formData = new FormData();
+
+    // Add files
+    formData.append("partA", files.partA);
+    formData.append("partB", files.partB);
+
+    // Add form data as JSON
+    formData.append(
+      "project_director",
+      JSON.stringify({
         name_en: data.project_director_name_en,
         mobile: data.project_director_mobile,
         email: data.project_director_email,
-      },
-      department: data.department,
-      faculty: data.faculty,
-      session: data.session,
-      roll_no: data.roll_no,
-      cgpa_honours: parseFloat(data.cgpa_honours),
-      supervisor: {
+      })
+    );
+    formData.append("department", data.department);
+    formData.append("faculty", data.faculty);
+    formData.append("session", data.session);
+    formData.append("roll_no", data.roll_no);
+    formData.append("cgpa_honours", data.cgpa_honours);
+    formData.append(
+      "supervisor",
+      JSON.stringify({
         name: data.supervisor_name,
         designation: data.supervisor_designation,
-      },
-      project_title: {
+      })
+    );
+    formData.append(
+      "project_title",
+      JSON.stringify({
         title_bn: data.project_title_bn,
         title_en: data.project_title_en,
-      },
-      project_details: {
+      })
+    );
+    formData.append(
+      "project_details",
+      JSON.stringify({
         approx_pages: parseInt(data.approx_pages),
         approx_words: parseInt(data.approx_words),
-      },
-      total_budget: parseFloat(data.total_budget),
-    };
+      })
+    );
+    formData.append("total_budget", data.total_budget);
 
     try {
-      console.log("Form data:", formData);
-      console.log("Files:", files);
+      const response = await api.post(
+        "/api/research-proposal/student/submit",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
-      // TODO: Implement actual API call
-      // const response = await axios.post('/api/submit/student', formData);
+      console.log("API response:", response.data);
+      // DUMMY RESPONSE - Comment out when using actual API
+      // console.log("Form data:", proposalData);
+      // console.log("Files:", files);
 
       toast({
         title: "Submission successful",
@@ -207,7 +289,8 @@ export default function StudentSubmission() {
       toast({
         title: "Submission failed",
         description:
-          error.message || "An error occurred while submitting the form",
+          error.response?.data?.message ||
+          "An error occurred while submitting the form",
         variant: "destructive",
       });
     } finally {
@@ -215,9 +298,16 @@ export default function StudentSubmission() {
     }
   };
 
+  const handleFormError = (errors) => {
+    // When the form has errors, this function will be called
+    checkForErrorsAndNavigate(errors);
+    return false; // Prevent default form submission
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-4xl mx-auto">
+        {/* Header Section */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-emerald-800 dark:text-emerald-400 mb-2">
             Student Research Proposal
@@ -230,6 +320,7 @@ export default function StudentSubmission() {
           </p>
         </div>
 
+        {/* Download and Upload Forms Card */}
         <Card className="mb-8 border-emerald-100 dark:border-emerald-800/50 shadow-sm">
           <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
             <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
@@ -245,6 +336,7 @@ export default function StudentSubmission() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6 pb-4">
+            {/* Guidelines Section */}
             <div className="mb-6 bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-md border border-emerald-200 dark:border-emerald-800/50">
               <h3 className="text-md font-medium mb-2 text-emerald-800 dark:text-emerald-400">
                 Guidelines (নির্দেশিকা):
@@ -290,7 +382,9 @@ export default function StudentSubmission() {
               </p>
             </div>
 
+            {/* Download and Upload Section */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Download Buttons */}
               <div className="justify-between flex flex-col">
                 <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Part A Application Forms/ 'ক' অংশের আবেদন ফর্ম:
@@ -329,7 +423,9 @@ export default function StudentSubmission() {
                 </Button>
               </div>
 
+              {/* File Upload Section */}
               <div className="space-y-4">
+                {/* Part A Upload */}
                 <div className="rounded-md border border-dashed border-emerald-300 dark:border-emerald-800 px-6 py-8 text-center">
                   <label className="flex flex-col items-center cursor-pointer text-sm">
                     <Upload className="h-8 w-8 text-emerald-600 dark:text-emerald-400 mb-2" />
@@ -342,6 +438,7 @@ export default function StudentSubmission() {
                     <input
                       type="file"
                       className="hidden"
+                      id="partAInput"
                       accept=".pdf"
                       onChange={(e) => handleFileChange("partA", e)}
                     />
@@ -350,7 +447,7 @@ export default function StudentSubmission() {
                       size="sm"
                       className="border-emerald-200 dark:border-emerald-800"
                       onClick={() =>
-                        document.querySelector('input[type="file"]').click()
+                        document.getElementById("partAInput").click()
                       }
                     >
                       Select File
@@ -362,6 +459,8 @@ export default function StudentSubmission() {
                     )}
                   </label>
                 </div>
+
+                {/* Part B Upload */}
                 <div className="rounded-md border border-dashed border-emerald-300 dark:border-emerald-800 px-6 py-8 text-center">
                   <label className="flex flex-col items-center cursor-pointer text-sm">
                     <Upload className="h-8 w-8 text-emerald-600 dark:text-emerald-400 mb-2" />
@@ -374,6 +473,7 @@ export default function StudentSubmission() {
                     <input
                       type="file"
                       className="hidden"
+                      id="partBInput"
                       accept=".pdf"
                       onChange={(e) => handleFileChange("partB", e)}
                     />
@@ -381,12 +481,9 @@ export default function StudentSubmission() {
                       variant="outline"
                       size="sm"
                       className="border-emerald-200 dark:border-emerald-800"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        document
-                          .querySelectorAll('input[type="file"]')[1]
-                          .click();
-                      }}
+                      onClick={() =>
+                        document.getElementById("partBInput").click()
+                      }
                     >
                       Select File
                     </Button>
@@ -399,354 +496,380 @@ export default function StudentSubmission() {
                 </div>
               </div>
             </div>
+
+            {/* Alert Notice */}
             <Alert className="mb-4 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 mt-4">
               <AlertDescription className="text-red-700 dark:text-red-400">
                 বিঃ দ্রঃ- গবেষণা প্রকল্পের ভাষা ইংরেজি হলে প্রস্তাবনা ইংরেজি
-                ভাষায় উপস্থাপন করতে হবে।
+                ভাষায় উপস্থাপন করতে হবে।
               </AlertDescription>
             </Alert>
           </CardContent>
         </Card>
 
+        {/* Form Section */}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <Tabs defaultValue="personal" className="mb-8">
+          <form
+            onSubmit={form.handleSubmit(onSubmit, handleFormError)}
+            noValidate
+          >
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="mb-8"
+            >
               <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="personal">Applicant Details</TabsTrigger>
                 <TabsTrigger value="academic">Academic Info</TabsTrigger>
                 <TabsTrigger value="project">Project Details</TabsTrigger>
               </TabsList>
 
+              {/* Personal Tab */}
               <TabsContent value="personal">
-                <Card className="border-emerald-100 dark:border-emerald-800/50 shadow-sm">
-                  <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
-                    <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-                      <User className="h-5 w-5" />
-                      Personal Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="project_director_name_en"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Applicants Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Name in English" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="project_director_mobile"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Mobile Number</FormLabel>
-                            <FormControl>
-                              <div className="flex">
-                                <Phone className="h-4 w-4 mr-2 text-gray-500 self-center" />
-                                <Input placeholder="01XXXXXXXXX" {...field} />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="project_director_email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <div className="flex">
-                                <Mail className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                <div ref={personalTabRef}>
+                  <Card className="border-emerald-100 dark:border-emerald-800/50 shadow-sm">
+                    <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
+                      <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+                        <User className="h-5 w-5" />
+                        Personal Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="project_director_name_en"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Applicant's Name (English)</FormLabel>
+                              <FormControl>
                                 <Input
-                                  placeholder="email@example.com"
+                                  placeholder="Name in English"
                                   {...field}
                                 />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="project_director_mobile"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mobile Number</FormLabel>
+                              <FormControl>
+                                <div className="flex">
+                                  <Phone className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                                  <Input placeholder="01XXXXXXXXX" {...field} />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="project_director_email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <div className="flex">
+                                  <Mail className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                                  <Input
+                                    placeholder="email@example.com"
+                                    {...field}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
+              {/* Academic Tab */}
               <TabsContent value="academic">
-                <Card className="border-emerald-100 dark:border-emerald-800/50 shadow-sm">
-                  <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
-                    <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-                      <GraduationCap className="h-5 w-5" />
-                      Academic Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="department"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Department</FormLabel>
-                            <FormControl>
-                              <div className="flex">
-                                <Building className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                <div ref={academicTabRef}>
+                  <Card className="border-emerald-100 dark:border-emerald-800/50 shadow-sm">
+                    <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
+                      <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+                        <GraduationCap className="h-5 w-5" />
+                        Academic Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="department"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Department</FormLabel>
+                              <FormControl>
+                                <div className="flex">
+                                  <Building className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                                  <Input
+                                    placeholder="Your department"
+                                    {...field}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="faculty"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Faculty</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Your faculty" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="session"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Session</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g. 2020-21" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="roll_no"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Roll Number</FormLabel>
+                              <FormControl>
                                 <Input
-                                  placeholder="Your department"
+                                  placeholder="Your roll number"
                                   {...field}
                                 />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
                       <FormField
                         control={form.control}
-                        name="faculty"
+                        name="cgpa_honours"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Faculty</FormLabel>
+                            <FormLabel>CGPA (Honours)</FormLabel>
                             <FormControl>
-                              <Input placeholder="Your faculty" {...field} />
+                              <Input placeholder="e.g. 3.75" {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="session"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Session</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. 2020-21" {...field} />
-                            </FormControl>
-                            <FormMessage />
+                            <FormDescription>
+                              Enter your Honours CGPA
+                            </FormDescription>
                           </FormItem>
                         )}
                       />
 
-                      <FormField
-                        control={form.control}
-                        name="roll_no"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Roll Number</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Your roll number"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                      <Separator className="my-4" />
 
-                    <FormField
-                      control={form.control}
-                      name="cgpa_honours"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>CGPA (Honours)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. 3.75" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                          <FormDescription>
-                            Enter your Honours CGPA
-                          </FormDescription>
-                        </FormItem>
-                      )}
-                    />
+                      <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                        <BriefcaseBusiness className="h-5 w-5" />
+                        Supervisor Information
+                      </h3>
 
-                    <Separator className="my-4" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="supervisor_name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Supervisor Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Supervisor's full name"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
-                      <BriefcaseBusiness className="h-5 w-5" />
-                      Supervisor Information
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="supervisor_name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Supervisor Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Supervisor's full name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="supervisor_designation"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Supervisor Designation</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Professor" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                        <FormField
+                          control={form.control}
+                          name="supervisor_designation"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Supervisor Designation</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="e.g. Professor"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
+              {/* Project Tab */}
               <TabsContent value="project">
-                <Card className="border-emerald-100 dark:border-emerald-800/50 shadow-sm">
-                  <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
-                    <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-                      <BookOpen className="h-5 w-5" />
-                      Project Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="project_title_bn"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Project Title (Bangla)</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="বাংলায় প্রকল্পের শিরোনাম"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                <div ref={projectTabRef}>
+                  <Card className="border-emerald-100 dark:border-emerald-800/50 shadow-sm">
+                    <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
+                      <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+                        <BookOpen className="h-5 w-5" />
+                        Project Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="project_title_bn"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Project Title (Bangla)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="বাংলায় প্রকল্পের শিরোনাম"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="project_title_en"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Project Title (English)</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Project title in English"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                        <FormField
+                          control={form.control}
+                          name="project_title_en"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Project Title (English)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Project title in English"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
-                    <Separator className="my-4" />
+                      <Separator className="my-4" />
 
-                    <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
-                      <ClipboardList className="h-5 w-5" />
-                      Project Specifications
-                    </h3>
+                      <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                        <ClipboardList className="h-5 w-5" />
+                        Project Specifications
+                      </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="approx_pages"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Approximate Pages</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. 50" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="approx_pages"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Approximate Pages</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g. 50" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="approx_words"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Approximate Words</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. 15000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormField
+                          control={form.control}
+                          name="approx_words"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Approximate Words</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g. 15000" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="total_budget"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Total Budget (BDT)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. 150000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                        <FormField
+                          control={form.control}
+                          name="total_budget"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Total Budget (BDT)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g. 150000" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
-                    <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900 mt-4">
-                      <AlertTitle className="text-blue-800 dark:text-blue-300">
-                        Important Note / গুরুত্বপূর্ণ তথ্য
-                      </AlertTitle>
-                      <AlertDescription className="text-blue-700 dark:text-blue-400">
-                        <p>
-                          Please ensure part A is signed by the Applicant, Head
-                          of the Department, and Faculty Dean before submission.
-                        </p>
-                        <p className="mt-1">
-                          জমা দেওয়ার পুর্বে আবেদন ফর্ম এর 'ক' অংশে আবেদনকারী,
-                          বিভাগীয় প্রধান এবং ডীনের স্বাক্ষর আছে কিনা তা নিশ্চিত
-                          করুন।
-                        </p>
-                      </AlertDescription>
-                    </Alert>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      type="submit"
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting
-                        ? "Submitting..."
-                        : "Submit Research Proposal"}
-                    </Button>
-                  </CardFooter>
-                </Card>
+                      <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900 mt-4">
+                        <AlertTitle className="text-blue-800 dark:text-blue-300">
+                          Important Note / গুরুত্বপূর্ণ তথ্য
+                        </AlertTitle>
+                        <AlertDescription className="text-blue-700 dark:text-blue-400">
+                          <p>
+                            Please ensure part A is signed by the Applicant,
+                            Head of the Department, and Faculty Dean before
+                            submission.
+                          </p>
+                          <p className="mt-1">
+                            জমা দেওয়ার পুর্বে আবেদন ফর্ম এর 'ক' অংশে আবেদনকারী,
+                            বিভাগীয় প্রধান এবং ডীনের স্বাক্ষর আছে কিনা তা
+                            নিশ্চিত করুন।
+                          </p>
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                    <CardFooter>
+                      <Button
+                        type="submit"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting
+                          ? "Submitting..."
+                          : "Submit Research Proposal"}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </div>
               </TabsContent>
             </Tabs>
           </form>

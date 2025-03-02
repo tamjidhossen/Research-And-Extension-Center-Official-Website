@@ -97,13 +97,30 @@ const Notices = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simulate API fetch with timeout
-    const timer = setTimeout(() => {
-      setNotices(dummyNotices);
-      setLoading(false);
-    }, 800);
+    const fetchNotices = async () => {
+      try {
+        setLoading(true);
+        
+        // Uncomment to use actual API
+        // const response = await api.get("/api/Notice/get-Notice");
+        // setNotices(response.data);
+        
+        // DUMMY DATA - Comment out when using actual API
+        const timer = setTimeout(() => {
+          setNotices(dummyNotices);
+          setLoading(false);
+        }, 800);
+        
+        return () => clearTimeout(timer);
+        
+      } catch (err) {
+        console.error("Failed to fetch notices:", err);
+        setError(err.response?.data?.message || "Failed to load notices");
+        setLoading(false);
+      }
+    };
     
-    return () => clearTimeout(timer);
+    fetchNotices();
   }, []);
 
   if (loading) {

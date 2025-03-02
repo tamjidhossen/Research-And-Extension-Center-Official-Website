@@ -38,6 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import api from "@/lib/api";
 
 // Form validation schema
 const formSchema = z.object({
@@ -144,51 +145,61 @@ export default function TeacherSubmission() {
       });
       return;
     }
-
+  
     setIsSubmitting(true);
-
-    // Prepare form data for API
-    const formData = {
-      project_director: {
-        name_bn: data.project_director_name_bn,
-        name_en: data.project_director_name_en,
-        mobile: data.project_director_mobile,
-        email: data.project_director_email,
-      },
-      designation: data.designation,
-      department: data.department,
-      faculty: data.faculty,
-      project_title: {
-        title_bn: data.project_title_bn,
-        title_en: data.project_title_en,
-      },
-      research_location: data.research_location,
-      project_details: {
-        approx_pages: parseInt(data.approx_pages),
-        approx_words: parseInt(data.approx_words),
-      },
-      total_budget: parseFloat(data.total_budget),
-    };
-
+  
+    // Create FormData object for file upload
+    const formData = new FormData();
+    
+    // Add files
+    formData.append("partA", files.partA);
+    formData.append("partB", files.partB);
+    
+    // Add form data as JSON
+    formData.append("project_director", JSON.stringify({
+      name_bn: data.project_director_name_bn,
+      name_en: data.project_director_name_en,
+      mobile: data.project_director_mobile,
+      email: data.project_director_email,
+    }));
+    formData.append("designation", data.designation);
+    formData.append("department", data.department);
+    formData.append("faculty", data.faculty);
+    formData.append("project_title", JSON.stringify({
+      title_bn: data.project_title_bn,
+      title_en: data.project_title_en,
+    }));
+    formData.append("research_location", data.research_location);
+    formData.append("project_details", JSON.stringify({
+      approx_pages: parseInt(data.approx_pages),
+      approx_words: parseInt(data.approx_words),
+    }));
+    formData.append("total_budget", data.total_budget);
+  
     try {
-      console.log("Form data:", formData);
-      console.log("Files:", files);
-
-      // TODO: Implement actual API call
-      // const response = await axios.post('/api/submit/teacher', formData);
-
+      // Uncomment to use actual API
+      const response = await api.post("/api/research-proposal/teacher/submit", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
+      console.log("API response:", response.data);
+      
+      // DUMMY RESPONSE - Comment out when using actual API
+      // console.log("Form data:", proposalData);
+      // console.log("Files:", files);
+  
       toast({
         title: "Submission successful",
         description: "Your research proposal has been submitted successfully",
       });
-
+  
       form.reset();
       setFiles({ partA: null, partB: null });
     } catch (error) {
       toast({
         title: "Submission failed",
         description:
-          error.message || "An error occurred while submitting the form",
+          error.response?.data?.message || "An error occurred while submitting the form",
         variant: "destructive",
       });
     } finally {

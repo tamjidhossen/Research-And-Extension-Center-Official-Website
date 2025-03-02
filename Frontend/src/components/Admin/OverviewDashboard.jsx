@@ -32,9 +32,12 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import api from "@/lib/api";
 
 const OverviewDashboard = () => {
   const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [currentYear, setCurrentYear] = useState("2025-2026");
+  const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState([
     {
       id: 1,
@@ -101,67 +104,213 @@ const OverviewDashboard = () => {
       url: null,
     },
   ]);
-  const [currentYear, setCurrentYear] = useState("2024-2025");
-  const [loading, setLoading] = useState(false);
 
   // Update guidelines
   const updateGuidelines = async () => {
+    setLoading(true);
+  
     try {
-      setLoading(true);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      toast.success("Guidelines updated successfully");
-      setLoading(false);
+      if (!currentYear || currentYear.trim() === "") {
+        toast.error("Please enter a valid academic year");
+        setLoading(false);
+        return;
+      }
+  
+      // Use FormData instead of JSON
+      const formData = new FormData();
+      formData.append("fiscal_year", currentYear);
+  
+      await api.post("/api/admin/research-proposal/upload", formData);
+  
+      toast.success("Academic year updated successfully");
     } catch (error) {
-      toast.error("Failed to update guidelines");
+      console.error("Failed to update year:", error);
+      toast.error("Error updating academic year");
+    } finally {
       setLoading(false);
     }
   };
 
+  // Fetch settings
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        // Get document information which contains fiscal year
+        const response = await api.get("/api/admin/research-proposal");
+        
+        if (response.data && response.data.proposalDocument) {
+          const docData = response.data.proposalDocument;
+          
+          setCurrentYear(docData.fiscal_year || "");
+          
+          // Determine if registration is open based on fiscal year
+          setRegistrationOpen(!!docData.fiscal_year && docData.fiscal_year.trim() !== "");
+          
+          // Map backend document structure to frontend structure
+          const mappedDocs = [
+            {
+              id: 1,
+              name: "Student Part A - Application Form (English)",
+              category: "student",
+              uploaded: !!docData.student?.partA_url?.en,
+              url: docData.student?.partA_url?.en || null,
+            },
+            {
+              id: 2,
+              name: "Student Part A - Application Form (বাংলা)",
+              category: "student",
+              uploaded: !!docData.student?.partA_url?.bn,
+              url: docData.student?.partA_url?.bn || null,
+            },
+            {
+              id: 3,
+              name: "Student Part B - Proposal Template (English)",
+              category: "student",
+              uploaded: !!docData.student?.partB_url?.en,
+              url: docData.student?.partB_url?.en || null,
+            },
+            {
+              id: 4,
+              name: "Student Part B - Proposal Template (বাংলা)",
+              category: "student",
+              uploaded: !!docData.student?.partB_url?.bn,
+              url: docData.student?.partB_url?.bn || null,
+            },
+            {
+              id: 5,
+              name: "Teacher Part A - Application Form (English)",
+              category: "teacher",
+              uploaded: !!docData.teacher?.partA_url?.en,
+              url: docData.teacher?.partA_url?.en || null,
+            },
+            {
+              id: 6,
+              name: "Teacher Part A - Application Form (বাংলা)",
+              category: "teacher",
+              uploaded: !!docData.teacher?.partA_url?.bn,
+              url: docData.teacher?.partA_url?.bn || null,
+            },
+            {
+              id: 7,
+              name: "Teacher Part B - Proposal Template (English)",
+              category: "teacher",
+              uploaded: !!docData.teacher?.partB_url?.en,
+              url: docData.teacher?.partB_url?.en || null,
+            },
+            {
+              id: 8,
+              name: "Teacher Part B - Proposal Template (বাংলা)",
+              category: "teacher",
+              uploaded: !!docData.teacher?.partB_url?.bn,
+              url: docData.teacher?.partB_url?.bn || null,
+            },
+          ];
+          
+          setDocuments(mappedDocs);
+        }
+      } catch (error) {
+        console.error("Failed to fetch settings:", error);
+        toast.error("Error fetching settings");
+      }
+    };
+  
+    fetchSettings();
+  }, []);
+
   // Toggle registration status
   const toggleRegistration = async () => {
+    setLoading(true);
+  
     try {
-      setLoading(true);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      if (!registrationOpen && (!currentYear || currentYear.trim() === "")) {
+        toast.error("Please set a fiscal year before opening registration");
+        setLoading(false);
+        return;
+      }
+  
+      // Use FormData instead of JSON
+      const formData = new FormData();
+      formData.append("fiscal_year", !registrationOpen ? currentYear : "");
+      formData.append("registration_open", !registrationOpen);
+  
+      await api.post("/api/admin/research-proposal/upload", formData);
+  
       setRegistrationOpen(!registrationOpen);
       toast.success(
-        `Registration ${registrationOpen ? "closed" : "opened"} successfully`
+        `Registration ${!registrationOpen ? "opened" : "closed"} successfully`
       );
-      setLoading(false);
     } catch (error) {
-      toast.error("Failed to update registration status");
+      console.error("Failed to update registration status:", error);
+      toast.error("Error updating registration status");
+    } finally {
       setLoading(false);
     }
   };
 
   // Handle file upload
-  const handleFileUpload = async (id, file) => {
+  const handleFileUpload = async (docId, file) => {
+    if (!file) return;
+
+    // Check file type
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Only PDF and Word documents are allowed");
+      return;
+    }
+
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast("File must be less than 5MB");
+      return;
+    }
+
+    const docTypeMap = {
+      1: "student_partA_en",
+      2: "student_partA_bn",
+      3: "student_partB_en",
+      4: "student_partB_bn",
+      5: "teacher_partA_en",
+      6: "teacher_partA_bn",
+      7: "teacher_partB_en",
+      8: "teacher_partB_bn",
+    };
+
+    const fieldName = docTypeMap[docId];
+    if (!fieldName) {
+      toast.error("Invalid document type");
+      return;
+    }
+
     try {
-      setLoading(true);
-      // Simulate file upload
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const formData = new FormData();
+      formData.append(fieldName, file);
 
-      const updatedDocuments = documents.map((doc) => {
-        if (doc.id === id) {
-          return {
-            ...doc,
-            file: file,
-            uploaded: true,
-            url: URL.createObjectURL(file),
-          };
+      // Uncomment to use actual API
+      const response = await api.post(
+        "/api/admin/research-proposal/upload",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
         }
-        return doc;
-      });
+      );
 
-      setDocuments(updatedDocuments);
+      // Update the document in state
+      setDocuments(
+        documents.map((doc) =>
+          doc.id === docId
+            ? { ...doc, uploaded: true, url: response.data.url || null }
+            : doc
+        )
+      );
+
       toast.success("Document uploaded successfully");
-      setLoading(false);
     } catch (error) {
-      toast.error("Failed to upload document");
-      setLoading(false);
+      console.error("Failed to upload document:", error);
+      toast.error(error.response?.data?.message || "Error uploading document");
     }
   };
 
@@ -169,21 +318,45 @@ const OverviewDashboard = () => {
   const deleteDocument = async (id) => {
     try {
       setLoading(true);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
+      
+      const docTypeMap = {
+        1: "student_partA_en",
+        2: "student_partA_bn",
+        3: "student_partB_en",
+        4: "student_partB_bn",
+        5: "teacher_partA_en",
+        6: "teacher_partA_bn",
+        7: "teacher_partB_en",
+        8: "teacher_partB_bn",
+      };
+      
+      const fieldName = docTypeMap[id];
+      if (!fieldName) {
+        toast.error("Invalid document type");
+        return;
+      }
+      
+      // The backend expects a field with null value to clear it
+      const formData = new FormData();
+      
+      // Include the special "delete" parameter the backend will recognize
+      formData.append(fieldName, "null");
+      
+      await api.post("/api/admin/research-proposal/upload", formData);
+      
       const updatedDocuments = documents.map((doc) => {
         if (doc.id === id) {
           return { ...doc, file: null, uploaded: false, url: null };
         }
         return doc;
       });
-
+      
       setDocuments(updatedDocuments);
       toast.success("Document deleted successfully");
-      setLoading(false);
     } catch (error) {
-      toast.error("Failed to delete document");
+      console.error("Failed to delete document:", error);
+      toast.error("Error deleting document");
+    } finally {
       setLoading(false);
     }
   };

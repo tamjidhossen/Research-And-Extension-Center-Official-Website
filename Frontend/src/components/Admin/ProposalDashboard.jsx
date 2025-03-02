@@ -60,6 +60,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
 
 export default function ProposalsDashboard() {
   // States
@@ -102,171 +103,196 @@ export default function ProposalsDashboard() {
   useEffect(() => {
     const fetchProposals = async () => {
       try {
-        // API endpoint would be used here when backend is ready
-        // const response = await fetch("/api/admin/proposals");
-        // const data = await response.json();
-        // setProposals(data);
-        // setFilteredProposals(data);
-        // calculateStatistics(data);
-        // setLoading(false);
+        setLoading(true);
+        
+        // Uncomment to use actual API
+        // const response = await api.get("/api/admin/research-proposal/all");
+        // const proposalsData = response.data;
+        // setProposals(proposalsData);
+        // setFilteredProposals(proposalsData);
+        
+        // Extract filter options from real data
+        // const departments = [...new Set(proposalsData.map(p => p.department))];
+        // const fiscalYears = [...new Set(proposalsData.map(p => p.fiscalYear))];
+        // setFilterOptions({
+        //   departments,
+        //   fiscalYears,
+        //   applicantTypes: ["student", "teacher"],
+        // });
+        
+        // calculateStatistics(proposalsData);
+        
+        // DUMMY DATA - Comment out when using actual API
+        const mockProposals = [
+          {
+            id: "PRJ-2001",
+            title: "Research on Machine Learning Algorithms for Climate Prediction",
+            applicant: "Dr. Rahima Khan",
+            applicantType: "teacher",
+            faculty: "Science and Engineering",
+            department: "Computer Science",
+            fiscalYear: "2023-2024",
+            submissionDate: "2023-09-15T10:30:00Z",
+            status: "reviewed",
+            totalMarks: 85,
+            reviewers: [
+              { name: "Dr. Ahmed Hassan", email: "ahmed@example.com", marksGiven: 42 },
+              { name: "Dr. Nadia Islam", email: "nadia@example.com", marksGiven: 43 }
+            ]
+          },
+          {
+            id: "PRJ-2002",
+            title: "Study on Biodiversity in the Sundarbans",
+            applicant: "Tanvir Ahmed",
+            applicantType: "student",
+            faculty: "Science and Engineering",
+            department: "Environmental Science",
+            fiscalYear: "2023-2024",
+            submissionDate: "2023-09-20T14:15:00Z",
+            status: "pending",
+            totalMarks: null,
+            reviewers: []
+          },
+          {
+            id: "PRJ-2003",
+            title: "Economic Impact of Climate Change on Agriculture",
+            applicant: "Dr. Farhana Rahman",
+            applicantType: "teacher",
+            faculty: "Business Studies",
+            department: "Economics",
+            fiscalYear: "2023-2024",
+            submissionDate: "2023-09-10T09:45:00Z",
+            status: "pending_review",
+            totalMarks: null,
+            reviewers: [
+              { name: "Dr. Kamal Hossain", email: "kamal@example.com", marksGiven: null },
+              { name: "Dr. Sadia Khan", email: "sadia@example.com", marksGiven: null }
+            ]
+          },
+          {
+            id: "PRJ-2004",
+            title: "Analysis of Mental Health Issues Among University Students",
+            applicant: "Sabrina Akter",
+            applicantType: "student",
+            faculty: "Arts and Humanities",
+            department: "Psychology",
+            fiscalYear: "2022-2023",
+            submissionDate: "2022-11-05T11:20:00Z",
+            status: "reviewed",
+            totalMarks: 78,
+            reviewers: [
+              { name: "Dr. Rashid Ali", email: "rashid@example.com", marksGiven: 38 },
+              { name: "Dr. Nasreen Begum", email: "nasreen@example.com", marksGiven: 40 }
+            ]
+          },
+          {
+            id: "PRJ-2005",
+            title: "Renewable Energy Implementation in Rural Areas",
+            applicant: "Dr. Masud Rana",
+            applicantType: "teacher",
+            faculty: "Science and Engineering",
+            department: "Electrical Engineering",
+            fiscalYear: "2022-2023",
+            submissionDate: "2022-10-12T16:00:00Z",
+            status: "pending",
+            totalMarks: null,
+            reviewers: []
+          }
+        ];
+        
+        setProposals(mockProposals);
+        setFilteredProposals(mockProposals);
+        
+        // Extract filter options from mock data
+        const departments = [...new Set(mockProposals.map((p) => p.department))];
+        const fiscalYears = [...new Set(mockProposals.map((p) => p.fiscalYear))];
+        
+        setFilterOptions({
+          departments,
+          fiscalYears,
+          applicantTypes: ["student", "teacher"],
+        });
+        
+        calculateStatistics(mockProposals);
       } catch (error) {
         console.error("Failed to fetch proposals:", error);
-        toast.error("Failed to load proposals");
+        toast({
+          variant: "destructive", 
+          title: "Error", 
+          description: "Failed to fetch proposals"
+        });
+      } finally {
         setLoading(false);
       }
     };
 
-    // Mock data for development
-    const mockProposals = [
-      {
-        id: 1,
-        title: "Development of Sustainable Agriculture Practices",
-        applicant: "Dr. Jane Smith",
-        applicantType: "teacher",
-        department: "Agriculture Science",
-        submissionDate: "2024-02-15",
-        fiscalYear: "2023-2024",
-        status: "pending",
-        reviewers: [],
-        totalMarks: null,
-        partAPdfUrl: "/files/proposal1_partA.pdf",
-        partBPdfUrl: "/files/proposal1_partB.pdf",
-      },
-      {
-        id: 2,
-        title: "AI-Based Traffic Management System",
-        applicant: "Dr. Robert Johnson",
-        applicantType: "teacher",
-        department: "Computer Science",
-        submissionDate: "2024-02-10",
-        fiscalYear: "2023-2024",
-        status: "pending_review",
-        reviewers: [
-          {
-            name: "Dr. Alan Turing",
-            email: "reviewer1@example.com",
-            marksGiven: null,
-          },
-          {
-            name: "Dr. Ada Lovelace",
-            email: "reviewer2@example.com",
-            marksGiven: null,
-          },
-        ],
-        totalMarks: null,
-        partAPdfUrl: "/files/proposal2_partA.pdf",
-        partBPdfUrl: "/files/proposal2_partB.pdf",
-      },
-      {
-        id: 3,
-        title: "Nanomaterial Applications in Cancer Treatment",
-        applicant: "Sarah Williams",
-        applicantType: "student",
-        department: "Medical Sciences",
-        submissionDate: "2024-02-05",
-        fiscalYear: "2023-2024",
-        status: "reviewed",
-        reviewers: [
-          {
-            name: "Dr. Marie Curie",
-            email: "reviewer3@example.com",
-            marksGiven: 48,
-          },
-          {
-            name: "Dr. Louis Pasteur",
-            email: "reviewer4@example.com",
-            marksGiven: 45,
-          },
-        ],
-        totalMarks: 93,
-        partAPdfUrl: "/files/proposal3_partA.pdf",
-        partBPdfUrl: "/files/proposal3_partB.pdf",
-      },
-      {
-        id: 4,
-        title: "Machine Learning for Climate Change Prediction",
-        applicant: "Dr. Michael Chen",
-        applicantType: "teacher",
-        department: "Environmental Science",
-        submissionDate: "2024-01-28",
-        fiscalYear: "2022-2023",
-        status: "reviewed",
-        reviewers: [
-          {
-            name: "Dr. Rachel Carson",
-            email: "reviewer1@example.com",
-            marksGiven: 30,
-          },
-          {
-            name: "Dr. James Hansen",
-            email: "reviewer5@example.com",
-            marksGiven: 25,
-          },
-        ],
-        totalMarks: 55,
-        partAPdfUrl: "/files/proposal4_partA.pdf",
-        partBPdfUrl: "/files/proposal4_partB.pdf",
-      },
-      {
-        id: 5,
-        title: "Biodiversity Conservation in Urban Areas",
-        applicant: "Ahmed Khan",
-        applicantType: "student",
-        department: "Environmental Science",
-        submissionDate: "2024-01-15",
-        fiscalYear: "2022-2023",
-        status: "pending_review",
-        reviewers: [
-          {
-            name: "Dr. David Attenborough",
-            email: "reviewer6@example.com",
-            marksGiven: null,
-          },
-          {
-            name: "Dr. Jane Goodall",
-            email: "reviewer7@example.com",
-            marksGiven: null,
-          },
-        ],
-        totalMarks: null,
-        partAPdfUrl: "/files/proposal5_partA.pdf",
-        partBPdfUrl: "/files/proposal5_partB.pdf",
-      },
-      {
-        id: 6,
-        title: "Advanced Materials for Solar Energy Harvesting",
-        applicant: "Maria Rodriguez",
-        applicantType: "student",
-        department: "Physics",
-        submissionDate: "2024-03-05",
-        fiscalYear: "2023-2024",
-        status: "pending",
-        reviewers: [],
-        totalMarks: null,
-        partAPdfUrl: "/files/proposal6_partA.pdf",
-        partBPdfUrl: "/files/proposal6_partB.pdf",
-      },
-    ];
-
-    setProposals(mockProposals);
-    setFilteredProposals(mockProposals);
-
-    // Extract unique filter options
-    const departments = [...new Set(mockProposals.map((p) => p.department))];
-    const fiscalYears = [...new Set(mockProposals.map((p) => p.fiscalYear))];
-
-    setFilterOptions({
-      departments,
-      fiscalYears,
-      applicantTypes: ["student", "teacher"],
-    });
-
-    calculateStatistics(mockProposals);
-    setLoading(false);
-
-    // Uncomment to use actual API when backend is ready
-    // fetchProposals();
+    fetchProposals();
   }, []);
+
+  // Assign reviewers function
+  const handleAssignReviewers = async () => {
+    if (!selectedProposal) return;
+    
+    try {
+      // Uncomment to use actual API
+      // const response = await api.put(
+      //   `/api/admin/research-proposal/${selectedProposal.id}/assign-reviewer`,
+      //   {
+      //     reviewer_email: reviewerEmail1,
+      //     reviewer_name: reviewerName1,
+      //     reviewer_email2: reviewerEmail2,
+      //     reviewer_name2: reviewerName2,
+      //     message: "Please review this proposal."
+      //   }
+      // );
+      
+      // Update the selected proposal with the new reviewers
+      const updatedProposal = {
+        ...selectedProposal,
+        reviewers: [
+          { email: reviewerEmail1, name: reviewerName1 },
+          { email: reviewerEmail2, name: reviewerName2 }
+        ],
+        status: "pending_review"
+      };
+      
+      // Update proposals state
+      const updatedProposals = proposals.map(p => 
+        p.id === selectedProposal.id ? updatedProposal : p
+      );
+      
+      setProposals(updatedProposals);
+      setFilteredProposals(updatedProposals.filter(p => 
+        // Apply your filters here
+        (filters.status === "all" || p.status === filters.status) &&
+        (filters.department === "all" || p.department === filters.department) &&
+        (filters.fiscalYear === "all" || p.fiscalYear === filters.fiscalYear) &&
+        (filters.applicantType === "all" || p.applicantType === filters.applicantType)
+      ));
+      
+      calculateStatistics(updatedProposals);
+      
+      toast({
+        title: "Success",
+        description: "Reviewers assigned successfully"
+      });
+      
+      // Reset form
+      setReviewerEmail1("");
+      setReviewerName1("");
+      setReviewerEmail2("");
+      setReviewerName2("");
+      setSelectedProposal(null);
+      
+    } catch (error) {
+      console.error("Failed to assign reviewers:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.response?.data?.message || "Failed to assign reviewers"
+      });
+    }
+  };
 
   // Calculate statistics from proposals data
   const calculateStatistics = (proposalsData) => {

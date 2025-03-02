@@ -24,9 +24,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Toaster } from "@/components/ui/toaster";
+import api from "@/lib/api";
 
 export default function NoticesDashboard() {
-  const [Notices, setNotices] = useState([]);
+  const [notices, setNotices] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -39,19 +40,23 @@ export default function NoticesDashboard() {
   // Fetch Notices
   const fetchNotices = async () => {
     try {
-      const response = await axios.get(
-        `${API_URL}/api/Notice/get-Notice`
-      );
+      setIsLoading(true);
+      const response = await api.get("/api/Notice/get-Notice");
+      
       const sortedNotices = response.data.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
       setNotices(sortedNotices);
-    } catch {
+    } catch (error) {
+      console.error("Failed to fetch notices:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch Notices",
+        description: "Failed to fetch notices",
       });
+      
+      // FALLBACK TO DUMMY DATA - Remove when API is ready
+      // setNotices([/* your dummy notices here */]);
     } finally {
       setIsLoading(false);
     }
@@ -64,10 +69,7 @@ export default function NoticesDashboard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `${API_URL}/api/Notice/add`,
-        formData
-      );
+      const response = await api.post("/api/Notice/add", formData);
 
       // Create a new Notice object with the correct structure
       const newNotice = {
@@ -76,7 +78,7 @@ export default function NoticesDashboard() {
       };
 
       // Update state with the new Notice
-      setNotices([newNotice, ...Notices]);
+      setNotices([newNotice, ...notices]);
       setIsDialogOpen(false);
       setFormData({ title: "", description: "", link: "" });
 
@@ -85,32 +87,32 @@ export default function NoticesDashboard() {
         description: "Notice added successfully",
       });
     } catch (error) {
+      console.error("Failed to add notice:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error.response?.data?.message || "Failed to add Notice",
+        description: error.response?.data?.message || "Failed to add Notice",
       });
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_URL}/api/Notice/delete/${id}`);
-      setNotices(
-        Notices.filter((Notice) => Notice._id !== id)
-      );
-
+      await api.delete(`/api/Notice/${id}`);
+      
+      // Remove the deleted notice from state
+      setNotices(notices.filter(notice => notice._id !== id));
+      
       toast({
         title: "Success",
         description: "Notice deleted successfully",
       });
     } catch (error) {
+      console.error("Failed to delete notice:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error.response?.data?.message || "Failed to delete Notice",
+        description: error.response?.data?.message || "Failed to delete Notice",
       });
     }
   };
@@ -188,7 +190,7 @@ export default function NoticesDashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {Notices.map((Notice) => (
+          {notices.map((Notice) => (
             <Card key={Notice._id} className="flex flex-col">
               <CardHeader>
                 <div className="flex justify-between items-start">
@@ -251,7 +253,7 @@ export default function NoticesDashboard() {
           ))}
         </div>
 
-        {Notices.length === 0 && (
+        {notices.length === 0 && (
           <Card className="text-center py-8">
             <CardContent>
               <p className="text-muted-foreground">No Notices found</p>

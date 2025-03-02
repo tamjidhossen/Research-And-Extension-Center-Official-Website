@@ -8,20 +8,22 @@ import { setAuthToken } from "@/lib/auth";
 import { API_URL } from "@/lib/authConfig";
 import { Toaster } from "@/components/ui/toaster";
 import { Eye, EyeOff } from "lucide-react";
+import api from "@/lib/api";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    
     try {
-      const response = await axios.post(
-        `${API_URL}/api/admin/login`,
-        credentials
-      );
+      const response = await api.post("/api/admin/login", credentials);
+      
       if (response.data.success) {
         setAuthToken(response.data.token);
         // Store admin data in localStorage
@@ -39,6 +41,17 @@ export default function AdminLogin() {
         title: "Login Failed",
         description: error.response?.data?.message || "Invalid credentials",
       });
+      
+      // Uncomment for testing without backend
+      /*
+      // DUMMY LOGIN FOR TESTING
+      setAuthToken("dummy-token");
+      localStorage.setItem("adminData", JSON.stringify({ name: "Admin User" }));
+      toast({ title: "Success", description: "Logged in successfully (dummy)" });
+      navigate("/admin/dashboard");
+      */
+    } finally {
+      setIsLoading(false);
     }
   };
 
