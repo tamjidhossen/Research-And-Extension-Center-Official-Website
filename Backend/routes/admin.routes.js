@@ -3,7 +3,7 @@ const router = express.Router();
 const adminController = require('../controllers/admin.controller.js');
 const upload = require('../middlewares/uploadDocument.js');
 const adminMiddileware = require('../middlewares/admin.auth.middleware.js')
-router.post('/register', adminController.registerAdmin);
+router.post('/register', adminMiddileware.authAdmin, adminController.registerAdmin);
 router.post('/login', adminController.loginAdmin);
 router.post('/research-proposal/upload', upload.fields([
     { name: 'student_partA_en', maxCount: 1 },
