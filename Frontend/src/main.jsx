@@ -7,6 +7,10 @@ import StudentSubmission from "./components/Submit/Student";
 import TeacherSubmission from "./components/Submit/Teacher";
 import Notices from "./components/Notices/Notices";
 import PrevProposals from "./components/Proposals/PrevProposals";
+import AdminLogin from './components/Admin/Login'
+import Dashboard from './components/Admin/Dashboard'
+import ProtectedRoute from './components/Admin/ProtectedRoute'
+import AdminRegister from './components/Admin/Register'
 
 import {
   Route,
@@ -24,6 +28,18 @@ const router = createBrowserRouter(
         <Route path="submit/teacher" element={<TeacherSubmission />} />
         <Route path="notices" element={<Notices />} />
         <Route path="proposals" element={<PrevProposals />} />
+      </Route>
+      <Route path="/admin">
+        <Route path="register" element={<AdminRegister />} />
+        <Route path="login" element={<AdminLogin />} />
+        <Route 
+          path="dashboard" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
       </Route>
     </>
   )
