@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const studentProposalSchema = new mongoose.Schema({
+    proposal_number: { type: Number, required: true },
     proposal_type: { type: String, required: true },
     fiscal_year: { type: String, required: true },
     project_director: {
@@ -27,6 +28,7 @@ const studentProposalSchema = new mongoose.Schema({
         approx_words: { type: Number, required: true }
     },
     total_budget: { type: Number, required: true },
+    reviewer_avg_mark: { type: Number, required: true, default: 0 },
     signatures: {
         project_director: {
             signature: { type: String },
@@ -54,6 +56,7 @@ const studentProposalSchema = new mongoose.Schema({
                 department: { type: String, required: true },
                 address: { type: String, required: true },
                 mark_sheet_url: { type: String },
+                status: { type: Number, default: 0 },
                 total_mark: { type: String, required: true, default: 0 }
             }
         ],
@@ -62,6 +65,32 @@ const studentProposalSchema = new mongoose.Schema({
     status: { type: Number, default: 0 }
 
 }, { timestamps: true });
+
+studentProposalSchema.pre("save", async function (next) {
+    if (!this.isNew) return next(); // Only generate number for new proposals
+
+    try {
+        console.log("hi")
+        const yearParts = this.fiscal_year.split("-");
+        if (yearParts.length !== 2) {
+            throw new Error("Invalid fiscal year format. Expected format: YYYY-YYYY");
+        }
+
+        // Extract last two digits of each year
+        const yearCode = yearParts[0].slice(-2) + yearParts[1].slice(-2);
+
+        // Count existing proposals for the same fiscal year
+        const count = await mongoose.model("StudentProposal").countDocuments({ fiscal_year: this.fiscal_year });
+
+        // Generate proposal number (e.g., 2526001, 2526002, ...)
+        this.proposal_number = parseInt(yearCode + String(count + 1).padStart(3, "0"));
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
 
 studentProposalSchema.methods.generateUpdateToken = function () {
     const token = jwt.sign({ _id: this._id, proposal: "student" }, process.env.SECRET_KEY_STUDENT, { expiresIn: '7d' });

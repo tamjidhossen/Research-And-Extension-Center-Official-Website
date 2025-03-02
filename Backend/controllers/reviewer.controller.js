@@ -48,16 +48,21 @@ const addMark = async (req, res) => {
                 $set: {
                     "reviewer.$.mark_sheet_url": fileUrl,
                     "reviewer.$.total_mark": total_mark,
+                    "reviewer.$.status": 1,
                 }
             },
             { new: true }
         );
-
         if (!proposal) {
             // Delete file if proposal update failed
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
             return res.status(404).json({ success: false, message: "Reviewer not found" });
         }
+        const marks = proposal.reviewer.map(rev => Number(rev.total_mark) || 0);
+        const reviewerAvgMark = marks.length ? (marks.reduce((sum, mark) => sum + mark, 0) / marks.length).toFixed(2) : 0;
+
+        // Update the proposal with the new average mark
+        await ProposalModel.findByIdAndUpdate(id, { reviewer_avg_mark: reviewerAvgMark });
 
         res.status(200).json({
             success: true,
