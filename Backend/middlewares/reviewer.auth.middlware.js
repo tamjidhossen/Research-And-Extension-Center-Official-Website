@@ -23,7 +23,7 @@ module.exports.authReview = async (req, res, next) => {
                 { "reviewer.$": 1 }
             );
         }
-        else if (decoded.proposal_type === "student") {
+        else if (decoded.proposal_type === "teacher") {
             proposal = await TeacherProposal.findOne(
                 { _id: decoded.id, "reviewer.name": decoded.name, "reviewer.email": decoded.email },
                 { "reviewer.$": 1 }
@@ -37,6 +37,8 @@ module.exports.authReview = async (req, res, next) => {
         }
         req.proposal = proposal;
         req.proposal_type = decoded.proposal_type;
+        req.reviewer_name = decoded.name;
+        req.reviewer_email = decoded.email;
         next();
     } catch (err) {
         console.error("Authentication Error:", err);

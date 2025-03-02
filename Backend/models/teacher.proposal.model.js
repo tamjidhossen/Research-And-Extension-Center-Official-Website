@@ -47,6 +47,7 @@ const teacherProposalSchema = new mongoose.Schema(
                 {
                     name: { type: String, required: true },
                     email: { type: String, required: true },
+                    mark_sheet_url: { type: String, required: true },
                     mark: [
                         {
                             part_name: { type: String, required: true },
