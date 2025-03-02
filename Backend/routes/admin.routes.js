@@ -21,5 +21,6 @@ router.get('/research-proposal/', adminMiddileware.authAdmin, adminController.ge
 router.post('/research-proposal/request-reset-password', adminController.requestPasswordReset);
 router.post('/research-proposal/reset-password', adminController.resetPassword);
 router.post('/research-proposal/sent-to-reviewer', adminMiddileware.authAdmin, adminController.sentToReviewer);
+router.post('/research-proposal/fiscal-year/update', adminMiddileware.authAdmin, adminController.updateFiscalYear);
 
 module.exports = router;

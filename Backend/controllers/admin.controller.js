@@ -134,6 +134,36 @@ const resetPassword = async (req, res) => {
     res.status(200).json({ message: "Password reset successful. You can now log in." });
 };
 
+const updateFiscalYear = async (req, res) => {
+    try {
+        const { fiscal_year } = req.body;
+        let proposalDoc = await ProposalDocument.findOne();
+        if (!proposalDoc) {
+            proposalDoc = new ProposalDocument({
+                fiscal_year: "2025-2026",
+                student: {
+                    partA_url: { en: null, bn: null },
+                    partB_url: { en: null, bn: null }
+                },
+                teacher: {
+                    partA_url: { en: null, bn: null },
+                    partB_url: { en: null, bn: null }
+                }
+            });
+        }
+        const updatedDocument = await ProposalDocument.findByIdAndUpdate(
+            proposalDoc._id,
+            { fiscal_year: fiscal_year },
+            { new: true } // Return the updated document
+        );
+        res.status(200).json({ message: "Fiscal Year Updated", updatedDocument });
+    } catch (error) {
+        console.error("Error updating fiscal year:", error);
+        res.status(500).json({ message: error });
+    }
+};
+
+
 const updatedDocument = async (req, res, next) => {
     try {
         let proposalDoc = await ProposalDocument.findOne();
@@ -275,5 +305,5 @@ const sentToReviewer = async (req, res) => {
 
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
-    sentToReviewer
+    sentToReviewer, updateFiscalYear
 };
