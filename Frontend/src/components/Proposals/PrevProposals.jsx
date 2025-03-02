@@ -1,86 +1,100 @@
 import { useState, useEffect } from "react";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
+import {
+  Card,
+  CardContent,
   CardHeader,
   CardTitle,
-  CardFooter 
+  CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Search, 
-  Filter, 
-  BookOpen, 
-  FileText, 
-  CheckCircle, 
-  User, 
+import {
+  Search,
+  Filter,
+  FileText,
+  User,
   GraduationCap,
-  Building,
   CalendarClock,
   Loader2,
   ChevronLeft,
-  ChevronRight 
+  ChevronRight,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { 
+import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger
+  CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
 
 // Mock data - replace with actual API fetch
 const generateMockProjects = () => {
-  const faculties = ["Science", "Arts", "Business", "Engineering", "Social Science"];
+  const faculties = [
+    "Science",
+    "Arts",
+    "Business",
+    "Engineering",
+    "Social Science",
+  ];
   const departments = {
-    "Science": ["Physics", "Chemistry", "Mathematics", "Biology"],
-    "Arts": ["Literature", "History", "Philosophy", "Fine Arts"],
-    "Business": ["Accounting", "Finance", "Marketing", "Management"],
-    "Engineering": ["CSE", "EEE", "Civil Engineering", "Mechanical Engineering"],
-    "Social Science": ["Economics", "Sociology", "Political Science", "Psychology"]
+    Science: ["Physics", "Chemistry", "Mathematics", "Biology"],
+    Arts: ["Literature", "History", "Philosophy", "Fine Arts"],
+    Business: ["Accounting", "Finance", "Marketing", "Management"],
+    Engineering: ["CSE", "EEE", "Civil Engineering", "Mechanical Engineering"],
+    "Social Science": [
+      "Economics",
+      "Sociology",
+      "Political Science",
+      "Psychology",
+    ],
   };
   const fiscalYears = ["2022-2023", "2021-2022", "2020-2021", "2019-2020"];
-  const statuses = ["Completed", "Ongoing", "Published"];
-  
-  return Array(35).fill(0).map((_, i) => {
-    const faculty = faculties[Math.floor(Math.random() * faculties.length)];
-    const department = departments[faculty][Math.floor(Math.random() * departments[faculty].length)];
-    const fiscalYear = fiscalYears[Math.floor(Math.random() * fiscalYears.length)];
-    const isStudent = Math.random() > 0.5;
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
 
-    return {
-      id: `PRJ-${2000 + i}`,
-      title: `Research on ${isStudent ? "Student" : "Faculty"} ${department} Project ${i + 1}`,
-      applicantName: `${isStudent ? "Student" : "Dr."} Name ${i + 1}`,
-      applicantType: isStudent ? "Student" : "Teacher",
-      faculty,
-      department,
-      fiscalYear,
-      submissionDate: new Date(2020 + Math.floor(Math.random() * 4), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString(),
-      status
-    };
-  });
+  return Array(35)
+    .fill(0)
+    .map((_, i) => {
+      const faculty = faculties[Math.floor(Math.random() * faculties.length)];
+      const department =
+        departments[faculty][
+          Math.floor(Math.random() * departments[faculty].length)
+        ];
+      const fiscalYear =
+        fiscalYears[Math.floor(Math.random() * fiscalYears.length)];
+      const isStudent = Math.random() > 0.5;
+
+      return {
+        id: `PRJ-${2000 + i}`,
+        title: `Research on ${
+          isStudent ? "Student" : "Faculty"
+        } ${department} Project ${i + 1}`,
+        applicantName: `${isStudent ? "Student" : "Dr."} Name ${i + 1}`,
+        applicantType: isStudent ? "Student" : "Teacher",
+        faculty,
+        department,
+        fiscalYear,
+        submissionDate: new Date(
+          2020 + Math.floor(Math.random() * 4),
+          Math.floor(Math.random() * 12),
+          Math.floor(Math.random() * 28) + 1
+        ).toISOString(),
+      };
+    });
 };
 
 export default function PrevProposals() {
@@ -90,10 +104,9 @@ export default function PrevProposals() {
   const [filters, setFilters] = useState({
     search: "",
     faculty: "all",
-    department: "all", 
+    department: "all",
     fiscalYear: "all",
     applicantType: "all",
-    status: "all"
   });
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [availableDepartments, setAvailableDepartments] = useState([]);
@@ -105,7 +118,6 @@ export default function PrevProposals() {
     faculties: [],
     departments: {},
     fiscalYears: [],
-    statuses: []
   });
 
   useEffect(() => {
@@ -115,26 +127,34 @@ export default function PrevProposals() {
         setLoading(true);
         // Replace with actual API call
         // const response = await axios.get(`${API_URL}/api/proposals`);
+
+        // When replacing with real API, remove setTimeout and use:
+        // const mockProjects = response.data;
         setTimeout(() => {
           const mockProjects = generateMockProjects();
           setProjects(mockProjects);
-          
+
           // Extract unique filter options
-          const faculties = [...new Set(mockProjects.map(p => p.faculty))];
+          const faculties = [...new Set(mockProjects.map((p) => p.faculty))];
           const departments = {};
-          faculties.forEach(faculty => {
-            departments[faculty] = [...new Set(mockProjects
-              .filter(p => p.faculty === faculty)
-              .map(p => p.department))];
+          faculties.forEach((faculty) => {
+            departments[faculty] = [
+              ...new Set(
+                mockProjects
+                  .filter((p) => p.faculty === faculty)
+                  .map((p) => p.department)
+              ),
+            ];
           });
-          const fiscalYears = [...new Set(mockProjects.map(p => p.fiscalYear))];
-          const statuses = [...new Set(mockProjects.map(p => p.status))];
-          
-          setFilterOptions({ faculties, departments, fiscalYears, statuses });
+          const fiscalYears = [
+            ...new Set(mockProjects.map((p) => p.fiscalYear)),
+          ];
+
+          setFilterOptions({ faculties, departments, fiscalYears });
           setLoading(false);
         }, 1000);
-        
       } catch (err) {
+        console.error("API fetch error:", err);
         setError("Failed to fetch projects. Please try again later.");
         setLoading(false);
       }
@@ -145,42 +165,55 @@ export default function PrevProposals() {
 
   // Update available departments when faculty filter changes
   useEffect(() => {
-    if (filters.faculty && filterOptions.departments[filters.faculty]) {
+    if (
+      filters.faculty !== "all" &&
+      filterOptions.departments[filters.faculty]
+    ) {
       setAvailableDepartments(filterOptions.departments[filters.faculty]);
     } else {
       const allDepartments = [];
-      Object.values(filterOptions.departments).forEach(depts => {
+      Object.values(filterOptions.departments).forEach((depts) => {
         allDepartments.push(...depts);
       });
       setAvailableDepartments([...new Set(allDepartments)]);
     }
-    
+
     // Reset department filter if faculty changes
-    if (filters.faculty && filters.department && !filterOptions.departments[filters.faculty]?.includes(filters.department)) {
-      setFilters(prev => ({ ...prev, department: "" }));
+    if (
+      filters.faculty !== "all" &&
+      filters.department !== "all" &&
+      !filterOptions.departments[filters.faculty]?.includes(filters.department)
+    ) {
+      setFilters((prev) => ({ ...prev, department: "all" }));
     }
   }, [filters.faculty, filterOptions.departments]);
 
   // Filter the projects based on selected filters
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = projects.filter((project) => {
     return (
-      (filters.search === "" || 
-        project.title.toLowerCase().includes(filters.search.toLowerCase()) || 
-        project.applicantName.toLowerCase().includes(filters.search.toLowerCase()) ||
-        project.id.toLowerCase().includes(filters.search.toLowerCase())
-      ) &&
+      (filters.search === "" ||
+        project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+        project.applicantName
+          .toLowerCase()
+          .includes(filters.search.toLowerCase()) ||
+        project.id.toLowerCase().includes(filters.search.toLowerCase())) &&
       (filters.faculty === "all" || project.faculty === filters.faculty) &&
-      (filters.department === "all" || project.department === filters.department) &&
-      (filters.fiscalYear === "all" || project.fiscalYear === filters.fiscalYear) &&
-      (filters.applicantType === "all" || project.applicantType === filters.applicantType) &&
-      (filters.status === "all" || project.status === filters.status)
+      (filters.department === "all" ||
+        project.department === filters.department) &&
+      (filters.fiscalYear === "all" ||
+        project.fiscalYear === filters.fiscalYear) &&
+      (filters.applicantType === "all" ||
+        project.applicantType === filters.applicantType)
     );
   });
 
   // Pagination logic
   const indexOfLastProject = currentPage * projectsPerPage;
   const indexOfFirstProject = indexOfLastProject - projectsPerPage;
-  const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
+  const currentProjects = filteredProjects.slice(
+    indexOfFirstProject,
+    indexOfLastProject
+  );
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
   // Reset to first page when filters change
@@ -189,7 +222,7 @@ export default function PrevProposals() {
   }, [filters]);
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const resetFilters = () => {
@@ -199,7 +232,6 @@ export default function PrevProposals() {
       department: "all",
       fiscalYear: "all",
       applicantType: "all",
-      status: "all"
     });
   };
 
@@ -215,7 +247,9 @@ export default function PrevProposals() {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400 animate-spin mb-4" />
-        <p className="text-emerald-700 dark:text-emerald-300">Loading projects...</p>
+        <p className="text-emerald-700 dark:text-emerald-300">
+          Loading projects...
+        </p>
       </div>
     );
   }
@@ -227,12 +261,18 @@ export default function PrevProposals() {
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-        <Button onClick={() => window.location.reload()} className="mx-auto block">
+        <Button
+          onClick={() => window.location.reload()}
+          className="mx-auto block"
+        >
           Try Again
         </Button>
       </div>
     );
   }
+
+  const noProjectsMatch = !loading && filteredProjects.length === 0;
+  const showPagination = !loading && filteredProjects.length > 0;
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 md:py-12">
@@ -255,7 +295,7 @@ export default function PrevProposals() {
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" />
                 <Input
-                  placeholder="Search by title, applicant, or ID..."
+                  placeholder="Search by title, applicant ..."
                   className="pl-10 bg-white dark:bg-emerald-950/30"
                   value={filters.search}
                   onChange={(e) => handleFilterChange("search", e.target.value)}
@@ -278,64 +318,86 @@ export default function PrevProposals() {
             <CardContent className="pt-2">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">Faculty</label>
+                  <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">
+                    Faculty
+                  </label>
                   <Select
                     value={filters.faculty}
-                    onValueChange={(value) => handleFilterChange("faculty", value)}
+                    onValueChange={(value) =>
+                      handleFilterChange("faculty", value)
+                    }
                   >
                     <SelectTrigger className="bg-white dark:bg-emerald-950/30">
                       <SelectValue placeholder="All Faculties" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Faculties</SelectItem>
-                      {filterOptions.faculties.map(faculty => (
-                        <SelectItem key={faculty} value={faculty}>{faculty}</SelectItem>
+                      {filterOptions.faculties.map((faculty) => (
+                        <SelectItem key={faculty} value={faculty}>
+                          {faculty}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">Department</label>
+                  <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">
+                    Department
+                  </label>
                   <Select
                     value={filters.department}
-                    onValueChange={(value) => handleFilterChange("department", value)}
+                    onValueChange={(value) =>
+                      handleFilterChange("department", value)
+                    }
                   >
                     <SelectTrigger className="bg-white dark:bg-emerald-950/30">
                       <SelectValue placeholder="All Departments" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Departments</SelectItem>
-                      {availableDepartments.map(dept => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      {availableDepartments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">Fiscal Year</label>
+                  <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">
+                    Fiscal Year
+                  </label>
                   <Select
                     value={filters.fiscalYear}
-                    onValueChange={(value) => handleFilterChange("fiscalYear", value)}
+                    onValueChange={(value) =>
+                      handleFilterChange("fiscalYear", value)
+                    }
                   >
                     <SelectTrigger className="bg-white dark:bg-emerald-950/30">
                       <SelectValue placeholder="All Years" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Years</SelectItem>
-                      {filterOptions.fiscalYears.map(year => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      {filterOptions.fiscalYears.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">Applicant Type</label>
+                  <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">
+                    Applicant Type
+                  </label>
                   <Select
                     value={filters.applicantType}
-                    onValueChange={(value) => handleFilterChange("applicantType", value)}
+                    onValueChange={(value) =>
+                      handleFilterChange("applicantType", value)
+                    }
                   >
                     <SelectTrigger className="bg-white dark:bg-emerald-950/30">
                       <SelectValue placeholder="All Types" />
@@ -347,29 +409,11 @@ export default function PrevProposals() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-1 block text-gray-700 dark:text-gray-300">Status</label>
-                  <Select
-                    value={filters.status}
-                    onValueChange={(value) => handleFilterChange("status", value)}
-                  >
-                    <SelectTrigger className="bg-white dark:bg-emerald-950/30">
-                      <SelectValue placeholder="All Statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      {filterOptions.statuses.map(status => (
-                        <SelectItem key={status} value={status}>{status}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
-              
+
               <div className="flex justify-end">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={resetFilters}
                   className="border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
                 >
@@ -382,12 +426,14 @@ export default function PrevProposals() {
         </Collapsible>
 
         <CardContent className="p-0">
-          {filteredProjects.length === 0 ? (
+          {noProjectsMatch ? (
             <div className="py-12 text-center">
               <FileText className="h-12 w-12 text-gray-400 mb-2 mx-auto" />
-              <p className="text-gray-600 dark:text-gray-300">No projects match your filters</p>
-              <Button 
-                variant="link" 
+              <p className="text-gray-600 dark:text-gray-300">
+                No projects match your filters
+              </p>
+              <Button
+                variant="link"
                 onClick={resetFilters}
                 className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 mt-2"
               >
@@ -395,30 +441,29 @@ export default function PrevProposals() {
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto px-8">
               <Table>
                 <TableCaption>
                   Found {filteredProjects.length} research projects
                 </TableCaption>
                 <TableHeader>
                   <TableRow className="bg-emerald-50/50 dark:bg-emerald-900/20">
-                    <TableHead className="w-[15%]">ID</TableHead>
                     <TableHead className="w-[30%]">Title</TableHead>
                     <TableHead className="w-[15%]">Applicant</TableHead>
                     <TableHead className="w-[15%]">Department</TableHead>
                     <TableHead className="w-[15%]">Fiscal Year</TableHead>
-                    <TableHead className="w-[10%]">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {currentProjects.map((project) => (
-                    <TableRow 
+                    <TableRow
                       key={project.id}
                       className="hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-colors"
                     >
-                      <TableCell className="font-medium">{project.id}</TableCell>
                       <TableCell>
-                        <div className="font-medium text-emerald-700 dark:text-emerald-400">{project.title}</div>
+                        <div className="font-medium text-emerald-700 dark:text-emerald-400">
+                          {project.title}
+                        </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           Submitted: {formatDate(project.submissionDate)}
                         </div>
@@ -430,13 +475,19 @@ export default function PrevProposals() {
                           ) : (
                             <User className="h-4 w-4 text-purple-500 dark:text-purple-400" />
                           )}
-                          <span className="text-sm">{project.applicantName}</span>
+                          <span className="text-sm">
+                            {project.applicantName}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium">{project.department}</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{project.faculty}</span>
+                          <span className="text-sm font-medium">
+                            {project.department}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {project.faculty}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -444,16 +495,6 @@ export default function PrevProposals() {
                           <CalendarClock className="h-4 w-4 mr-1 text-gray-500" />
                           <span>{project.fiscalYear}</span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={cn(
-                          "border",
-                          project.status === "Completed" && "border-green-200 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800/50",
-                          project.status === "Ongoing" && "border-amber-200 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50",
-                          project.status === "Published" && "border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800/50"
-                        )}>
-                          {project.status}
-                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -463,16 +504,18 @@ export default function PrevProposals() {
           )}
         </CardContent>
 
-        {filteredProjects.length > 0 && (
+        {showPagination && (
           <CardFooter className="flex justify-between pt-4">
             <div className="text-sm text-gray-600 dark:text-gray-300">
-              Showing {indexOfFirstProject + 1} to {Math.min(indexOfLastProject, filteredProjects.length)} of {filteredProjects.length} entries
+              Showing {indexOfFirstProject + 1} to{" "}
+              {Math.min(indexOfLastProject, filteredProjects.length)} of{" "}
+              {filteredProjects.length} entries
             </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 className="border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
               >
@@ -484,7 +527,9 @@ export default function PrevProposals() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
                 className="border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
               >
