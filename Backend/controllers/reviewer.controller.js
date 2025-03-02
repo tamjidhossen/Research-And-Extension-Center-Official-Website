@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { StudentProposal } = require('../models/student.proposal.model.js');
-const { TeacherProposal } = require('../models/student.proposal.model.js');
+const { TeacherProposal } = require('../models/teacher.proposal.model.js');
 
 const verifyReviewer = async (req, res) => {
     try {
