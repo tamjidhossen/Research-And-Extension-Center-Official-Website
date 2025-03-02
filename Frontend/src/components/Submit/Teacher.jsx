@@ -77,6 +77,8 @@ export default function TeacherSubmission() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [fiscalYear, setFiscalYear] = useState("2025-2026");
+
   // Initialize form
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -201,6 +203,9 @@ export default function TeacherSubmission() {
           <h1 className="text-3xl font-bold text-emerald-800 dark:text-emerald-400 mb-2">
             Teachers Research Proposal
           </h1>
+          <div className="inline-block bg-emerald-100 dark:bg-emerald-800/40 px-3 py-1 rounded-full text-emerald-800 dark:text-emerald-300 text-sm font-medium mb-2">
+            Fiscal Year: {fiscalYear}
+          </div>
           <p className="text-gray-600 dark:text-gray-300">
             Submit your research proposal for review
           </p>

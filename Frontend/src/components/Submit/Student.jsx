@@ -86,6 +86,8 @@ export default function StudentSubmission() {
     partB: null,
   });
 
+  const [fiscalYear, setFiscalYear] = useState("2025-2026");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize form
@@ -220,6 +222,9 @@ export default function StudentSubmission() {
           <h1 className="text-3xl font-bold text-emerald-800 dark:text-emerald-400 mb-2">
             Student Research Proposal
           </h1>
+          <div className="inline-block bg-emerald-100 dark:bg-emerald-800/40 px-3 py-1 rounded-full text-emerald-800 dark:text-emerald-300 text-sm font-medium mb-2">
+            Fiscal Year: {fiscalYear}
+          </div>
           <p className="text-gray-600 dark:text-gray-300">
             Submit your research proposal for review
           </p>
@@ -407,15 +412,9 @@ export default function StudentSubmission() {
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <Tabs defaultValue="personal" className="mb-8">
               <TabsList className="grid grid-cols-3 w-full">
-                <TabsTrigger value="personal">
-                  Applicant Details
-                </TabsTrigger>
-                <TabsTrigger value="academic">
-                  Academic Info
-                </TabsTrigger>
-                <TabsTrigger value="project">
-                  Project Details
-                </TabsTrigger>
+                <TabsTrigger value="personal">Applicant Details</TabsTrigger>
+                <TabsTrigger value="academic">Academic Info</TabsTrigger>
+                <TabsTrigger value="project">Project Details</TabsTrigger>
               </TabsList>
 
               <TabsContent value="personal">
@@ -433,9 +432,7 @@ export default function StudentSubmission() {
                         name="project_director_name_en"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              Applicants Name
-                            </FormLabel>
+                            <FormLabel>Applicants Name</FormLabel>
                             <FormControl>
                               <Input placeholder="Name in English" {...field} />
                             </FormControl>
@@ -494,7 +491,6 @@ export default function StudentSubmission() {
                       <GraduationCap className="h-5 w-5" />
                       Academic Information
                     </CardTitle>
-                   
                   </CardHeader>
                   <CardContent className="pt-6 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -571,9 +567,7 @@ export default function StudentSubmission() {
                       name="cgpa_honours"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>
-                            CGPA (Honours)
-                          </FormLabel>
+                          <FormLabel>CGPA (Honours)</FormLabel>
                           <FormControl>
                             <Input placeholder="e.g. 3.75" {...field} />
                           </FormControl>
@@ -598,9 +592,7 @@ export default function StudentSubmission() {
                         name="supervisor_name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              Supervisor Name
-                            </FormLabel>
+                            <FormLabel>Supervisor Name</FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Supervisor's full name"
@@ -617,9 +609,7 @@ export default function StudentSubmission() {
                         name="supervisor_designation"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              Supervisor Designation
-                            </FormLabel>
+                            <FormLabel>Supervisor Designation</FormLabel>
                             <FormControl>
                               <Input placeholder="e.g. Professor" {...field} />
                             </FormControl>
@@ -647,9 +637,7 @@ export default function StudentSubmission() {
                         name="project_title_bn"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              Project Title (Bangla)
-                            </FormLabel>
+                            <FormLabel>Project Title (Bangla)</FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="বাংলায় প্রকল্পের শিরোনাম"
@@ -666,9 +654,7 @@ export default function StudentSubmission() {
                         name="project_title_en"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              Project Title (English)
-                            </FormLabel>
+                            <FormLabel>Project Title (English)</FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Project title in English"
@@ -694,9 +680,7 @@ export default function StudentSubmission() {
                         name="approx_pages"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              Approximate Pages
-                            </FormLabel>
+                            <FormLabel>Approximate Pages</FormLabel>
                             <FormControl>
                               <Input placeholder="e.g. 50" {...field} />
                             </FormControl>
@@ -710,9 +694,7 @@ export default function StudentSubmission() {
                         name="approx_words"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              Approximate Words
-                            </FormLabel>
+                            <FormLabel>Approximate Words</FormLabel>
                             <FormControl>
                               <Input placeholder="e.g. 15000" {...field} />
                             </FormControl>
@@ -726,9 +708,7 @@ export default function StudentSubmission() {
                         name="total_budget"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              Total Budget (BDT)
-                            </FormLabel>
+                            <FormLabel>Total Budget (BDT)</FormLabel>
                             <FormControl>
                               <Input placeholder="e.g. 150000" {...field} />
                             </FormControl>
@@ -744,13 +724,13 @@ export default function StudentSubmission() {
                       </AlertTitle>
                       <AlertDescription className="text-blue-700 dark:text-blue-400">
                         <p>
-                          Please ensure part A is signed by the
-                          Applicant, Head of the Department, and Faculty Dean before
-                          submission.
+                          Please ensure part A is signed by the Applicant, Head
+                          of the Department, and Faculty Dean before submission.
                         </p>
                         <p className="mt-1">
-                          জমা দেওয়ার পুর্বে আবেদন ফর্ম এর 'ক' অংশে আবেদনকারী, বিভাগীয়
-                          প্রধান এবং ডীনের স্বাক্ষর আছে কিনা তা নিশ্চিত করুন।
+                          জমা দেওয়ার পুর্বে আবেদন ফর্ম এর 'ক' অংশে আবেদনকারী,
+                          বিভাগীয় প্রধান এবং ডীনের স্বাক্ষর আছে কিনা তা নিশ্চিত
+                          করুন।
                         </p>
                       </AlertDescription>
                     </Alert>
