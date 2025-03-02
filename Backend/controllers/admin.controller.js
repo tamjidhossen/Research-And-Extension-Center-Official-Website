@@ -279,7 +279,7 @@ const getProposal = async (req, res) => {
 
 
 const sentToReviewer = async (req, res) => {
-    const { name, email, proposal_id, proposal_type } = req.body;
+    const { name, email, designation, department, address, proposal_id, proposal_type } = req.body;
     console.log(req.body);
     if (!mongoose.Types.ObjectId.isValid(proposal_id)) {
         throw new Error("Invalid Proposal ID format");
@@ -292,10 +292,10 @@ const sentToReviewer = async (req, res) => {
     else if (proposal_type === "student") {
         proposal = await StudentProposal.findById(proposalId);
     }
-    if (!proposal) return res.status(404).json({ success: flase, message: "Proposal not found" });
+    if (!proposal) return res.status(404).json({ success: false, message: "Proposal not found" });
 
     const token = proposal.generateReviewerToken(name, email);
-    proposal.reviewer.push({ name: name, email: email, mark: [] });
+    proposal.reviewer.push({ name: name, email: email, designation: designation, department: department, address: address, mark_sheet_url: "", total_mark: 0 });
     await proposal.save();
     await sendMailToReviewer(email, name, token);
 

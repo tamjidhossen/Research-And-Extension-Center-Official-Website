@@ -50,17 +50,16 @@ const studentProposalSchema = new mongoose.Schema({
             {
                 name: { type: String, required: true },
                 email: { type: String, required: true },
+                designation: { type: String, required: true },
+                department: { type: String, required: true },
+                address: { type: String, required: true },
                 mark_sheet_url: { type: String },
-                mark: [
-                    {
-                        part_name: { type: String, required: true },
-                        part_mark: { type: Number, required: true }
-                    }
-                ]
+                total_mark: { type: String, required: true, default: 0 }
             }
         ],
         default: []
-    }
+    },
+    status: { type: Number, default: 0 }
 
 }, { timestamps: true });
 

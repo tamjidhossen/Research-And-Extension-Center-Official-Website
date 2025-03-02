@@ -24,7 +24,7 @@ const verifyReviewer = async (req, res) => {
 
 const addMark = async (req, res) => {
     try {
-        const { mark } = req.body;
+        const { total_mark } = req.body;
         const { proposal_type, reviewer_name, reviewer_email } = req;
         const id = req.proposal._id;
         if (!req.file) {
@@ -42,22 +42,12 @@ const addMark = async (req, res) => {
         } else {
             return res.status(400).json({ success: false, message: "Invalid proposal type" });
         }
-
-        let parsedMarks;
-        try {
-            parsedMarks = JSON.parse(mark);
-        } catch (error) {
-            // Delete file if parsing marks failed
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-            return res.status(400).json({ success: false, message: "Invalid marks format" });
-        }
-
         const proposal = await ProposalModel.findOneAndUpdate(
             { _id: id, "reviewer.name": reviewer_name, "reviewer.email": reviewer_email },
             {
                 $set: {
                     "reviewer.$.mark_sheet_url": fileUrl,
-                    "reviewer.$.mark": parsedMarks,
+                    "reviewer.$.total_mark": total_mark,
                 }
             },
             { new: true }
@@ -73,7 +63,7 @@ const addMark = async (req, res) => {
             success: true,
             message: "Mark sheet & marks updated successfully",
             fileUrl,
-            mark: parsedMarks
+            mark: total_mark
         });
 
     } catch (error) {
