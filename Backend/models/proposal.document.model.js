@@ -5,23 +5,23 @@ const proposalDocumentSchema = new mongoose.Schema({
 
     student: {
         partA_url: {
-            en: { type: String, required: true },
-            bn: { type: String, required: true }
+            en: { type: String, required: true, default: "" },
+            bn: { type: String, required: true, default: "" }
         },
         partB_url: {
-            en: { type: String, required: true },
-            bn: { type: String, required: true }
+            en: { type: String, required: true, default: "" },
+            bn: { type: String, required: true, default: "" }
         }
     },
 
     teacher: {
         partA_url: {
-            en: { type: String, required: true },
-            bn: { type: String, required: true }
+            en: { type: String, required: true, default: "" },
+            bn: { type: String, required: true, default: "" }
         },
         partB_url: {
-            en: { type: String, required: true },
-            bn: { type: String, required: true }
+            en: { type: String, required: true, default: "" },
+            bn: { type: String, required: true, default: "" }
         }
     }
 
