@@ -106,7 +106,7 @@ export default function ProposalsDashboard() {
         setLoading(true);
         
         // Uncomment to use actual API
-        // const response = await api.get("/api/admin/research-proposal/all");
+        // const response = await api.get("/api/admin/research-proposal");
         // const proposalsData = response.data;
         // setProposals(proposalsData);
         // setFilteredProposals(proposalsData);
@@ -235,16 +235,12 @@ export default function ProposalsDashboard() {
     
     try {
       // Uncomment to use actual API
-      // const response = await api.put(
-      //   `/api/admin/research-proposal/${selectedProposal.id}/assign-reviewer`,
-      //   {
-      //     reviewer_email: reviewerEmail1,
-      //     reviewer_name: reviewerName1,
-      //     reviewer_email2: reviewerEmail2,
-      //     reviewer_name2: reviewerName2,
-      //     message: "Please review this proposal."
-      //   }
-      // );
+      // const response = await api.post("/api/admin/research-proposal/sent-to-reviewer", {
+      //   name: reviewerName1,
+      //   email: reviewerEmail1,
+      //   proposal_id: selectedProposal.id,
+      //   proposal_type: selectedProposal.applicantType
+      // });
       
       // Update the selected proposal with the new reviewers
       const updatedProposal = {

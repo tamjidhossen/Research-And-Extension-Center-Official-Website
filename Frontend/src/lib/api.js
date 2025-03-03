@@ -19,4 +19,18 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("adminData");
+      localStorage.removeItem("dashboardView");
+      window.location.href = "/admin/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarDays, ExternalLink, Loader2, FileText, Download, Bell } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import api from "@/lib/api";
 
 const formatDate = (dateString) => {
   return new Intl.DateTimeFormat("en-US", {
@@ -102,16 +103,16 @@ const Notices = () => {
         setLoading(true);
         
         // Uncomment to use actual API
-        // const response = await api.get("/api/Notice/get-Notice");
-        // setNotices(response.data);
+        const response = await api.get("/api/notice/get-notice");
+        setNotices(response.data);
         
         // DUMMY DATA - Comment out when using actual API
-        const timer = setTimeout(() => {
-          setNotices(dummyNotices);
-          setLoading(false);
-        }, 800);
+        // const timer = setTimeout(() => {
+        //   setNotices(dummyNotices);
+        //   setLoading(false);
+        // }, 800);
         
-        return () => clearTimeout(timer);
+        // return () => clearTimeout(timer);
         
       } catch (err) {
         console.error("Failed to fetch notices:", err);

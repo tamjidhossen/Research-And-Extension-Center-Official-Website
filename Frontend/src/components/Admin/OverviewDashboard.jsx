@@ -5,6 +5,7 @@ import {
   Check,
   AlertCircle,
   Trash2,
+  Loader2,
   CalendarRange,
 } from "lucide-react";
 import {
@@ -22,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogClose,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -31,13 +33,15 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import api from "@/lib/api";
 
 const OverviewDashboard = () => {
   const [registrationOpen, setRegistrationOpen] = useState(false);
-  const [currentYear, setCurrentYear] = useState("2025-2026");
-  const [loading, setLoading] = useState(false);
+  const [currentYear, setCurrentYear] = useState("");
+  const [yearLoading, setYearLoading] = useState(false);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState({});
   const [documents, setDocuments] = useState([
     {
       id: 1,
@@ -105,29 +109,39 @@ const OverviewDashboard = () => {
     },
   ]);
 
+  const docTypeMap = {
+    1: "student_partA_en",
+    2: "student_partA_bn",
+    3: "student_partB_en",
+    4: "student_partB_bn",
+    5: "teacher_partA_en",
+    6: "teacher_partA_bn",
+    7: "teacher_partB_en",
+    8: "teacher_partB_bn",
+  };
+
   // Update guidelines
   const updateGuidelines = async () => {
-    setLoading(true);
-  
+    setYearLoading(true);
+
     try {
       if (!currentYear || currentYear.trim() === "") {
         toast.error("Please enter a valid academic year");
-        setLoading(false);
+        setYearLoading(false);
         return;
       }
-  
-      // Use FormData instead of JSON
-      const formData = new FormData();
-      formData.append("fiscal_year", currentYear);
-  
-      await api.post("/api/admin/research-proposal/upload", formData);
-  
+
+      // Use the correct endpoint with JSON format
+      await api.post("/api/admin/research-proposal/fiscal-year/update", {
+        fiscal_year: currentYear,
+      });
+
       toast.success("Academic year updated successfully");
     } catch (error) {
       console.error("Failed to update year:", error);
       toast.error("Error updating academic year");
     } finally {
-      setLoading(false);
+      setYearLoading(false);
     }
   };
 
@@ -137,15 +151,14 @@ const OverviewDashboard = () => {
       try {
         // Get document information which contains fiscal year
         const response = await api.get("/api/admin/research-proposal");
-        
+
         if (response.data && response.data.proposalDocument) {
           const docData = response.data.proposalDocument;
-          
+
           setCurrentYear(docData.fiscal_year || "");
-          
-          // Determine if registration is open based on fiscal year
-          setRegistrationOpen(!!docData.fiscal_year && docData.fiscal_year.trim() !== "");
-          
+
+          setRegistrationOpen(docData.registration_open === true);
+
           // Map backend document structure to frontend structure
           const mappedDocs = [
             {
@@ -205,7 +218,7 @@ const OverviewDashboard = () => {
               url: docData.teacher?.partB_url?.bn || null,
             },
           ];
-          
+
           setDocuments(mappedDocs);
         }
       } catch (error) {
@@ -213,28 +226,24 @@ const OverviewDashboard = () => {
         toast.error("Error fetching settings");
       }
     };
-  
+
     fetchSettings();
   }, []);
 
   // Toggle registration status
   const toggleRegistration = async () => {
-    setLoading(true);
-  
+    setYearLoading(true);
     try {
       if (!registrationOpen && (!currentYear || currentYear.trim() === "")) {
         toast.error("Please set a fiscal year before opening registration");
-        setLoading(false);
+        setYearLoading(false);
         return;
       }
-  
-      // Use FormData instead of JSON
-      const formData = new FormData();
-      formData.append("fiscal_year", !registrationOpen ? currentYear : "");
-      formData.append("registration_open", !registrationOpen);
-  
-      await api.post("/api/admin/research-proposal/upload", formData);
-  
+
+      await api.post("/api/admin/research-proposal/registration-status", {
+        registration_open: !registrationOpen,
+      });
+
       setRegistrationOpen(!registrationOpen);
       toast.success(
         `Registration ${!registrationOpen ? "opened" : "closed"} successfully`
@@ -243,53 +252,26 @@ const OverviewDashboard = () => {
       console.error("Failed to update registration status:", error);
       toast.error("Error updating registration status");
     } finally {
-      setLoading(false);
+      setYearLoading(false);
     }
   };
 
-  // Handle file upload
-  const handleFileUpload = async (docId, file) => {
-    if (!file) return;
+  const handleUpdateAllDocuments = async () => {
+    if (Object.keys(selectedFiles).length === 0) return;
 
-    // Check file type
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Only PDF and Word documents are allowed");
-      return;
-    }
-
-    // Check file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      toast("File must be less than 5MB");
-      return;
-    }
-
-    const docTypeMap = {
-      1: "student_partA_en",
-      2: "student_partA_bn",
-      3: "student_partB_en",
-      4: "student_partB_bn",
-      5: "teacher_partA_en",
-      6: "teacher_partA_bn",
-      7: "teacher_partB_en",
-      8: "teacher_partB_bn",
-    };
-
-    const fieldName = docTypeMap[docId];
-    if (!fieldName) {
-      toast.error("Invalid document type");
-      return;
-    }
+    setDocsLoading(true);
 
     try {
       const formData = new FormData();
-      formData.append(fieldName, file);
+      // Add all selected files to formData
+      Object.entries(selectedFiles).forEach(([docId, file]) => {
+        const fieldName = docTypeMap[docId];
+        if (fieldName) {
+          formData.append(fieldName, file);
+        }
+      });
 
-      // Uncomment to use actual API
+      // Upload all files at once
       const response = await api.post(
         "/api/admin/research-proposal/upload",
         formData,
@@ -298,66 +280,53 @@ const OverviewDashboard = () => {
         }
       );
 
-      // Update the document in state
-      setDocuments(
-        documents.map((doc) =>
-          doc.id === docId
-            ? { ...doc, uploaded: true, url: response.data.url || null }
-            : doc
-        )
-      );
+      // Update documents state with new URLs
+      const updatedDocs = documents.map((doc) => {
+        if (selectedFiles[doc.id]) {
+          return {
+            ...doc,
+            uploaded: true,
+            url: response.data.urls?.[docTypeMap[doc.id]] || null,
+            selectedFileName: null,
+          };
+        }
+        return doc;
+      });
 
-      toast.success("Document uploaded successfully");
+      setDocuments(updatedDocs);
+      setSelectedFiles({});
+      toast.success("Documents updated successfully");
     } catch (error) {
-      console.error("Failed to upload document:", error);
-      toast.error(error.response?.data?.message || "Error uploading document");
+      console.error("Failed to update documents:", error);
+      toast.error(error.response?.data?.message || "Error updating documents");
+    } finally {
+      setDocsLoading(false);
     }
   };
 
   // Delete document
   const deleteDocument = async (id) => {
     try {
-      setLoading(true);
-      
-      const docTypeMap = {
-        1: "student_partA_en",
-        2: "student_partA_bn",
-        3: "student_partB_en",
-        4: "student_partB_bn",
-        5: "teacher_partA_en",
-        6: "teacher_partA_bn",
-        7: "teacher_partB_en",
-        8: "teacher_partB_bn",
-      };
-      
-      const fieldName = docTypeMap[id];
-      if (!fieldName) {
-        toast.error("Invalid document type");
-        return;
-      }
-      
-      // The backend expects a field with null value to clear it
-      const formData = new FormData();
-      
-      // Include the special "delete" parameter the backend will recognize
-      formData.append(fieldName, "null");
-      
-      await api.post("/api/admin/research-proposal/upload", formData);
-      
+      setDocsLoading(true);
+
+      await api.delete(
+        `/api/admin/research-proposal/document/${docTypeMap[id]}`
+      );
+
       const updatedDocuments = documents.map((doc) => {
         if (doc.id === id) {
           return { ...doc, file: null, uploaded: false, url: null };
         }
         return doc;
       });
-      
+
       setDocuments(updatedDocuments);
       toast.success("Document deleted successfully");
     } catch (error) {
       console.error("Failed to delete document:", error);
       toast.error("Error deleting document");
     } finally {
-      setLoading(false);
+      setDocsLoading(false);
     }
   };
 
@@ -384,7 +353,7 @@ const OverviewDashboard = () => {
               <Switch
                 checked={registrationOpen}
                 onCheckedChange={toggleRegistration}
-                disabled={loading}
+                disabled={yearLoading}
               />
               <span
                 className={
@@ -409,7 +378,12 @@ const OverviewDashboard = () => {
                   onChange={(e) => setCurrentYear(e.target.value)}
                   className="w-40 mt-1"
                 />
-                <Button size="sm" onClick={updateGuidelines} disabled={loading}>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={updateGuidelines}
+                  disabled={yearLoading}
+                >
                   Update
                 </Button>
               </div>
@@ -420,11 +394,29 @@ const OverviewDashboard = () => {
 
       {/* Document Management */}
       <Card>
-        <CardHeader>
-          <CardTitle>Document Templates</CardTitle>
-          <CardDescription>
-            Upload and manage proposal submission document templates
-          </CardDescription>
+        <CardHeader className="flex flex-row justify-between">
+          <div>
+            <CardTitle>Document Templates</CardTitle>
+            <CardDescription>
+              Upload and manage proposal submission document templates
+            </CardDescription>
+          </div>
+          <div className="">
+            <Button
+              type="button"
+              onClick={handleUpdateAllDocuments}
+              disabled={Object.keys(selectedFiles).length === 0 || docsLoading}
+            >
+              {docsLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>Update Document Templates</>
+              )}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <h3 className="text-lg font-medium mb-4">Student Documents</h3>
@@ -456,6 +448,7 @@ const OverviewDashboard = () => {
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button
                         variant="outline"
+                        type="button"
                         size="sm"
                         asChild
                         className="text-blue-600 hover:text-blue-700 border-blue-200"
@@ -468,6 +461,7 @@ const OverviewDashboard = () => {
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
+                            type="button"
                             size="sm"
                             className="text-red-600 hover:text-red-700 border-red-200"
                           >
@@ -484,9 +478,14 @@ const OverviewDashboard = () => {
                             </DialogDescription>
                           </DialogHeader>
                           <DialogFooter>
-                            <Button variant="outline">Cancel</Button>
+                            <DialogClose asChild>
+                              <Button variant="outline" type="button">
+                                Cancel
+                              </Button>
+                            </DialogClose>
                             <Button
                               variant="destructive"
+                              type="button"
                               onClick={() => deleteDocument(doc.id)}
                             >
                               Delete
@@ -505,11 +504,33 @@ const OverviewDashboard = () => {
                           className="text-sm"
                           onChange={(e) => {
                             if (e.target.files && e.target.files[0]) {
-                              handleFileUpload(doc.id, e.target.files[0]);
+                              // Store file in state instead of uploading immediately
+                              setSelectedFiles((prev) => ({
+                                ...prev,
+                                [doc.id]: e.target.files[0],
+                              }));
+
+                              // Update UI to show selected file
+                              setDocuments((docs) =>
+                                docs.map((d) =>
+                                  d.id === doc.id
+                                    ? {
+                                        ...d,
+                                        selectedFileName:
+                                          e.target.files[0].name,
+                                      }
+                                    : d
+                                )
+                              );
                             }
                           }}
                         />
                       </div>
+                      {doc.selectedFileName && (
+                        <div className="mt-2 text-sm text-green-600 dark:text-green-400">
+                          Selected: {doc.selectedFileName}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -547,6 +568,7 @@ const OverviewDashboard = () => {
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button
                         variant="outline"
+                        type="button"
                         size="sm"
                         asChild
                         className="text-blue-600 hover:text-blue-700 border-blue-200"
@@ -559,6 +581,7 @@ const OverviewDashboard = () => {
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
+                            type="button"
                             size="sm"
                             className="text-red-600 hover:text-red-700 border-red-200"
                           >
@@ -575,9 +598,14 @@ const OverviewDashboard = () => {
                             </DialogDescription>
                           </DialogHeader>
                           <DialogFooter>
-                            <Button variant="outline">Cancel</Button>
+                            <DialogClose asChild>
+                              <Button variant="outline" type="button">
+                                Cancel
+                              </Button>
+                            </DialogClose>
                             <Button
                               variant="destructive"
+                              type="button"
                               onClick={() => deleteDocument(doc.id)}
                             >
                               Delete
@@ -602,11 +630,33 @@ const OverviewDashboard = () => {
                           className="text-sm"
                           onChange={(e) => {
                             if (e.target.files && e.target.files[0]) {
-                              handleFileUpload(doc.id, e.target.files[0]);
+                              // Store file in state instead of uploading immediately
+                              setSelectedFiles((prev) => ({
+                                ...prev,
+                                [doc.id]: e.target.files[0],
+                              }));
+
+                              // Update UI to show selected file
+                              setDocuments((docs) =>
+                                docs.map((d) =>
+                                  d.id === doc.id
+                                    ? {
+                                        ...d,
+                                        selectedFileName:
+                                          e.target.files[0].name,
+                                      }
+                                    : d
+                                )
+                              );
                             }
                           }}
                         />
                       </div>
+                      {doc.selectedFileName && (
+                        <div className="mt-2 text-sm text-green-600 dark:text-green-400">
+                          Selected: {doc.selectedFileName}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -614,6 +664,7 @@ const OverviewDashboard = () => {
           </div>
         </CardContent>
       </Card>
+      <Toaster />
     </div>
   );
 };

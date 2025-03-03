@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { API_URL } from "@/lib/authConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,7 +40,7 @@ export default function NoticesDashboard() {
   const fetchNotices = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get("/api/Notice/get-Notice");
+      const response = await api.get("/api/notice/get-notice");
       
       const sortedNotices = response.data.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -69,7 +68,7 @@ export default function NoticesDashboard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post("/api/Notice/add", formData);
+      const response = await api.post("/api/notice/add", formData);
 
       // Create a new Notice object with the correct structure
       const newNotice = {
@@ -98,7 +97,7 @@ export default function NoticesDashboard() {
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/api/Notice/${id}`);
+      await api.delete(`/api/notice/${id}`);
       
       // Remove the deleted notice from state
       setNotices(notices.filter(notice => notice._id !== id));
