@@ -67,8 +67,9 @@ const formSchema = z.object({
     .min(1, "Supervisor designation is required"),
 
   // Project Details
-  project_title_bn: z.string().min(1, "Project title in Bengali is required"),
-  project_title_en: z.string().min(1, "Project title in English is required"),
+  // project_title_bn: z.string().min(1, "Project title in Bengali is required"),
+  // project_title_en: z.string().min(1, "Project title in English is required"),
+  project_title: z.string().min(1, "Project title required"),
   approx_pages: z.string().refine((val) => !isNaN(parseInt(val)), {
     message: "Must be a valid number",
   }),
@@ -109,8 +110,9 @@ export default function StudentSubmission() {
       cgpa_honours: "",
       supervisor_name: "",
       supervisor_designation: "",
-      project_title_bn: "",
-      project_title_en: "",
+      // project_title_bn: "",
+      // project_title_en: "",
+      project_title: "",
       approx_pages: "",
       approx_words: "",
       total_budget: "",
@@ -139,8 +141,9 @@ export default function StudentSubmission() {
     ];
 
     const projectFields = [
-      "project_title_bn",
-      "project_title_en",
+      // "project_title_bn",
+      // "project_title_en",
+      "project_title",
       "approx_pages",
       "approx_words",
       "total_budget",
@@ -208,7 +211,7 @@ export default function StudentSubmission() {
   };
 
   const onSubmit = async (data) => {
-    console.log("eihne");
+    // console.log("eihne");
     if (!files.partA || !files.partB) {
       toast({
         title: "Missing files",
@@ -249,11 +252,11 @@ export default function StudentSubmission() {
       })
     );
     formData.append(
-      "project_title",
-      JSON.stringify({
-        title_bn: data.project_title_bn,
-        title_en: data.project_title_en,
-      })
+      "project_title", data.project_title
+      // JSON.stringify({
+      //   title_bn: data.project_title_bn,
+      //   title_en: data.project_title_en,
+      // })
     );
     formData.append(
       "project_details",
@@ -755,13 +758,13 @@ export default function StudentSubmission() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
-                          name="project_title_bn"
+                          name="project_title"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Project Title (Bangla)</FormLabel>
+                              <FormLabel>Project Title (Bangla/ English)</FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="বাংলায় প্রকল্পের শিরোনাম"
+                                  placeholder="Project name in Bangla or English"
                                   {...field}
                                 />
                               </FormControl>
@@ -770,7 +773,7 @@ export default function StudentSubmission() {
                           )}
                         />
 
-                        <FormField
+                        {/* <FormField
                           control={form.control}
                           name="project_title_en"
                           render={({ field }) => (
@@ -785,7 +788,7 @@ export default function StudentSubmission() {
                               <FormMessage />
                             </FormItem>
                           )}
-                        />
+                        /> */}
                       </div>
 
                       <Separator className="my-4" />

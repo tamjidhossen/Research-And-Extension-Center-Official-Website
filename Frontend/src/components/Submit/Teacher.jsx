@@ -43,8 +43,7 @@ import api from "@/lib/api";
 // Form validation schema
 const formSchema = z.object({
   // Project Director
-  project_director_name_bn: z.string().min(1, "Name in Bengali is required"),
-  project_director_name_en: z.string().min(1, "Name in English is required"),
+  project_director_name_en: z.string().min(1, "Name is required"),
   project_director_mobile: z
     .string()
     .min(11, "Valid mobile number is required"),
@@ -56,8 +55,7 @@ const formSchema = z.object({
   faculty: z.string().min(1, "Faculty is required"),
 
   // Project Details
-  project_title_bn: z.string().min(1, "Project title in Bengali is required"),
-  project_title_en: z.string().min(1, "Project title in English is required"),
+  project_title: z.string().min(1, "Project title required"),
   research_location: z.string().min(1, "Research location is required"),
   approx_pages: z.string().refine((val) => !isNaN(parseInt(val)), {
     message: "Must be a valid number",
@@ -84,15 +82,13 @@ export default function TeacherSubmission() {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      project_director_name_bn: "",
       project_director_name_en: "",
       project_director_mobile: "",
       project_director_email: "",
       designation: "",
       department: "",
       faculty: "",
-      project_title_bn: "",
-      project_title_en: "",
+      project_title: "",
       research_location: "",
       approx_pages: "",
       approx_words: "",
@@ -157,7 +153,6 @@ export default function TeacherSubmission() {
     
     // Add form data as JSON
     formData.append("project_director", JSON.stringify({
-      name_bn: data.project_director_name_bn,
       name_en: data.project_director_name_en,
       mobile: data.project_director_mobile,
       email: data.project_director_email,
@@ -165,10 +160,7 @@ export default function TeacherSubmission() {
     formData.append("designation", data.designation);
     formData.append("department", data.department);
     formData.append("faculty", data.faculty);
-    formData.append("project_title", JSON.stringify({
-      title_bn: data.project_title_bn,
-      title_en: data.project_title_en,
-    }));
+    formData.append("project_title", data.project_title);
     formData.append("research_location", data.research_location);
     formData.append("project_details", JSON.stringify({
       approx_pages: parseInt(data.approx_pages),
@@ -544,30 +536,13 @@ export default function TeacherSubmission() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="project_title_bn"
+                        name="project_title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Project Title (Bangla)</FormLabel>
+                            <FormLabel>Project Title (Bangla/ English)</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="বাংলায় প্রকল্পের শিরোনাম"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="project_title_en"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Project Title (English)</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Project title in English"
+                                placeholder="Project title in Bangla or English"
                                 {...field}
                               />
                             </FormControl>
