@@ -3,6 +3,8 @@ const router = express.Router();
 const adminController = require('../controllers/admin.controller.js');
 const upload = require('../middlewares/uploadDocument.js');
 const adminMiddileware = require('../middlewares/admin.auth.middleware.js')
+
+
 router.post('/register', adminMiddileware.authAdmin, adminController.registerAdmin);
 router.post('/login', adminController.loginAdmin);
 router.post('/research-proposal/upload', upload.fields([
@@ -23,15 +25,10 @@ router.post('/research-proposal/reset-password', adminController.resetPassword);
 router.post('/research-proposal/sent-to-reviewer', adminMiddileware.authAdmin, adminController.sentToReviewer);
 router.post('/research-proposal/fiscal-year/update', adminMiddileware.authAdmin, adminController.updateFiscalYear);
 router.post('/reviewer/add', adminMiddileware.authAdmin, adminController.addReviewer);
-// ✅ Update an existing reviewer
 router.put("/reviewer/update/:id", adminMiddileware.authAdmin, adminController.updateReviewer);
-
-// ✅ Delete a reviewer
 router.delete("/reviewer/delete/:id", adminMiddileware.authAdmin, adminController.deleteReviewer);
-
-// ✅ Get a single reviewer by ID
 router.get("/reviewer/:id", adminMiddileware.authAdmin, adminController.getReviewerById);
-
-// ✅ Get all reviewers
 router.get("/", adminMiddileware.authAdmin, adminController.getAllReviewers);
+router.get('/research-proposal/overviews', adminMiddileware.authAdmin, adminController.getProposalOverviews);
+
 module.exports = router;

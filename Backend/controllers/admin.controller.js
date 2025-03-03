@@ -95,6 +95,16 @@ const loginAdmin = async (req, res) => {
     }
 };
 
+const getProposalOverviews = async (req, res) => {
+    try {
+        const proposalDoc = await ProposalDocument.findOne();
+        res.status(200).json({ proposalDoc });
+    } catch (error) {
+        console.error("Error fetching proposal settings:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
 const requestPasswordReset = async (req, res) => {
     const { email } = req.body;
 
@@ -431,5 +441,5 @@ const getAllReviewers = async (req, res) => {
 
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
-    sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers
+    sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers, getProposalOverviews
 };
