@@ -1,23 +1,13 @@
 import { useState, useEffect } from "react";
-import {
-  Upload,
-  FileText,
-  Check,
-  AlertCircle,
-  Trash2,
-  Loader2,
-  CalendarRange,
-} from "lucide-react";
+import { FileText, Trash2, Loader2, CalendarRange } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -37,241 +27,247 @@ import { toast, Toaster } from "sonner";
 import api from "@/lib/api";
 
 const OverviewDashboard = () => {
+  // State for managing registration status
   const [registrationOpen, setRegistrationOpen] = useState(false);
-  const [currentYear, setCurrentYear] = useState("");
   const [yearLoading, setYearLoading] = useState(false);
   const [docsLoading, setDocsLoading] = useState(false);
+  const [currentYear, setCurrentYear] = useState("2025-2026");
   const [selectedFiles, setSelectedFiles] = useState({});
+  const [openDialogId, setOpenDialogId] = useState(null);
   const [documents, setDocuments] = useState([
+    // Student documents
     {
-      id: 1,
-      name: "Student Part A - Application Form (English)",
+      id: "student_partA_en",
+      name: "Student Part A (English)",
       category: "student",
-      file: null,
       uploaded: false,
       url: null,
+      selectedFileName: null,
     },
     {
-      id: 2,
-      name: "Student Part A - Application Form (বাংলা)",
+      id: "student_partA_bn",
+      name: "Student Part A (Bengali)",
       category: "student",
-      file: null,
       uploaded: false,
       url: null,
+      selectedFileName: null,
     },
     {
-      id: 3,
-      name: "Student Part B - Proposal Template (English)",
+      id: "student_partB_en",
+      name: "Student Part B (English)",
       category: "student",
-      file: null,
       uploaded: false,
       url: null,
+      selectedFileName: null,
     },
     {
-      id: 4,
-      name: "Student Part B - Proposal Template (বাংলা)",
+      id: "student_partB_bn",
+      name: "Student Part B (Bengali)",
       category: "student",
-      file: null,
       uploaded: false,
       url: null,
+      selectedFileName: null,
+    },
+    // Teacher documents
+    {
+      id: "teacher_partA_en",
+      name: "Teacher Part A (English)",
+      category: "teacher",
+      uploaded: false,
+      url: null,
+      selectedFileName: null,
     },
     {
-      id: 5,
-      name: "Teacher Part A - Application Form (English)",
+      id: "teacher_partA_bn",
+      name: "Teacher Part A (Bengali)",
       category: "teacher",
-      file: null,
       uploaded: false,
       url: null,
+      selectedFileName: null,
     },
     {
-      id: 6,
-      name: "Teacher Part A - Application Form (বাংলা)",
+      id: "teacher_partB_en",
+      name: "Teacher Part B (English)",
       category: "teacher",
-      file: null,
       uploaded: false,
       url: null,
+      selectedFileName: null,
     },
     {
-      id: 7,
-      name: "Teacher Part B - Proposal Template (English)",
+      id: "teacher_partB_bn",
+      name: "Teacher Part B (Bengali)",
       category: "teacher",
-      file: null,
       uploaded: false,
       url: null,
-    },
-    {
-      id: 8,
-      name: "Teacher Part B - Proposal Template (বাংলা)",
-      category: "teacher",
-      file: null,
-      uploaded: false,
-      url: null,
+      selectedFileName: null,
     },
   ]);
 
-  const docTypeMap = {
-    1: "student_partA_en",
-    2: "student_partA_bn",
-    3: "student_partB_en",
-    4: "student_partB_bn",
-    5: "teacher_partA_en",
-    6: "teacher_partA_bn",
-    7: "teacher_partB_en",
-    8: "teacher_partB_bn",
+  const noFilesUploaded = documents.every((doc) => !doc.uploaded);
+  const allUnuploadedFilesSelected = noFilesUploaded
+    ? documents.length === Object.keys(selectedFiles).length
+    : true;
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  // Fetch documents and setup state
+  const fetchDocuments = async () => {
+    try {
+      // Use the new getProposalOverviews endpoint
+      const response = await api.get("/api/admin/research-proposal/overviews");
+
+      if (response.data && response.data.proposalDoc) {
+        const {
+          fiscal_year,
+          registrationOpen: isOpen,
+          student,
+          teacher,
+        } = response.data.proposalDoc;
+
+        // Update current year
+        setCurrentYear(fiscal_year || "2025-2026");
+
+        // Update registration status based on the registrationOpen field
+        setRegistrationOpen(isOpen);
+
+        // Get base URL from environment variable
+        const baseUrl = import.meta.env.VITE_API_URL;
+
+        // Update document statuses
+        setDocuments((prev) =>
+          prev.map((doc) => {
+            let url = null;
+            let docPath = null;
+
+            // Set URL based on document type
+            if (doc.category === "student") {
+              if (doc.id === "student_partA_en")
+                docPath = student?.partA_url?.en;
+              else if (doc.id === "student_partA_bn")
+                docPath = student?.partA_url?.bn;
+              else if (doc.id === "student_partB_en")
+                docPath = student?.partB_url?.en;
+              else if (doc.id === "student_partB_bn")
+                docPath = student?.partB_url?.bn;
+            } else if (doc.category === "teacher") {
+              if (doc.id === "teacher_partA_en")
+                docPath = teacher?.partA_url?.en;
+              else if (doc.id === "teacher_partA_bn")
+                docPath = teacher?.partA_url?.bn;
+              else if (doc.id === "teacher_partB_en")
+                docPath = teacher?.partB_url?.en;
+              else if (doc.id === "teacher_partB_bn")
+                docPath = teacher?.partB_url?.bn;
+            }
+
+            // Convert relative path to full URL if a path exists
+            if (docPath) {
+              // Remove any 'uploads/' prefix as it's already configured in Express
+              const normalizedPath = docPath.startsWith("uploads/")
+                ? docPath
+                : `uploads/${docPath}`;
+
+              const serverRoot = baseUrl.replace(/\/v1$/, "");
+              url = `${serverRoot}/${normalizedPath}`;
+            }
+
+            return {
+              ...doc,
+              url,
+              uploaded: !!docPath,
+            };
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Failed to fetch documents:", error);
+      toast.error("Failed to fetch documents");
+    }
   };
 
-  // Update guidelines
-  const updateGuidelines = async () => {
-    setYearLoading(true);
-
-    try {
-      if (!currentYear || currentYear.trim() === "") {
-        toast.error("Please enter a valid academic year");
-        setYearLoading(false);
+  // Toggle registration status
+  const toggleRegistration = async (value) => {
+    // Check if all documents are uploaded before allowing registration to be opened
+    if (value) {
+      const allDocsUploaded = documents.every((doc) => doc.uploaded);
+      if (!allDocsUploaded) {
+        toast.error("All document templates must be uploaded first");
         return;
       }
+    }
 
-      // Use the correct endpoint with JSON format
+    setYearLoading(true);
+    try {
+      // Since backend uses registrationOpen field, update it
+      await api.post("/api/admin/research-proposal/fiscal-year/update", {
+        fiscal_year: currentYear,
+        registrationOpen: value,
+      });
+
+      setRegistrationOpen(value);
+      toast.success(value ? "Submissions opened" : "Submissions closed");
+    } catch (error) {
+      console.error("Failed to toggle registration:", error);
+      toast.error("Failed to update submission status");
+    } finally {
+      setYearLoading(false);
+    }
+  };
+
+  // Update fiscal year
+  const updateGuidelines = async () => {
+    if (!currentYear) {
+      toast.error("Please enter a valid fiscal year");
+      return;
+    }
+
+    // Check if all documents are uploaded
+    const allDocsUploaded = documents.every((doc) => doc.uploaded);
+    if (!allDocsUploaded) {
+      toast.error("All document templates must be uploaded first");
+      return;
+    }
+
+    setYearLoading(true);
+    try {
       await api.post("/api/admin/research-proposal/fiscal-year/update", {
         fiscal_year: currentYear,
       });
 
-      toast.success("Academic year updated successfully");
+      toast.success("Fiscal year updated successfully");
     } catch (error) {
-      console.error("Failed to update year:", error);
-      toast.error("Error updating academic year");
+      console.error("Failed to update fiscal year:", error);
+      toast.error("Failed to update fiscal year");
     } finally {
       setYearLoading(false);
     }
   };
 
-  // Fetch settings
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        // Get document information which contains fiscal year
-        const response = await api.get("/api/admin/research-proposal");
-
-        if (response.data && response.data.proposalDocument) {
-          const docData = response.data.proposalDocument;
-
-          setCurrentYear(docData.fiscal_year || "");
-
-          setRegistrationOpen(docData.registration_open === true);
-
-          // Map backend document structure to frontend structure
-          const mappedDocs = [
-            {
-              id: 1,
-              name: "Student Part A - Application Form (English)",
-              category: "student",
-              uploaded: !!docData.student?.partA_url?.en,
-              url: docData.student?.partA_url?.en || null,
-            },
-            {
-              id: 2,
-              name: "Student Part A - Application Form (বাংলা)",
-              category: "student",
-              uploaded: !!docData.student?.partA_url?.bn,
-              url: docData.student?.partA_url?.bn || null,
-            },
-            {
-              id: 3,
-              name: "Student Part B - Proposal Template (English)",
-              category: "student",
-              uploaded: !!docData.student?.partB_url?.en,
-              url: docData.student?.partB_url?.en || null,
-            },
-            {
-              id: 4,
-              name: "Student Part B - Proposal Template (বাংলা)",
-              category: "student",
-              uploaded: !!docData.student?.partB_url?.bn,
-              url: docData.student?.partB_url?.bn || null,
-            },
-            {
-              id: 5,
-              name: "Teacher Part A - Application Form (English)",
-              category: "teacher",
-              uploaded: !!docData.teacher?.partA_url?.en,
-              url: docData.teacher?.partA_url?.en || null,
-            },
-            {
-              id: 6,
-              name: "Teacher Part A - Application Form (বাংলা)",
-              category: "teacher",
-              uploaded: !!docData.teacher?.partA_url?.bn,
-              url: docData.teacher?.partA_url?.bn || null,
-            },
-            {
-              id: 7,
-              name: "Teacher Part B - Proposal Template (English)",
-              category: "teacher",
-              uploaded: !!docData.teacher?.partB_url?.en,
-              url: docData.teacher?.partB_url?.en || null,
-            },
-            {
-              id: 8,
-              name: "Teacher Part B - Proposal Template (বাংলা)",
-              category: "teacher",
-              uploaded: !!docData.teacher?.partB_url?.bn,
-              url: docData.teacher?.partB_url?.bn || null,
-            },
-          ];
-
-          setDocuments(mappedDocs);
-        }
-      } catch (error) {
-        console.error("Failed to fetch settings:", error);
-        toast.error("Error fetching settings");
-      }
-    };
-
-    fetchSettings();
-  }, []);
-
-  // Toggle registration status
-  const toggleRegistration = async () => {
-    setYearLoading(true);
-    try {
-      if (!registrationOpen && (!currentYear || currentYear.trim() === "")) {
-        toast.error("Please set a fiscal year before opening registration");
-        setYearLoading(false);
-        return;
-      }
-
-      await api.post("/api/admin/research-proposal/registration-status", {
-        registration_open: !registrationOpen,
-      });
-
-      setRegistrationOpen(!registrationOpen);
-      toast.success(
-        `Registration ${!registrationOpen ? "opened" : "closed"} successfully`
-      );
-    } catch (error) {
-      console.error("Failed to update registration status:", error);
-      toast.error("Error updating registration status");
-    } finally {
-      setYearLoading(false);
-    }
-  };
-
+  // Update all documents
   const handleUpdateAllDocuments = async () => {
-    if (Object.keys(selectedFiles).length === 0) return;
+    // Check if any files are selected
+    if (Object.keys(selectedFiles).length === 0) {
+      toast.error("Please select at least one file to upload");
+      return;
+    }
 
     setDocsLoading(true);
+    const formData = new FormData();
+
+    // Append each selected file to the form data
+    Object.keys(selectedFiles).forEach((id) => {
+      formData.append(id, selectedFiles[id]);
+    });
+
+    // Add fiscal year if it exists
+    if (currentYear) {
+      formData.append("fiscal_year", currentYear);
+    }
 
     try {
-      const formData = new FormData();
-      // Add all selected files to formData
-      Object.entries(selectedFiles).forEach(([docId, file]) => {
-        const fieldName = docTypeMap[docId];
-        if (fieldName) {
-          formData.append(fieldName, file);
-        }
-      });
-
-      // Upload all files at once
       const response = await api.post(
         "/api/admin/research-proposal/upload",
         formData,
@@ -280,58 +276,140 @@ const OverviewDashboard = () => {
         }
       );
 
-      // Update documents state with new URLs
-      const updatedDocs = documents.map((doc) => {
-        if (selectedFiles[doc.id]) {
-          return {
-            ...doc,
-            uploaded: true,
-            url: response.data.urls?.[docTypeMap[doc.id]] || null,
-            selectedFileName: null,
-          };
-        }
-        return doc;
-      });
+      if (response.data && response.data.updatedDocument) {
+        // Update the documents state with new information
+        updateDocumentsFromResponse(response.data.updatedDocument);
 
-      setDocuments(updatedDocs);
-      setSelectedFiles({});
-      toast.success("Documents updated successfully");
+        // Clear selected files
+        setSelectedFiles({});
+        toast.success("Documents updated successfully");
+      }
     } catch (error) {
-      console.error("Failed to update documents:", error);
-      toast.error(error.response?.data?.message || "Error updating documents");
+      console.error("Failed to upload documents:", error);
+      toast.error("Failed to upload documents");
     } finally {
       setDocsLoading(false);
     }
   };
 
-  // Delete document
-  const deleteDocument = async (id) => {
-    try {
-      setDocsLoading(true);
+  const updateDocument = async (docId) => {
+    if (!selectedFiles[docId]) {
+      toast.error("Please select a file to update");
+      return;
+    }
 
-      await api.delete(
-        `/api/admin/research-proposal/document/${docTypeMap[id]}`
+    setDocsLoading(true);
+    const formData = new FormData();
+
+    // Add the selected file to the form data
+    formData.append(docId, selectedFiles[docId]);
+
+    // Add fiscal year to the request
+    formData.append("fiscal_year", currentYear);
+
+    try {
+      const response = await api.post(
+        "/api/admin/research-proposal/upload",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
 
-      const updatedDocuments = documents.map((doc) => {
-        if (doc.id === id) {
-          return { ...doc, file: null, uploaded: false, url: null };
-        }
-        return doc;
-      });
+      if (response.data && response.data.updatedDocument) {
+        // Update the documents state with new information
+        updateDocumentsFromResponse(response.data.updatedDocument);
 
-      setDocuments(updatedDocuments);
-      toast.success("Document deleted successfully");
+        // Clear just this one file from selectedFiles
+        setSelectedFiles((prev) => {
+          const updated = { ...prev };
+          delete updated[docId];
+          return updated;
+        });
+
+        setOpenDialogId(null);
+
+        toast.success("Document updated successfully");
+      }
     } catch (error) {
-      console.error("Failed to delete document:", error);
-      toast.error("Error deleting document");
+      console.error("Failed to update document:", error);
+      toast.error("Failed to update document");
     } finally {
       setDocsLoading(false);
     }
   };
+
+  // Helper to update documents state from API response
+  const updateDocumentsFromResponse = (documentData) => {
+    const {
+      fiscal_year,
+      registrationOpen: isOpen,
+      student,
+      teacher,
+    } = documentData;
+
+    // Get base URL from environment variable
+    const baseUrl = import.meta.env.VITE_API_URL;
+
+    // Update current year if it changed
+    if (fiscal_year) setCurrentYear(fiscal_year);
+
+    // Update registration status
+    if (isOpen !== undefined) setRegistrationOpen(isOpen);
+
+    // Update document statuses
+    setDocuments((prev) =>
+      prev.map((doc) => {
+        let url = null;
+        let docPath = null;
+
+        // Set URL based on document type
+        if (doc.category === "student") {
+          if (doc.id === "student_partA_en") docPath = student?.partA_url?.en;
+          else if (doc.id === "student_partA_bn")
+            docPath = student?.partA_url?.bn;
+          else if (doc.id === "student_partB_en")
+            docPath = student?.partB_url?.en;
+          else if (doc.id === "student_partB_bn")
+            docPath = student?.partB_url?.bn;
+        } else if (doc.category === "teacher") {
+          if (doc.id === "teacher_partA_en") docPath = teacher?.partA_url?.en;
+          else if (doc.id === "teacher_partA_bn")
+            docPath = teacher?.partA_url?.bn;
+          else if (doc.id === "teacher_partB_en")
+            docPath = teacher?.partB_url?.en;
+          else if (doc.id === "teacher_partB_bn")
+            docPath = teacher?.partB_url?.bn;
+        }
+
+        // Convert relative path to full URL if a path exists
+        if (docPath) {
+          // Remove any 'uploads/' prefix as it's already configured in Express
+          const normalizedPath = docPath.startsWith("uploads/")
+            ? docPath
+            : `uploads/${docPath}`;
+
+          // Create full URL with server root (without /v1)
+          const serverRoot = baseUrl.replace(/\/v1$/, "");
+          url = `${serverRoot}/${normalizedPath}`;
+        }
+
+        return {
+          ...doc,
+          url,
+          uploaded: !!docPath,
+          selectedFileName: null, // Clear selected file name on successful upload
+        };
+      })
+    );
+  };
+
+  // Check if all documents are uploaded
+  const allDocsUploaded = documents.every((doc) => doc.uploaded);
 
   return (
     <div className="space-y-6">
+      {/* Title Section */}
       <div>
         <h2 className="text-2xl font-bold mb-4">Proposal Management</h2>
         <p className="text-muted-foreground">
@@ -353,7 +431,7 @@ const OverviewDashboard = () => {
               <Switch
                 checked={registrationOpen}
                 onCheckedChange={toggleRegistration}
-                disabled={yearLoading}
+                disabled={yearLoading || !allDocsUploaded}
               />
               <span
                 className={
@@ -382,7 +460,7 @@ const OverviewDashboard = () => {
                   type="button"
                   size="sm"
                   onClick={updateGuidelines}
-                  disabled={yearLoading}
+                  disabled={yearLoading || !allDocsUploaded}
                 >
                   Update
                 </Button>
@@ -401,11 +479,15 @@ const OverviewDashboard = () => {
               Upload and manage proposal submission document templates
             </CardDescription>
           </div>
-          <div className="">
+          <div>
             <Button
               type="button"
               onClick={handleUpdateAllDocuments}
-              disabled={Object.keys(selectedFiles).length === 0 || docsLoading}
+              disabled={
+                Object.keys(selectedFiles).length === 0 ||
+                docsLoading ||
+                (noFilesUploaded && !allUnuploadedFilesSelected)
+              }
             >
               {docsLoading ? (
                 <>
@@ -413,7 +495,13 @@ const OverviewDashboard = () => {
                   Updating...
                 </>
               ) : (
-                <>Update Document Templates</>
+                <>
+                  {noFilesUploaded
+                    ? `Select All Documents (${
+                        Object.keys(selectedFiles).length
+                      }/${documents.length})`
+                    : "Update Document Templates"}
+                </>
               )}
             </Button>
           </div>
@@ -428,7 +516,6 @@ const OverviewDashboard = () => {
                   key={doc.id}
                   className="border rounded-md p-4 bg-white dark:bg-emerald-950/30"
                 >
-                  {/* Document item content - same as your existing code */}
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
                       <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -457,26 +544,61 @@ const OverviewDashboard = () => {
                           View Document
                         </a>
                       </Button>
-                      <Dialog>
+                      <Dialog
+                        open={openDialogId === doc.id}
+                        onOpenChange={(open) =>
+                          setOpenDialogId(open ? doc.id : null)
+                        }
+                      >
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
                             type="button"
                             size="sm"
-                            className="text-red-600 hover:text-red-700 border-red-200"
+                            className="text-amber-600 hover:text-amber-700 border-amber-200"
                           >
-                            <Trash2 className="h-3.5 w-3.5 mr-1" />
-                            Delete
+                            <FileText className="h-3.5 w-3.5 mr-1" />
+                            Update
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Delete Document</DialogTitle>
+                            <DialogTitle>Update Document</DialogTitle>
                             <DialogDescription>
-                              Are you sure you want to delete this document?
-                              This will make it unavailable to applicants.
+                              Select a new file to replace the current document.
                             </DialogDescription>
                           </DialogHeader>
+                          <div className="py-4">
+                            <Label htmlFor={`update-file-${doc.id}`}>
+                              New document file (PDF, DOC, or DOCX)
+                            </Label>
+                            <Input
+                              id={`update-file-${doc.id}`}
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              className="mt-2"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  setSelectedFiles((prev) => ({
+                                    ...prev,
+                                    [doc.id]: e.target.files[0],
+                                  }));
+
+                                  setDocuments((docs) =>
+                                    docs.map((d) =>
+                                      d.id === doc.id
+                                        ? {
+                                            ...d,
+                                            selectedFileName:
+                                              e.target.files[0].name,
+                                          }
+                                        : d
+                                    )
+                                  );
+                                }
+                              }}
+                            />
+                          </div>
                           <DialogFooter>
                             <DialogClose asChild>
                               <Button variant="outline" type="button">
@@ -484,11 +606,16 @@ const OverviewDashboard = () => {
                               </Button>
                             </DialogClose>
                             <Button
-                              variant="destructive"
                               type="button"
-                              onClick={() => deleteDocument(doc.id)}
+                              onClick={() => {
+                                if (selectedFiles[doc.id]) {
+                                  updateDocument(doc.id);
+                                } else {
+                                  toast.error("Please select a file to update");
+                                }
+                              }}
                             >
-                              Delete
+                              Update Document
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -504,13 +631,11 @@ const OverviewDashboard = () => {
                           className="text-sm"
                           onChange={(e) => {
                             if (e.target.files && e.target.files[0]) {
-                              // Store file in state instead of uploading immediately
                               setSelectedFiles((prev) => ({
                                 ...prev,
                                 [doc.id]: e.target.files[0],
                               }));
 
-                              // Update UI to show selected file
                               setDocuments((docs) =>
                                 docs.map((d) =>
                                   d.id === doc.id
@@ -548,7 +673,6 @@ const OverviewDashboard = () => {
                   key={doc.id}
                   className="border rounded-md p-4 bg-white dark:bg-emerald-950/30"
                 >
-                  {/* Same document item content as above */}
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
                       <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -577,26 +701,61 @@ const OverviewDashboard = () => {
                           View Document
                         </a>
                       </Button>
-                      <Dialog>
+                      <Dialog
+                        open={openDialogId === doc.id}
+                        onOpenChange={(open) =>
+                          setOpenDialogId(open ? doc.id : null)
+                        }
+                      >
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
                             type="button"
                             size="sm"
-                            className="text-red-600 hover:text-red-700 border-red-200"
+                            className="text-amber-600 hover:text-amber-700 border-amber-200"
                           >
-                            <Trash2 className="h-3.5 w-3.5 mr-1" />
-                            Delete
+                            <FileText className="h-3.5 w-3.5 mr-1" />
+                            Update
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Delete Document</DialogTitle>
+                            <DialogTitle>Update Document</DialogTitle>
                             <DialogDescription>
-                              Are you sure you want to delete this document?
-                              This will make it unavailable to applicants.
+                              Select a new file to replace the current document.
                             </DialogDescription>
                           </DialogHeader>
+                          <div className="py-4">
+                            <Label htmlFor={`update-file-${doc.id}`}>
+                              New document file (PDF, DOC, or DOCX)
+                            </Label>
+                            <Input
+                              id={`update-file-${doc.id}`}
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              className="mt-2"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  setSelectedFiles((prev) => ({
+                                    ...prev,
+                                    [doc.id]: e.target.files[0],
+                                  }));
+
+                                  setDocuments((docs) =>
+                                    docs.map((d) =>
+                                      d.id === doc.id
+                                        ? {
+                                            ...d,
+                                            selectedFileName:
+                                              e.target.files[0].name,
+                                          }
+                                        : d
+                                    )
+                                  );
+                                }
+                              }}
+                            />
+                          </div>
                           <DialogFooter>
                             <DialogClose asChild>
                               <Button variant="outline" type="button">
@@ -604,11 +763,16 @@ const OverviewDashboard = () => {
                               </Button>
                             </DialogClose>
                             <Button
-                              variant="destructive"
                               type="button"
-                              onClick={() => deleteDocument(doc.id)}
+                              onClick={() => {
+                                if (selectedFiles[doc.id]) {
+                                  updateDocument(doc.id);
+                                } else {
+                                  toast.error("Please select a file to update");
+                                }
+                              }}
                             >
-                              Delete
+                              Update Document
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -630,13 +794,11 @@ const OverviewDashboard = () => {
                           className="text-sm"
                           onChange={(e) => {
                             if (e.target.files && e.target.files[0]) {
-                              // Store file in state instead of uploading immediately
                               setSelectedFiles((prev) => ({
                                 ...prev,
                                 [doc.id]: e.target.files[0],
                               }));
 
-                              // Update UI to show selected file
                               setDocuments((docs) =>
                                 docs.map((d) =>
                                   d.id === doc.id
