@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const proposalDocumentSchema = new mongoose.Schema({
     fiscal_year: { type: String, required: true },
-
+    registrationOpen: { type: Boolean, default: false },
     student: {
         partA_url: {
             en: { type: String, required: true, default: "" },

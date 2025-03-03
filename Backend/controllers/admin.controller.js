@@ -148,11 +148,12 @@ const resetPassword = async (req, res) => {
 
 const updateFiscalYear = async (req, res) => {
     try {
-        const { fiscal_year } = req.body;
+        const { fiscal_year, registrationOpen } = req.body;
         let proposalDoc = await ProposalDocument.findOne();
         if (!proposalDoc) {
             proposalDoc = new ProposalDocument({
                 fiscal_year: "2025-2026",
+                registrationOpen: false,
                 student: {
                     partA_url: { en: null, bn: null },
                     partB_url: { en: null, bn: null }
@@ -165,15 +166,19 @@ const updateFiscalYear = async (req, res) => {
         }
         const updatedDocument = await ProposalDocument.findByIdAndUpdate(
             proposalDoc._id,
-            { fiscal_year: fiscal_year },
-            { new: true } // Return the updated document
+            {
+                fiscal_year,
+                registrationOpen
+            },
+            { new: true }
         );
-        res.status(200).json({ message: "Fiscal Year Updated", updatedDocument });
+        res.status(200).json({ message: "Fiscal Year and Registration Status Updated", updatedDocument });
     } catch (error) {
-        console.error("Error updating fiscal year:", error);
+        console.error("Error updating fiscal year and registration status:", error);
         res.status(500).json({ message: error });
     }
 };
+
 
 
 const updatedDocument = async (req, res, next) => {
