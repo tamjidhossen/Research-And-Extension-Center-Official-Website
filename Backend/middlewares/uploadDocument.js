@@ -1,6 +1,7 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 
 const uploadDir = 'uploads/document';
@@ -13,7 +14,8 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);
+        const randomStr = crypto.randomBytes(4).toString("hex"); // Generates 8 random characters
+        cb(null, `${Date.now()}-${randomStr}-${file.originalname}`);
     }
 });
 

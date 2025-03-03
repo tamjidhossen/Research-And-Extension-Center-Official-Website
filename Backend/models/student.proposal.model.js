@@ -28,6 +28,7 @@ const studentProposalSchema = new mongoose.Schema({
         approx_words: { type: Number, required: true }
     },
     total_budget: { type: Number, required: true },
+    approval_budget: { type: Number, required: true, default: 0 },
     reviewer_avg_mark: { type: Number, required: true, default: 0 },
     signatures: {
         project_director: {
@@ -55,7 +56,8 @@ const studentProposalSchema = new mongoose.Schema({
         ],
         default: []
     },
-    status: { type: Number, default: 0 }
+    status: { type: Number, default: 0 },
+    approval_status: { type: Number, default: 0 }
 
 }, { timestamps: true });
 

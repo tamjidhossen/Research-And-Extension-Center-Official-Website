@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const mongoose = require("mongoose");
 const ProposalDocument = require('../models/proposal.document.model.js');
 const ProposalUpdateRequest = require('../models/update.request.model.js');
@@ -131,7 +132,7 @@ const resetPassword = async (req, res) => {
     const { token, newPassword } = req.body;
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-    console.log(hashedToken)
+
     const user = await Admin.findOne({
         resetPasswordToken: hashedToken,
         resetPasswordExpires: { $gt: Date.now() },
@@ -179,7 +180,45 @@ const updateFiscalYear = async (req, res) => {
     }
 };
 
-
+const updateRegistrationOpen = async (req, res) => {
+    try {
+        let { value } = req.params;
+        value = Number(value);
+        let proposalDoc = await ProposalDocument.findOne();
+        if (!proposalDoc) {
+            proposalDoc = new ProposalDocument({
+                fiscal_year: "2025-2026",
+                registrationOpen: false,
+                student: {
+                    partA_url: { en: null, bn: null },
+                    partB_url: { en: null, bn: null }
+                },
+                teacher: {
+                    partA_url: { en: null, bn: null },
+                    partB_url: { en: null, bn: null }
+                }
+            });
+        }
+        let open;
+        if (value === 0) {
+            open = false;
+        }
+        else {
+            open = true;
+        }
+        const updatedDocument = await ProposalDocument.findByIdAndUpdate(
+            proposalDoc._id,
+            {
+                registrationOpen: open
+            },
+            { new: true }
+        );
+        res.status(200).json({ message: "Fiscal Year and Registration Status Updated", updatedDocument });
+    } catch (error) {
+        console.error("Error updating fiscal year and registration status:", error);
+        res.status(500).json({ message: error });
+    }
+};
 
 const updatedDocument = async (req, res, next) => {
     try {
@@ -231,8 +270,6 @@ const updatedDocument = async (req, res, next) => {
 
         // Save the updated document
         const updatedDocument = await proposalDoc.save();
-        console.log("Updated Proposal Document:", updatedDocument);
-
         res.status(200).json({ message: "Proposal document updated successfully", updatedDocument });
 
     } catch (error) {
@@ -303,6 +340,7 @@ const sentToReviewer = async (req, res) => {
     const proposalId = new mongoose.Types.ObjectId(proposal_id);
     const reviewerId = new mongoose.Types.ObjectId(reviewer_id);
     const reviewer = await Reviewer.findById(reviewerId);
+    console.log(reviewer._id);
     if (!reviewer) {
         res.status(404).json({ success: false, message: "Reviewer not found!" });
     }
@@ -333,8 +371,6 @@ const sentToReviewer = async (req, res) => {
     res.status(200).json({ success: true, message: "Sent Email to reviewer!" });
 };
 
-
-// ✅ Add a new reviewer
 const addReviewer = async (req, res) => {
     try {
         const { name, email, designation, department, address } = req.body;
@@ -359,7 +395,6 @@ const addReviewer = async (req, res) => {
     }
 };
 
-// ✅ Update reviewer details
 const updateReviewer = async (req, res) => {
     try {
         const { id } = req.params;
@@ -391,7 +426,6 @@ const updateReviewer = async (req, res) => {
     }
 };
 
-// ✅ Delete reviewer
 const deleteReviewer = async (req, res) => {
     try {
         const { id } = req.params;
@@ -411,7 +445,6 @@ const deleteReviewer = async (req, res) => {
     }
 };
 
-// ✅ Get a single reviewer by ID
 const getReviewerById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -429,7 +462,6 @@ const getReviewerById = async (req, res) => {
     }
 };
 
-// ✅ Get all reviewers
 const getAllReviewers = async (req, res) => {
     try {
         const reviewers = await Reviewer.find().sort({ createdAt: -1 });
@@ -441,10 +473,56 @@ const getAllReviewers = async (req, res) => {
     }
 };
 
+const updateProposalStatus = async (req, res) => {
+    try {
+        const { proposal_type, proposal_id } = req.params;
+        let { status } = req.params;
+        // Find the proposal
+        let proposal;
+        if (proposal_type === "student") {
+            proposal = await StudentProposal.findById(proposal_id);
+        }
+        else if (proposal_type === "teacher") {
+            proposal = await TeacherProposal.findById(proposal_id);
+        }
+        if (!proposal) {
+            return res.status(404).json({ message: "Proposal not found" });
+        }
+        status = Number(status)
+        if (status === 1 || status == 0) {
+            proposal.approval_status = status;
+            await proposal.save();
+            return res.status(200).json({ message: "Proposal approved", proposal });
+        } else if (status === 2) {
+            const filesToDelete = [proposal.pdf_url_part_A, proposal.pdf_url_part_B];
 
+            filesToDelete.forEach((filePath) => {
+                if (filePath) {
+                    const fullPath = path.join(__dirname, "..", filePath);
+                    if (fs.existsSync(fullPath)) {
+                        fs.unlinkSync(fullPath);
+                    }
+                }
+            });
+            if (proposal_type === "student") {
+                await StudentProposal.findByIdAndDelete(proposal_id);
+            }
+            else {
+                await TeacherProposal.findByIdAndDelete(proposal_id);
+            }
+            return res.status(200).json({ message: "Proposal deleted successfully" });
+        } else {
+            return res.status(400).json({ message: "Invalid status value" });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
 
 
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
-    sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers, getProposalOverviews
+    sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers, getProposalOverviews,
+    updateProposalStatus, updateRegistrationOpen
 };

@@ -6,11 +6,12 @@ const ProposalUpdateRequest = require('../models/update.request.model.js');
 const submitProposal = async (req, res) => {
     try {
         const firstDocument = await ProposalDocument.findOne();
-        if (!firstDocument || firstDocument.fiscal_year === "None") {
+        if (!firstDocument || firstDocument.registrationOpen === false) {
             if (req.files['partA'] && req.files['partA'][0].path) fs.unlinkSync(req.files['partA'][0].path);
             if (req.files['partB'] && req.files['partB'][0].path) fs.unlinkSync(req.files['partB'][0].path);
             return res.status(400).json({ success: false, message: "Application process not started" });
         }
+
         const {
             project_director, department, faculty, session, roll_no,
             cgpa_honours, supervisor, project_title, project_details, total_budget

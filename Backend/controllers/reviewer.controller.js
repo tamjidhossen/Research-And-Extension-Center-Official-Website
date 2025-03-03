@@ -68,8 +68,9 @@ const addMark = async (req, res) => {
                 }
             }
         ]);
-        if (result.length === 2) {
-            await ProposalModel.findByIdAndUpdate(id, { reviewer_avg_mark: result[0], status: 2 });
+        console.log(result);
+        if (result.length > 0 && result[0].totalAssignments === 2) {
+            await ProposalModel.findByIdAndUpdate(proposal_id, { reviewer_avg_mark: result[0].averageMark, status: 2 });
         }
 
         res.status(200).json({
