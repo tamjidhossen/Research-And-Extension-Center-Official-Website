@@ -4,6 +4,8 @@ const ProposalDocument = require('../models/proposal.document.model.js');
 const ProposalUpdateRequest = require('../models/update.request.model.js');
 const { TeacherProposal } = require('../models/teacher.proposal.model.js');
 const { StudentProposal } = require('../models/student.proposal.model.js');
+const { ReviewerAssignment } = require("../models/reviewer.assignment.model.js");
+const { Reviewer } = require("../models/reviewer.model.js");
 const Admin = require('../models/admin.model.js');
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
@@ -279,12 +281,16 @@ const getProposal = async (req, res) => {
 
 
 const sentToReviewer = async (req, res) => {
-    const { name, email, designation, department, address, proposal_id, proposal_type } = req.body;
-    console.log(req.body);
-    if (!mongoose.Types.ObjectId.isValid(proposal_id)) {
-        throw new Error("Invalid Proposal ID format");
+    const { reviewer_id, proposal_id, proposal_type } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(proposal_id) || !mongoose.Types.ObjectId.isValid(reviewer_id)) {
+        res.status(404).json({ success: false, message: "ID not valid!" });
     }
     const proposalId = new mongoose.Types.ObjectId(proposal_id);
+    const reviewerId = new mongoose.Types.ObjectId(reviewer_id);
+    const reviewer = await Reviewer.findById(reviewerId);
+    if (!reviewer) {
+        res.status(404).json({ success: false, message: "Reviewer not found!" });
+    }
     let proposal;
     if (proposal_type === "teacher") {
         proposal = await TeacherProposal.findById(proposalId);
@@ -294,16 +300,136 @@ const sentToReviewer = async (req, res) => {
     }
     if (!proposal) return res.status(404).json({ success: false, message: "Proposal not found" });
 
-    const token = proposal.generateReviewerToken(name, email);
-    proposal.reviewer.push({ name: name, email: email, designation: designation, department: department, address: address, mark_sheet_url: "", total_mark: 0 });
+    const token = proposal.generateReviewerToken(reviewerId);
+    proposal.reviewer.push({ id: reviewer._id });
+    proposal.status = 1;
     await proposal.save();
-    await sendMailToReviewer(email, name, token);
+    const newAssignment = new ReviewerAssignment({
+        reviewer_id: reviewerId,
+        proposal_id: proposalId,
+        proposal_type,
+        total_mark: 0,  // Default to 0
+        mark_sheet_url: "",
+        status: 0        // Pending by default
+    });
+    await newAssignment.save();
+    await sendMailToReviewer(reviewer.email, reviewer.name, token);
 
     res.status(200).json({ success: true, message: "Sent Email to reviewer!" });
 };
 
 
+// ✅ Add a new reviewer
+const addReviewer = async (req, res) => {
+    try {
+        const { name, email, designation, department, address } = req.body;
+
+        if (!name || !email || !designation || !department || !address) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
+        }
+
+        const existingReviewer = await Reviewer.findOne({ email });
+        if (existingReviewer) {
+            return res.status(400).json({ success: false, message: "Reviewer with this email already exists" });
+        }
+
+        const newReviewer = new Reviewer({ name, email, designation, department, address });
+        await newReviewer.save();
+
+        res.status(201).json({ success: true, message: "Reviewer added successfully", reviewer: newReviewer });
+
+    } catch (error) {
+        console.error("Error adding reviewer:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// ✅ Update reviewer details
+const updateReviewer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, email, designation, department, address } = req.body;
+
+        const reviewer = await Reviewer.findById(id);
+        if (!reviewer) {
+            return res.status(404).json({ success: false, message: "Reviewer not found" });
+        }
+
+        if (email && email !== reviewer.email) {
+            const emailExists = await Reviewer.findOne({ email });
+            if (emailExists) {
+                return res.status(400).json({ success: false, message: "Email already in use" });
+            }
+        }
+
+        const updatedReviewer = await Reviewer.findByIdAndUpdate(
+            id,
+            { name, email, designation, department, address },
+            { new: true, runValidators: true }
+        );
+
+        res.status(200).json({ success: true, message: "Reviewer updated successfully", reviewer: updatedReviewer });
+
+    } catch (error) {
+        console.error("Error updating reviewer:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// ✅ Delete reviewer
+const deleteReviewer = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const reviewer = await Reviewer.findById(id);
+        if (!reviewer) {
+            return res.status(404).json({ success: false, message: "Reviewer not found" });
+        }
+
+        await Reviewer.findByIdAndDelete(id);
+
+        res.status(200).json({ success: true, message: "Reviewer deleted successfully" });
+
+    } catch (error) {
+        console.error("Error deleting reviewer:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// ✅ Get a single reviewer by ID
+const getReviewerById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const reviewer = await Reviewer.findById(id);
+        if (!reviewer) {
+            return res.status(404).json({ success: false, message: "Reviewer not found" });
+        }
+
+        res.status(200).json({ success: true, reviewer });
+
+    } catch (error) {
+        console.error("Error getting reviewer:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+// ✅ Get all reviewers
+const getAllReviewers = async (req, res) => {
+    try {
+        const reviewers = await Reviewer.find().sort({ createdAt: -1 });
+        res.status(200).json({ success: true, reviewers });
+
+    } catch (error) {
+        console.error("Error getting reviewers:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+
+
+
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
-    sentToReviewer, updateFiscalYear
+    sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers
 };

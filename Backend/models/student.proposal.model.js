@@ -50,14 +50,7 @@ const studentProposalSchema = new mongoose.Schema({
     reviewer: {
         type: [
             {
-                name: { type: String, required: true },
-                email: { type: String, required: true },
-                designation: { type: String, required: true },
-                department: { type: String, required: true },
-                address: { type: String, required: true },
-                mark_sheet_url: { type: String },
-                status: { type: Number, default: 0 },
-                total_mark: { type: String, required: true, default: 0 }
+                id: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "Reviewer" }
             }
         ],
         default: []
@@ -70,7 +63,6 @@ studentProposalSchema.pre("save", async function (next) {
     if (!this.isNew) return next(); // Only generate number for new proposals
 
     try {
-        console.log("hi")
         const yearParts = this.fiscal_year.split("-");
         if (yearParts.length !== 2) {
             throw new Error("Invalid fiscal year format. Expected format: YYYY-YYYY");
@@ -97,8 +89,8 @@ studentProposalSchema.methods.generateUpdateToken = function () {
     return token;
 };
 
-studentProposalSchema.methods.generateReviewerToken = function (name_, email_) {
-    const token = jwt.sign({ id: this._id, proposal_type: "student", name: name_, email: email_ }, process.env.SECRET_KEY_REVIEWER, { expiresIn: '7d' });
+studentProposalSchema.methods.generateReviewerToken = function (reviewer_id) {
+    const token = jwt.sign({ proposal_id: this._id, reviewer_id: reviewer_id, proposal_type: "student" }, process.env.SECRET_KEY_REVIEWER, { expiresIn: '7d' });
     return token;
 };
 

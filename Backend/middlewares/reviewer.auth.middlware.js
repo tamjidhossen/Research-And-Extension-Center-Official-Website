@@ -1,5 +1,7 @@
 const { TeacherProposal } = require('../models/teacher.proposal.model.js');
 const { StudentProposal } = require('../models/student.proposal.model.js');
+const mongoose = require("mongoose");
+
 const jwt = require('jsonwebtoken');
 
 module.exports.authReview = async (req, res, next) => {
@@ -13,19 +15,22 @@ module.exports.authReview = async (req, res, next) => {
     }
     try {
         const decoded = jwt.verify(token, process.env.SECRET_KEY_REVIEWER);
+        console.log(decoded)
         let proposal;
-        if (!decoded.id || !decoded.proposal_type || !decoded.name || !decoded.email) {
+        if (!decoded.proposal_id || !decoded.reviewer_id || !decoded.proposal_type) {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
+        const proposalId = new mongoose.Types.ObjectId(decoded.proposal_id);
+        const reviewerId = new mongoose.Types.ObjectId(decoded.reviewer_id);
         if (decoded.proposal_type === "student") {
             proposal = await StudentProposal.findOne(
-                { _id: decoded.id, "reviewer.name": decoded.name, "reviewer.email": decoded.email },
+                { _id: proposalId, reviewer: { $elemMatch: { id: reviewerId } } },
                 { "reviewer.$": 1 }
             );
         }
         else if (decoded.proposal_type === "teacher") {
             proposal = await TeacherProposal.findOne(
-                { _id: decoded.id, "reviewer.name": decoded.name, "reviewer.email": decoded.email },
+                { _id: proposalId, reviewer: { $elemMatch: { id: reviewerId } } },
                 { "reviewer.$": 1 }
             );
         }
@@ -37,8 +42,8 @@ module.exports.authReview = async (req, res, next) => {
         }
         req.proposal = proposal;
         req.proposal_type = decoded.proposal_type;
-        req.reviewer_name = decoded.name;
-        req.reviewer_email = decoded.email;
+        req.proposal_id = decoded.proposal_id;
+        req.reviewer_id = decoded.reviewer_id;
         next();
     } catch (err) {
         console.error("Authentication Error:", err);

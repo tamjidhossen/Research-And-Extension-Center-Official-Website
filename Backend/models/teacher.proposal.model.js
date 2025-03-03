@@ -47,14 +47,7 @@ const teacherProposalSchema = new mongoose.Schema(
         reviewer: {
             type: [
                 {
-                    name: { type: String, required: true },
-                    email: { type: String, required: true },
-                    designation: { type: String, required: true },
-                    department: { type: String, required: true },
-                    address: { type: String, required: true },
-                    mark_sheet_url: { type: String },
-                    status: { type: Number, default: 0 },
-                    total_mark: { type: String, required: true, default: 0 }
+                    id: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "Reviewer" }
                 }
             ],
             default: []
@@ -64,6 +57,30 @@ const teacherProposalSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+teacherProposalSchema.pre("save", async function (next) {
+    if (!this.isNew) return next(); // Only generate number for new proposals
+
+    try {
+        const yearParts = this.fiscal_year.split("-");
+        if (yearParts.length !== 2) {
+            throw new Error("Invalid fiscal year format. Expected format: YYYY-YYYY");
+        }
+
+        // Extract last two digits of each year
+        const yearCode = yearParts[0].slice(-2) + yearParts[1].slice(-2);
+
+        // Count existing proposals for the same fiscal year
+        const count = await mongoose.model("TeacherProposal").countDocuments({ fiscal_year: this.fiscal_year });
+
+        // Generate proposal number (e.g., 2526001, 2526002, ...)
+        this.proposal_number = parseInt(yearCode + String(count + 1).padStart(3, "0"));
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
 teacherProposalSchema.methods.generateUpdateToken = function () {
     return jwt.sign(
         { _id: this._id, proposal: "teacher" },
@@ -72,15 +89,11 @@ teacherProposalSchema.methods.generateUpdateToken = function () {
     );
 };
 
-teacherProposalSchema.methods.generateReviewerToken = function (name_, email_) {
-    if (!name_ || !email_) throw new Error("Name and Email are required for token generation.");
-
-    return jwt.sign(
-        { id: this._id, proposal_type: "teacher", name: name_, email: email_ },
-        process.env.SECRET_KEY_REVIEWER,
-        { expiresIn: '7d' }
-    );
+teacherProposalSchema.methods.generateReviewerToken = function () {
+    const token = jwt.sign({ proposal_id: this._id, reviewer_id: reviewer_id, proposal_type: "teacher" }, process.env.SECRET_KEY_REVIEWER, { expiresIn: '7d' });
+    return token;
 };
+
 
 const TeacherProposal = mongoose.model('TeacherProposal', teacherProposalSchema);
 

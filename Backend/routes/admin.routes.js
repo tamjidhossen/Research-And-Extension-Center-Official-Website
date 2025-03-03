@@ -22,5 +22,16 @@ router.post('/research-proposal/request-reset-password', adminController.request
 router.post('/research-proposal/reset-password', adminController.resetPassword);
 router.post('/research-proposal/sent-to-reviewer', adminMiddileware.authAdmin, adminController.sentToReviewer);
 router.post('/research-proposal/fiscal-year/update', adminMiddileware.authAdmin, adminController.updateFiscalYear);
+router.post('/reviewer/add', adminMiddileware.authAdmin, adminController.addReviewer);
+// ✅ Update an existing reviewer
+router.put("/reviewer/update/:id", adminMiddileware.authAdmin, adminController.updateReviewer);
 
+// ✅ Delete a reviewer
+router.delete("/reviewer/delete/:id", adminMiddileware.authAdmin, adminController.deleteReviewer);
+
+// ✅ Get a single reviewer by ID
+router.get("/reviewer/:id", adminMiddileware.authAdmin, adminController.getReviewerById);
+
+// ✅ Get all reviewers
+router.get("/", adminMiddileware.authAdmin, adminController.getAllReviewers);
 module.exports = router;

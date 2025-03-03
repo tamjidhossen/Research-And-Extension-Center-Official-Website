@@ -2,16 +2,17 @@ const fs = require('fs');
 const path = require('path');
 const { StudentProposal } = require('../models/student.proposal.model.js');
 const { TeacherProposal } = require('../models/teacher.proposal.model.js');
-
+const { ReviewerAssignment } = require("../models/reviewer.assignment.model.js");
+const mongoose = require("mongoose");
 const verifyReviewer = async (req, res) => {
     try {
         const { proposal_type } = req;
         let proposal;
         if (proposal_type === "student") {
-            proposal = await StudentProposal.findById(req.proposal._id).select("pdf_url_part_B");
+            proposal = await StudentProposal.findById(req.proposal_id).select("pdf_url_part_B");
         }
         else if (proposal_type === "teacher") {
-            proposal = await TeacherProposal.findById(req.proposal._id).select("pdf_url_part_B");
+            proposal = await TeacherProposal.findById(req.proposal_id).select("pdf_url_part_B");
         }
         else {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -25,8 +26,7 @@ const verifyReviewer = async (req, res) => {
 const addMark = async (req, res) => {
     try {
         const { total_mark } = req.body;
-        const { proposal_type, reviewer_name, reviewer_email } = req;
-        const id = req.proposal._id;
+        const { proposal_type, proposal_id, reviewer_id } = req;
         if (!req.file) {
             return res.status(400).json({ success: false, message: "File upload failed" });
         }
@@ -42,33 +42,39 @@ const addMark = async (req, res) => {
         } else {
             return res.status(400).json({ success: false, message: "Invalid proposal type" });
         }
-        const proposal = await ProposalModel.findOneAndUpdate(
-            { _id: id, "reviewer.name": reviewer_name, "reviewer.email": reviewer_email },
+        const assignment = await ReviewerAssignment.findOneAndUpdate(
+            { reviewer_id: reviewer_id, proposal_id: proposal_id },
             {
                 $set: {
-                    "reviewer.$.mark_sheet_url": fileUrl,
-                    "reviewer.$.total_mark": total_mark,
-                    "reviewer.$.status": 1,
+                    "mark_sheet_url": fileUrl,
+                    "total_mark": total_mark,
+                    "status": 1,
                 }
             },
             { new: true }
         );
-        if (!proposal) {
+        if (!assignment) {
             // Delete file if proposal update failed
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
             return res.status(404).json({ success: false, message: "Reviewer not found" });
         }
-        const marks = proposal.reviewer.map(rev => Number(rev.total_mark) || 0);
-        const reviewerAvgMark = marks.length ? (marks.reduce((sum, mark) => sum + mark, 0) / marks.length).toFixed(2) : 0;
-
-        // Update the proposal with the new average mark
-        await ProposalModel.findByIdAndUpdate(id, { reviewer_avg_mark: reviewerAvgMark });
+        const result = await ReviewerAssignment.aggregate([
+            { $match: { proposal_id: new mongoose.Types.ObjectId(proposal_id), status: 1 } }, // Filter by proposal_id & reviewed status
+            {
+                $group: {
+                    _id: "$proposal_id",
+                    totalAssignments: { $sum: 1 }, // Count total reviewed assignments
+                    averageMark: { $avg: "$total_mark" } // Calculate average mark
+                }
+            }
+        ]);
+        if (result.length === 2) {
+            await ProposalModel.findByIdAndUpdate(id, { reviewer_avg_mark: result[0], status: 2 });
+        }
 
         res.status(200).json({
             success: true,
             message: "Mark sheet & marks updated successfully",
-            fileUrl,
-            mark: total_mark
         });
 
     } catch (error) {
