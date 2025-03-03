@@ -520,9 +520,36 @@ const updateProposalStatus = async (req, res) => {
     }
 };
 
+const updateApprovalBudget = async (req, res) => {
+    try {
+        const { proposal_id, proposal_type, approval_budget } = req.body;
+        // Ensure approval_budget is a valid number
+        if (isNaN(approval_budget) || approval_budget < 0) {
+            return res.status(400).json({ message: "Invalid approval budget amount" });
+        }
+        let Proposal;
+        if (proposal_type === "student") {
+            Proposal = await StudentProposal.findById(proposal_id);
+        }
+        else if (proposal_type === "teacher") {
+            Proposal = await TeacherProposal.findById(proposal_id);
+        }
+        if (!Proposal) {
+            return res.status(404).json({ message: "Proposal not found" });
+        }
+
+        Proposal.approval_budget = approval_budget;
+        await Proposal.save();
+
+        return res.status(200).json({ message: "Approval budget updated successfully", Proposal });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
 
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
     sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers, getProposalOverviews,
-    updateProposalStatus, updateRegistrationOpen
+    updateProposalStatus, updateRegistrationOpen, updateApprovalBudget
 };
