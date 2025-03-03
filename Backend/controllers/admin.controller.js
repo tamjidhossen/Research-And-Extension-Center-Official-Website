@@ -340,7 +340,6 @@ const sentToReviewer = async (req, res) => {
     const proposalId = new mongoose.Types.ObjectId(proposal_id);
     const reviewerId = new mongoose.Types.ObjectId(reviewer_id);
     const reviewer = await Reviewer.findById(reviewerId);
-    console.log(reviewer._id);
     if (!reviewer) {
         res.status(404).json({ success: false, message: "Reviewer not found!" });
     }
@@ -548,8 +547,41 @@ const updateApprovalBudget = async (req, res) => {
     }
 };
 
+
+const getAllReviewerAssignments = async (req, res) => {
+    try {
+        // Fetch all assignments and populate reviewer details
+        const assignments = await ReviewerAssignment.find()
+            .populate("reviewer_id", "name email designation department address") // Fetch reviewer details
+            .lean(); // Convert to plain object
+
+        if (!assignments.length) {
+            return res.status(404).json({ message: "No reviewer assignments found" });
+        }
+
+        // Fetch proposal details for each assignment
+        const assignmentsWithProposals = await Promise.all(
+            assignments.map(async (assignment) => {
+                let proposal;
+                if (assignment.proposal_type === "student") {
+                    proposal = await StudentProposal.findById(assignment.proposal_id)
+                } else if (assignment.proposal_type === "teacher") {
+
+                    proposal = await TeacherProposal.findById(assignment.proposal_id)
+                }
+                return { ...assignment, proposal };
+            })
+        );
+
+        return res.status(200).json(assignmentsWithProposals);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
     sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers, getProposalOverviews,
-    updateProposalStatus, updateRegistrationOpen, updateApprovalBudget
+    updateProposalStatus, updateRegistrationOpen, updateApprovalBudget, getAllReviewerAssignments
 };

@@ -20,6 +20,7 @@ router.post('/research-proposal/upload', upload.fields([
     adminController.updatedDocument);
 
 router.get('/research-proposal/', adminMiddileware.authAdmin, adminController.getProposal);
+router.get('/reviewer/review-details', adminMiddileware.authAdmin, adminController.getAllReviewerAssignments);
 router.post('/research-proposal/approval-budget', adminMiddileware.authAdmin, adminController.updateApprovalBudget);
 router.post('/research-proposal/request-reset-password', adminController.requestPasswordReset);
 router.post('/research-proposal/reset-password', adminController.resetPassword);
