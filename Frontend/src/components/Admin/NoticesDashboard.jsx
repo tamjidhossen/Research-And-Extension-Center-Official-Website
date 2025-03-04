@@ -1,5 +1,5 @@
+// src/components/Admin/NoticesDashboard.jsx
 import { useState, useEffect } from "react";
-import { API_URL } from "@/lib/authConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarDays, Trash2, ExternalLink, PlusCircle } from "lucide-react";
+import {
+  CalendarDays,
+  Trash2,
+  ExternalLink,
+  PlusCircle,
+  FileUp,
+  X,
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,16 +41,22 @@ export default function NoticesDashboard() {
     description: "",
     link: "",
   });
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const { toast } = useToast();
+
+  // Get the server root for file URLs
+  const baseUrl = import.meta.env.VITE_API_URL || "";
+  const serverRoot = baseUrl.replace(/\/v1$/, "");
 
   // Fetch Notices
   const fetchNotices = async () => {
     try {
       setIsLoading(true);
       const response = await api.get("/api/notice/get-notice");
-      
+
       const sortedNotices = response.data.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        (a, b) =>
+          new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt)
       );
       setNotices(sortedNotices);
     } catch (error) {
@@ -53,9 +66,6 @@ export default function NoticesDashboard() {
         title: "Error",
         description: "Failed to fetch notices",
       });
-      
-      // FALLBACK TO DUMMY DATA - Remove when API is ready
-      // setNotices([/* your dummy notices here */]);
     } finally {
       setIsLoading(false);
     }
@@ -65,43 +75,124 @@ export default function NoticesDashboard() {
     fetchNotices();
   }, []);
 
+  const handleFileChange = (e) => {
+    if (e.target.files) {
+      // Convert FileList to Array and limit to remaining slots (max 5 files)
+      const filesArray = Array.from(e.target.files);
+      const maxFiles = 5 - selectedFiles.length;
+      const newFiles = filesArray.slice(0, maxFiles);
+
+      // Check file types and sizes
+      const validFiles = newFiles.filter((file) => {
+        const validTypes = [
+          "image/jpeg",
+          "image/png",
+          "application/pdf",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!validTypes.includes(file.type)) {
+          toast({
+            variant: "destructive",
+            title: "Invalid file type",
+            description:
+              "Only JPEG, PNG, PDF, DOC, and DOCX files are allowed.",
+          });
+          return false;
+        }
+
+        if (file.size > maxSize) {
+          toast({
+            variant: "destructive",
+            title: "File too large",
+            description: "Files must be less than 5MB",
+          });
+          return false;
+        }
+
+        return true;
+      });
+
+      setSelectedFiles([...selectedFiles, ...validFiles]);
+    }
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      link: "",
+    });
+    setSelectedFiles([]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await api.post("/api/notice/add", formData);
 
-      // Create a new Notice object with the correct structure
-      const newNotice = {
-        ...response.data.Notice, // Use response.data.Notice instead of response.data
-        createdAt: new Date().toISOString(), // Add the current timestamp
-      };
-
-      // Update state with the new Notice
-      setNotices([newNotice, ...notices]);
-      setIsDialogOpen(false);
-      setFormData({ title: "", description: "", link: "" });
-
+    if (!formData.title || !formData.description) {
       toast({
-        title: "Success",
-        description: "Notice added successfully",
+        variant: "destructive",
+        title: "Error",
+        description: "Title and description are required",
       });
+      return;
+    }
+
+    // Create FormData object for file upload
+    const formDataObj = new FormData();
+    formDataObj.append("title", formData.title);
+    formDataObj.append("description", formData.description);
+    formDataObj.append("link", formData.link || "");
+
+    // Add files if they exist
+    selectedFiles.forEach((file) => {
+      formDataObj.append("files", file);
+    });
+
+    try {
+      const response = await api.post("/api/notice/add", formDataObj, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data.success) {
+        // Create a new notice object with the response data
+        const newNotice = response.data.notice;
+
+        // Update state with the new notice
+        setNotices([newNotice, ...notices]);
+        setIsDialogOpen(false);
+        resetForm();
+
+        toast({
+          title: "Success",
+          description: "Notice added successfully",
+        });
+      }
     } catch (error) {
       console.error("Failed to add notice:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.response?.data?.message || "Failed to add Notice",
+        description: error.response?.data?.message || "Failed to add notice",
       });
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/api/notice/${id}`);
-      
+      await api.delete(`/api/notice/delete/${id}`);
+
       // Remove the deleted notice from state
-      setNotices(notices.filter(notice => notice._id !== id));
-      
+      setNotices(notices.filter((notice) => notice._id !== id));
+
       toast({
         title: "Success",
         description: "Notice deleted successfully",
@@ -111,7 +202,7 @@ export default function NoticesDashboard() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.response?.data?.message || "Failed to delete Notice",
+        description: error.response?.data?.message || "Failed to delete notice",
       });
     }
   };
@@ -152,49 +243,137 @@ export default function NoticesDashboard() {
               <PlusCircle className="h-4 w-4 mr-2" />
               Add Notice
             </Button>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[525px]">
               <DialogHeader>
                 <DialogTitle>Add New Notice</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <Input
-                  placeholder="Title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  required
-                />
-                <Textarea
-                  placeholder="Description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  required
-                />
-                <Input
-                  placeholder="Link (optional)"
-                  value={formData.link}
-                  onChange={(e) =>
-                    setFormData({ ...formData, link: e.target.value })
-                  }
-                />
-                <Button type="submit" className="w-full">
-                  Submit
-                </Button>
+                <div>
+                  <label
+                    htmlFor="title"
+                    className="text-sm font-medium block mb-1"
+                  >
+                    Title
+                  </label>
+                  <Input
+                    id="title"
+                    placeholder="Title"
+                    value={formData.title}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="description"
+                    className="text-sm font-medium block mb-1"
+                  >
+                    Description
+                  </label>
+                  <Textarea
+                    id="description"
+                    placeholder="Description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    rows={5}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="link"
+                    className="text-sm font-medium block mb-1"
+                  >
+                    External Link (optional)
+                  </label>
+                  <Input
+                    id="link"
+                    placeholder="Link (optional)"
+                    value={formData.link}
+                    onChange={(e) =>
+                      setFormData({ ...formData, link: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">
+                    Attachments (optional, max 5 files)
+                  </label>
+                  <div className="flex items-center">
+                    <Input
+                      type="file"
+                      onChange={handleFileChange}
+                      multiple
+                      disabled={selectedFiles.length >= 5}
+                      accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                      className="flex-1"
+                    />
+                  </div>
+
+                  {/* Display selected files */}
+                  {selectedFiles.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {selectedFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-2 rounded-md"
+                        >
+                          <span className="text-sm truncate max-w-[80%]">
+                            {file.name}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFile(index)}
+                            className="h-8 w-8 p-0 flex items-center justify-center"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedFiles.length >= 5 && (
+                    <p className="text-xs text-amber-500 mt-1">
+                      Maximum 5 files allowed
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      resetForm();
+                      setIsDialogOpen(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">Submit Notice</Button>
+                </div>
               </form>
             </DialogContent>
           </Dialog>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {notices.map((Notice) => (
-            <Card key={Notice._id} className="flex flex-col">
+          {notices.map((notice) => (
+            <Card key={notice._id} className="flex flex-col">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-xl font-semibold">
-                    {Notice.title}
+                    {notice.title}
                   </CardTitle>
                   <div className="flex space-x-2">
                     <AlertDialog>
@@ -217,7 +396,7 @@ export default function NoticesDashboard() {
                             Cancel
                           </AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDelete(Notice._id)}
+                            onClick={() => handleDelete(notice._id)}
                             className="w-full sm:w-auto bg-red-500 hover:bg-red-600"
                           >
                             Delete
@@ -229,23 +408,57 @@ export default function NoticesDashboard() {
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground mt-2">
                   <CalendarDays className="h-4 w-4 mr-2" />
-                  {formatDate(Notice.createdAt)}
+                  {formatDate(notice.date || notice.createdAt)}
                 </div>
               </CardHeader>
               <CardContent className="flex-grow">
-                <p className="text-muted-foreground">
-                  {Notice.description}
+                <p className="text-muted-foreground line-clamp-3 mb-4">
+                  {notice.description}
                 </p>
-                {Notice.link && (
-                  <a
-                    href={Notice.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center mt-4 text-primary hover:underline"
+
+                {/* Show link if exists */}
+                {notice.link && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="mr-2 mb-2"
                   >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View More
-                  </a>
+                    <a
+                      href={notice.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      External Link
+                    </a>
+                  </Button>
+                )}
+
+                {/* Show file attachments if they exist */}
+                {notice.files && notice.files.length > 0 && (
+                  <div className="mt-2">
+                    {notice.files.map((file, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="mr-2 mb-2"
+                      >
+                        <a
+                          href={`${serverRoot}/${file.url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2"
+                        >
+                          <FileUp className="h-4 w-4 mr-1" />
+                          Attachment {index + 1}
+                        </a>
+                      </Button>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
