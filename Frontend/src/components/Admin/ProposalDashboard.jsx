@@ -22,6 +22,7 @@ import {
   DollarSign,
   MailCheck,
   Clock,
+  Loader2, 
 } from "lucide-react";
 import {
   Card,
@@ -79,6 +80,7 @@ export default function ProposalsDashboard() {
   const [reviewerEmail2, setReviewerEmail2] = useState("");
   const [existingReviewers, setExistingReviewers] = useState([]);
   const [selectedProposal, setSelectedProposal] = useState(null);
+  const [sendingEmails, setSendingEmails] = useState(false);
 
   const [showReviewerDetailsDialog, setShowReviewerDetailsDialog] =
     useState(false);
@@ -575,6 +577,7 @@ export default function ProposalsDashboard() {
     }
 
     try {
+      setSendingEmails(true);
       // Handle first reviewer
       let reviewer1Id;
       const existingReviewer1 = existingReviewers.find(
@@ -683,6 +686,8 @@ export default function ProposalsDashboard() {
       toast.error(
         error.response?.data?.message || "Failed to assign reviewers"
       );
+    } finally {
+      setSendingEmails(false);
     }
   };
 
@@ -1333,11 +1338,21 @@ export default function ProposalsDashboard() {
                                   !reviewerEmail1 ||
                                   !reviewerName2 ||
                                   !reviewerEmail2 ||
-                                  reviewerEmail1 === reviewerEmail2
+                                  reviewerEmail1 === reviewerEmail2 ||
+                                  sendingEmails
                                 }
                               >
-                                <Mail className="mr-2 h-4 w-4" />
-                                Send Invitations
+                                {sendingEmails ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                                    Sending...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Mail className="mr-2 h-4 w-4" /> Send
+                                    Invitations
+                                  </>
+                                )}
                               </Button>
                             </DialogFooter>
                           </DialogContent>

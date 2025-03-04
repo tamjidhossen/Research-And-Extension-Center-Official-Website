@@ -11,6 +11,7 @@ import AdminLogin from './components/Admin/Login'
 import Dashboard from './components/Admin/Dashboard'
 import ProtectedRoute from './components/Admin/ProtectedRoute'
 import AdminRegister from './components/Admin/Register'
+import ReviewerPage from './components/Reviewer/ReviewerPage';
 
 import {
   Route,
@@ -28,6 +29,7 @@ const router = createBrowserRouter(
         <Route path="submit/teacher" element={<TeacherSubmission />} />
         <Route path="notices" element={<Notices />} />
         <Route path="proposals" element={<PrevProposals />} />
+        <Route path="review" element={<ReviewerPage />} />
       </Route>
       <Route path="/admin">
         <Route path="register" element={<AdminRegister />} />

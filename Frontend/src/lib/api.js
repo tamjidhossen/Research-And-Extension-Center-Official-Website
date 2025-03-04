@@ -33,4 +33,16 @@ api.interceptors.response.use(
   }
 );
 
+// request interceptor to attach token from localStorage
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("reviewerToken");
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export default api;
