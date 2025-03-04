@@ -3,6 +3,7 @@ const { Reviewer } = require("./reviewer.model.js");
 const { StudentProposal } = require("./student.proposal.model.js");
 const { TeacherProposal } = require("./teacher.proposal.model.js");
 
+
 const reviewerAssignmentSchema = new mongoose.Schema({
     reviewer_id: { type: mongoose.Schema.Types.ObjectId, ref: "Reviewer", required: true },
     proposal_id: { type: mongoose.Schema.Types.ObjectId, required: true },

@@ -32,7 +32,7 @@ router.put("/reviewer/update/:id", adminMiddileware.authAdmin, adminController.u
 router.delete("/reviewer/delete/:id", adminMiddileware.authAdmin, adminController.deleteReviewer);
 router.get("/reviewer/:id", adminMiddileware.authAdmin, adminController.getReviewerById);
 router.get("/get-reviewers", adminMiddileware.authAdmin, adminController.getAllReviewers);
-router.get('/research-proposal/overviews', adminMiddileware.authAdmin, adminController.getProposalOverviews);
+router.get('/research-proposal/overviews', adminController.getProposalOverviews);
 router.put('/research-proposal/status-update/:proposal_type/:proposal_id/:status', adminMiddileware.authAdmin, adminController.updateProposalStatus);
 
 module.exports = router;
