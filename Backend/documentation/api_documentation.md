@@ -1,301 +1,242 @@
-# RE Center Digitalization API Documentation
+# Research And Extension Center API Documentation
 
 ## Table of Contents
-- [Authentication](#authentication)
-- [Admin Endpoints](#admin-endpoints)
-  - [Registration and Authentication](#registration-and-authentication)
-  - [Research Proposal Management](#research-proposal-management)
-  - [Reviewer Management](#reviewer-management)
-  - [Fiscal Year Management](#fiscal-year-management)
-- [Notice Management](#notice-management)
-- [Reviewer Endpoints](#reviewer-endpoints)
-- [Student Endpoints](#student-endpoints)
-- [Teacher Endpoints](#teacher-endpoints)
+1. [Authentication](#authentication)
+2. [Admin Endpoints](#admin-endpoints)
+   - [Authentication](#admin-authentication)
+   - [Proposal Management](#proposal-management)
+   - [Reviewer Management](#reviewer-management)
+   - [Notice Management](#notice-management)
+   - [Invoice Management](#invoice-management)
+3. [Student Endpoints](#student-endpoints)
+   - [Proposal Submission](#student-proposal-submission)
+4. [Teacher Endpoints](#teacher-endpoints)
+   - [Proposal Submission](#teacher-proposal-submission)
+5. [Reviewer Endpoints](#reviewer-endpoints)
+   - [Proposal Review](#proposal-review)
+   - [Invoice Submission](#reviewer-invoice-submission)
 
 ## Authentication
 
-Most endpoints require authentication via a JWT token. Include the token in the Authorization header as follows:
-
-```
-Authorization: Bearer <jwt_token>
-```
+### JWT Token
+- All administrative and secured endpoints require a JWT (JSON Web Token) in the Authorization header
+- Format: `Bearer <token>`
 
 ## Admin Endpoints
 
-### Registration and Authentication
+### Admin Authentication
 
-#### Register Admin
-- **URL**: `/v1/api/admin/register`
-- **Method**: `POST`
-- **Auth Required**: No
-- **Body**:
+#### Login
+- **Endpoint:** `POST /v1/api/admin/login`
+- **Request Body:**
+  ```json
+  {
+    "email": "admin@example.com",
+    "password": "password"
+  }
+  ```
+
+#### Register
+- **Endpoint:** `POST /v1/api/admin/register`
+- **Request Body:**
   ```json
   {
     "name": "Admin Name",
     "email": "admin@example.com",
-    "password": "securePassword123"
+    "password": "securePassword"
   }
   ```
-- **Description**: Creates a new admin account.
 
-#### Admin Login
-- **URL**: `/v1/api/admin/login`
-- **Method**: `POST`
-- **Auth Required**: No
-- **Body**:
-  ```json
-  {
-    "email": "admin@example.com",
-    "password": "securePassword123"
-  }
-  ```
-- **Description**: Authenticates an admin and returns a JWT token.
+#### Password Reset
+- **Request Reset Password:**
+  - **Endpoint:** `POST /v1/api/admin/research-proposal/request-reset-password`
+  - **Request Body:**
+    ```json
+    {
+      "email": "admin@example.com"
+    }
+    ```
 
-#### Request Password Reset
-- **URL**: `/v1/api/admin/research-proposal/request-reset-password`
-- **Method**: `POST`
-- **Auth Required**: No
-- **Body**:
-  ```json
-  {
-    "email": "admin@example.com"
-  }
-  ```
-- **Description**: Sends a password reset email with a token.
+- **Reset Password:**
+  - **Endpoint:** `POST /v1/api/admin/research-proposal/reset-password`
+  - **Request Body:**
+    ```json
+    {
+      "token": "reset_token",
+      "newPassword": "newPassword"
+    }
+    ```
 
-#### Reset Password
-- **URL**: `/v1/api/admin/research-proposal/reset-password`
-- **Method**: `POST`
-- **Auth Required**: No
-- **Body**:
-  ```json
-  {
-    "token": "reset_token",
-    "newPassword": "newPassword123"
-  }
-  ```
-- **Description**: Resets admin password using the token received via email.
-
-### Research Proposal Management
-
-#### Upload Research Proposal Documents
-- **URL**: `/v1/api/admin/research-proposal/upload`
-- **Method**: `POST`
-- **Auth Required**: No
-- **Body**: FormData with the following fields:
-  - `fiscal_year`: Year range (e.g., "2026-2027")
-  - `student_partA_en`: PDF/DOCX file
-  - `student_partB_en`: PDF/DOCX file
-  - `teacher_partA_en`: PDF/DOCX file
-  - `teacher_partB_en`: PDF/DOCX file
-  - `teacher_partA_bn`: PDF/DOCX file
-  - `teacher_partB_bn`: PDF/DOCX file
-  - `student_partA_bn`: PDF/DOCX file
-  - `student_partB_bn`: PDF/DOCX file
-- **Description**: Uploads proposal form templates for students and teachers.
-
-#### Get Proposal Overviews
-- **URL**: `/v1/api/admin/research-proposal/overviews`
-- **Method**: `GET`
-- **Auth Required**: Yes
-- **Description**: Returns an overview of all submitted research proposals.
-
-#### Get Research Proposals
-- **URL**: `/v1/api/admin/research-proposal`
-- **Method**: `GET`
-- **Auth Required**: Yes
-- **Description**: Returns detailed information about all research proposals.
-
-#### Update Proposal Status
-- **URL**: `/v1/api/admin/research-proposal/status-update/:type/:id/:status`
-- **Method**: `PUT`
-- **Auth Required**: Yes
-- **Path Parameters**:
-  - `type`: "teacher" or "student"
-  - `id`: Proposal ID
-  - `status`: Status code (e.g., 2)
-- **Description**: Updates the status of a research proposal.
-
-#### Update Registration Status
-- **URL**: `/v1/api/admin/research-proposal/registration-status/update/:status`
-- **Method**: `PUT`
-- **Auth Required**: Yes
-- **Path Parameters**:
-  - `status`: Status code (e.g., 1)
-- **Description**: Updates the overall registration status for proposals.
+### Proposal Management
 
 #### Add Approval Budget
-- **URL**: `/v1/api/admin/research-proposal/approval-budget`
-- **Method**: `POST`
-- **Auth Required**: Yes
-- **Body**:
+- **Endpoint:** `POST /v1/api/admin/research-proposal/approval-budget`
+- **Request Body:**
   ```json
   {
     "proposal_type": "teacher",
-    "proposal_id": "67c609c45e255ea3fd2da292",
+    "proposal_id": "proposal_id",
     "approval_budget": 43323
   }
   ```
-- **Description**: Sets an approved budget for a research proposal.
 
-### Reviewer Management
+#### Update Proposal Status
+- **Endpoint:** `PUT /v1/api/admin/research-proposal/status-update/{type}/{proposal_id}/{status}`
+- **Parameters:**
+  - `type`: "teacher" or "student"
+  - `proposal_id`: Unique proposal identifier
+  - `status`: Status code
 
-#### Add Reviewer
-- **URL**: `/v1/api/admin/reviewer/add`
-- **Method**: `POST`
-- **Auth Required**: Yes
-- **Body**:
-  ```json
-  {
-    "name": "Reviewer Name",
-    "email": "reviewer@example.com",
-    "designation": "Associate Professor",
-    "department": "Computer Science Engineering",
-    "address": "University Name"
-  }
-  ```
-- **Description**: Adds a new reviewer to the system.
+#### Get Proposals
+- **Get All Proposals:**
+  - **Endpoint:** `GET /v1/api/admin/research-proposal`
 
-#### Send Proposal to Reviewer
-- **URL**: `/v1/api/admin/research-proposal/sent-to-reviewer`
-- **Method**: `POST`
-- **Auth Required**: Yes
-- **Body**:
-  ```json
-  {
-    "reviewer_id": "67c5e64cf196dd3761eb7b75",
-    "proposal_id": "67c609c45e255ea3fd2da292",
-    "proposal_type": "teacher"
-  }
-  ```
-- **Description**: Assigns a research proposal to a reviewer.
-
-#### Get Reviewers
-- **URL**: `/v1/api/admin/get-reviewers`
-- **Method**: `GET`
-- **Auth Required**: Yes
-- **Description**: Returns a list of all reviewers in the system.
-
-#### Get Review Details
-- **URL**: `/v1/api/admin/reviewer/review-details`
-- **Method**: `GET`
-- **Auth Required**: Yes
-- **Description**: Returns details of all reviews submitted by reviewers.
-
-### Fiscal Year Management
+- **Get Proposal Documents:**
+  - **Endpoint:** `GET /v1/api/admin/research-proposal/overviews`
 
 #### Update Fiscal Year
-- **URL**: `/v1/api/admin/research-proposal/fiscal-year/update`
-- **Method**: `POST`
-- **Auth Required**: Yes
-- **Body**:
+- **Endpoint:** `POST /v1/api/admin/research-proposal/fiscal-year/update`
+- **Request Body:**
   ```json
   {
     "fiscal_year": "2025-2026"
   }
   ```
-- **Description**: Sets the current fiscal year for research proposals.
 
-## Notice Management
+### Reviewer Management
+
+#### Add Reviewer
+- **Endpoint:** `POST /v1/api/admin/reviewer/add`
+- **Request Body:**
+  ```json
+  {
+    "name": "Reviewer Name",
+    "email": "reviewer@example.com",
+    "designation": "Associate Professor",
+    "department": "Computer Science",
+    "address": "University Address"
+  }
+  ```
+
+#### Get Reviewers
+- **Endpoint:** `GET /v1/api/admin/get-reviewers`
+
+#### Set Reviewer for Proposal
+- **Endpoint:** `POST /v1/api/admin/research-proposal/sent-to-reviewer`
+- **Request Body:**
+  ```json
+  {
+    "reviewer_id": "reviewer_id",
+    "proposal_id": "proposal_id",
+    "proposal_type": "student"
+  }
+  ```
+
+#### Get Review Details
+- **Endpoint:** `GET /v1/api/admin/reviewer/review-details`
+
+### Notice Management
 
 #### Add Notice
-- **URL**: `/v1/api/notice/add`
-- **Method**: `POST`
-- **Auth Required**: Yes
-- **Body**: FormData with the following fields:
+- **Endpoint:** `POST /v1/api/notice/add`
+- **Form Data:**
   - `title`: Notice title
   - `description`: Notice description
-  - `link`: Related link (optional)
-  - `files`: Files to attach to the notice
-- **Description**: Creates a new notice with optional file attachments.
+  - `link`: Optional URL
+  - `files`: Attachments
 
 #### Get Notices
-- **URL**: `/v1/api/notice/get-notice`
-- **Method**: `GET`
-- **Auth Required**: Yes
-- **Description**: Returns all notices.
+- **Endpoint:** `GET /v1/api/notice/get-notice/`
 
 #### Delete Notice
-- **URL**: `/v1/api/notice/delete/:id`
-- **Method**: `DELETE`
-- **Auth Required**: Yes
-- **Path Parameters**:
-  - `id`: Notice ID
-- **Description**: Deletes a specific notice.
+- **Endpoint:** `DELETE /v1/api/notice/delete/{notice_id}`
 
-## Reviewer Endpoints
+### Invoice Management
 
-#### Submit Marks
-- **URL**: `/v1/api/reviewer/research-proposal/submit/mark`
-- **Method**: `POST`
-- **Auth Required**: Yes (Reviewer token)
-- **Body**: FormData with the following fields:
-  - `total_mark`: Numerical score (e.g., "70.05")
-  - `marksheet`: PDF file containing evaluation details
-- **Description**: Allows a reviewer to submit evaluation marks for an assigned proposal.
+#### Send Reviewer Invoice
+- **Endpoint:** `POST /v1/api/admin/reviewer-invoice`
+- **Form Data:**
+  - `invoice`: Invoice file
+  - `reviewer_id`: Reviewer identifier
+  - `fiscal_year`: Fiscal year
 
-#### Verify Review
-- **URL**: `/v1/api/reviewer/research-proposal/review/verify`
-- **Method**: `POST`
-- **Auth Required**: Yes (Reviewer token)
-- **Description**: Verifies a reviewer's identity and access to assigned proposals.
+#### Get Invoices
+- **Endpoint:** `GET /v1/api/admin/invoices`
+
+#### Delete Invoice
+- **Endpoint:** `DELETE /v1/api/admin/invoice/delete/{invoice_id}`
 
 ## Student Endpoints
 
-#### Submit Proposal
-- **URL**: `/v1/api/research-proposal/student/submit`
-- **Method**: `POST`
-- **Auth Required**: No
-- **Body**: FormData with the following fields:
-  - `project_director`: JSON string with director's information
-  - `partA`: PDF form part A
-  - `partB`: PDF form part B
-  - `department`: Department name
-  - `faculty`: Faculty name
-  - `project_title`: JSON string with title in Bengali and English
-  - `project_details`: JSON string with page and word count
-  - `total_budget`: Budget amount
-  - `session`: Academic session
-  - `cgpa_honours`: CGPA
-  - `supervisor`: JSON string with supervisor's information
-  - `roll_no`: Student roll number
-- **Description**: Submits a new research proposal from a student.
+### Student Proposal Submission
+- **Endpoint:** `POST /v1/api/research-proposal/student/submit`
+- **Form Data Includes:**
+  - Project director details
+  - Part A and Part B documents
+  - Department and faculty
+  - Project title and details
+  - Budget
+  - Session
+  - CGPA
+  - Supervisor details
+  - Roll number
 
-#### Update Proposal
-- **URL**: `/v1/api/research-proposal/student/update`
-- **Method**: `POST`
-- **Auth Required**: No
-- **Body**: FormData with the following fields:
-  - `proposal_id`: ID of the proposal to update
-  - `partA`: Updated PDF form part A (optional)
-  - `updates`: JSON string with fields to update
-- **Description**: Updates an existing student research proposal.
+### Student Proposal Update
+- **Endpoint:** `POST /v1/api/research-proposal/student/update`
+- **Form Data Includes:**
+  - Proposal ID
+  - Part A document
+  - Updates (title, budget, etc.)
 
 ## Teacher Endpoints
 
-#### Submit Proposal
-- **URL**: `/v1/api/research-proposal/teacher/submit`
-- **Method**: `POST`
-- **Auth Required**: No
-- **Body**: FormData with the following fields:
-  - `project_director`: JSON string with director's information
-  - `partA`: PDF form part A
-  - `partB`: PDF form part B
-  - `designation`: Teacher's designation
-  - `department`: Department name
-  - `faculty`: Faculty name
-  - `project_title`: JSON string with title in Bengali and English
-  - `research_location`: Location where research will be conducted
-  - `project_details`: JSON string with page and word count
-  - `total_budget`: Budget amount
-- **Description**: Submits a new research proposal from a teacher.
+### Teacher Proposal Submission
+- **Endpoint:** `POST /v1/api/research-proposal/teacher/submit`
+- **Form Data Includes:**
+  - Project director details
+  - Part A and Part B documents
+  - Designation
+  - Department and faculty
+  - Project title
+  - Research location
+  - Project details
+  - Total budget
 
-#### Update Proposal
-- **URL**: `/v1/api/research-proposal/teacher/update`
-- **Method**: `POST`
-- **Auth Required**: No
-- **Body**: FormData with the following fields:
-  - `proposal_id`: ID of the proposal to update
-  - `partA`: Updated PDF form part A (optional)
-  - `updates`: JSON string with fields to update
-- **Description**: Updates an existing teacher research proposal.
+### Teacher Proposal Update
+- **Endpoint:** `POST /v1/api/research-proposal/teacher/update`
+- **Form Data Includes:**
+  - Proposal ID
+  - Part A document
+  - Updates (title, budget, etc.)
+
+## Reviewer Endpoints
+
+### Proposal Review
+
+#### Submit Marks
+- **Endpoint:** `POST /v1/api/reviewer/research-proposal/submit/mark`
+- **Form Data:**
+  - `total_mark`: Numerical score
+  - `marksheet`: Review document
+
+#### Verify Review
+- **Endpoint:** `POST /v1/api/reviewer/research-proposal/review/verify`
+
+### Reviewer Invoice Submission
+- **Endpoint:** `POST /v1/api/reviewer/research-proposal/submit/invoice`
+- **Form Data:**
+  - `invoice`: Invoice file
+
+## Notes
+- All endpoints require proper authentication
+- Ensure all form data and JSON payloads are correctly formatted
+- Keep JWT tokens secure and regenerate if compromised
+- Some endpoints may have additional validation not shown in this documentation
+
+## Error Handling
+- Expect standard HTTP status codes (200 for success, 400 for bad request, 401 for unauthorized, 500 for server errors)
+- Specific error messages will be returned in the response body
+
+## Version
+- Current API Version: v1
+- Base URL: `http://localhost:4000/v1/api/`
