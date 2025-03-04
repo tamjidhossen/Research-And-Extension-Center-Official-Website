@@ -490,10 +490,14 @@ const updateProposalStatus = async (req, res) => {
             return res.status(404).json({ message: "Proposal not found" });
         }
         status = Number(status)
-        if (status === 1 || status == 0) {
+        if (status === 3) {
             proposal.approval_status = status;
             await proposal.save();
             return res.status(200).json({ message: "Proposal approved", proposal });
+        } else if (status === 0) {
+            proposal.approval_status = status;
+            await proposal.save();
+            return res.status(200).json({ message: "Proposal approval in pending", proposal });
         } else if (status === 2) {
             const filesToDelete = [proposal.pdf_url_part_A, proposal.pdf_url_part_B];
 
