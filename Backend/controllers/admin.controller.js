@@ -11,7 +11,7 @@ const Admin = require('../models/admin.model.js');
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { sendPasswordResetMail, sendMailToReviewer } = require("../config/emailConfig.js");
+const { sendPasswordResetMail, sendMailToReviewer, sendMailInvoiceToReviewer } = require("../config/emailConfig.js");
 const registerAdmin = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -581,8 +581,91 @@ const getAllReviewerAssignments = async (req, res) => {
     }
 };
 
+const searchReviewerByFiscalYear = async (reviewer_id, fiscal_year) => {
+    try {
+        // Find proposals matching the fiscal year
+        const studentProposals = await StudentProposal.find({ fiscal_year }).select("_id");
+        const teacherProposals = await TeacherProposal.find({ fiscal_year }).select("_id");
+
+        // Extract proposal IDs
+        const studentProposalIds = studentProposals.map(p => p._id);
+        const teacherProposalIds = teacherProposals.map(p => p._id);
+
+        // Check if the reviewer is assigned to any of these proposals
+        const assignmentExists = await ReviewerAssignment.exists({
+            reviewer_id,
+            proposal_id: { $in: [...studentProposalIds, ...teacherProposalIds] }
+        });
+
+        return assignmentExists ? true : false;
+    } catch (error) {
+        console.error("Error searching reviewer by fiscal year:", error);
+        return false;
+    }
+};
+
+const sendInvoice = async (req, res) => {
+    try {
+        const { reviewer_id, fiscal_year } = req.body;
+
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "File upload failed" });
+        }
+
+        // Ensure the reviewer exists in the specified fiscal year
+        const exists = await searchReviewerByFiscalYear(reviewer_id, fiscal_year);
+        if (!exists) {
+            return res.status(404).json({ message: "No such data!" });
+        }
+
+        // File Path
+        const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
+        const fileUrl = `uploads/invoice/${req.file.filename}`;
+
+        // Ensure the file exists before proceeding
+        if (!fs.existsSync(filePath)) {
+            return res.status(500).json({ success: false, message: "Invoice file not found!" });
+        }
+
+        // Find reviewer details
+        const reviewer = await Reviewer.findById(reviewer_id);
+        if (!reviewer) {
+            return res.status(404).json({ message: "Reviewer not found!" });
+        }
+
+        // Generate a secure upload link for the reviewer to upload a signed invoice
+        const token = jwt.sign(
+            { reviewer_id, fiscal_year, message: "invoice" },
+            process.env.SECRET_KEY_REVIEWER,
+            { expiresIn: "7d" }
+        );
+        const uploadUrl = `${process.env.FRONTEND_BASE_URL}/invoice/upload?token=${token}`;
+
+        // Send invoice email
+        await sendMailInvoiceToReviewer(reviewer.email, filePath, uploadUrl);
+
+        res.status(200).json({
+            success: true,
+            message: "Invoice Sent!",
+            uploadUrl, // Include upload URL in the response
+        });
+
+    } catch (error) {
+        console.error("Upload Error:", error);
+
+        // Delete file if there is an error
+        if (req.file) {
+            const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        }
+
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
     sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers, getProposalOverviews,
-    updateProposalStatus, updateRegistrationOpen, updateApprovalBudget, getAllReviewerAssignments
+    updateProposalStatus, updateRegistrationOpen, updateApprovalBudget, getAllReviewerAssignments, sendInvoice
 };

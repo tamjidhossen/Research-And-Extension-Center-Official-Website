@@ -7,4 +7,5 @@ const upload = require("../middlewares/uploadMarkSheet.js");
 router.post('/research-proposal/review/verify', reviewerMiddileware.authReview, reviewerController.verifyReviewer);
 router.post('/research-proposal/submit/mark', reviewerMiddileware.authReview, upload.single("marksheet"), reviewerController.addMark);
 
+
 module.exports = router;

@@ -15,7 +15,6 @@ module.exports.authReview = async (req, res, next) => {
     }
     try {
         const decoded = jwt.verify(token, process.env.SECRET_KEY_REVIEWER);
-        console.log(decoded)
         let proposal;
         if (!decoded.proposal_id || !decoded.reviewer_id || !decoded.proposal_type) {
             return res.status(401).json({ success: false, message: 'Unauthorized' });

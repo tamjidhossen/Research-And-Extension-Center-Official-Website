@@ -1,13 +1,14 @@
 const nodemailer = require("nodemailer");
 require("dotenv").config();
+const fs = require('fs')
 
 // Configure transporter for Gmail
 const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USERNAME, // Your Gmail address
-        pass: process.env.EMAIL_PASSWORD, // Your Gmail app password
-    },
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USERNAME, // Your Gmail address
+    pass: process.env.EMAIL_PASSWORD, // Your Gmail app password
+  },
 });
 
 const createResponsiveEmailTemplate = (content) => `
@@ -50,8 +51,8 @@ const createResponsiveEmailTemplate = (content) => `
  * @returns {Promise} - Resolves when the email is sent successfully
  */
 const sendPasswordResetMail = async (to, resetLink) => {
-    try {
-        const emailContent = `
+  try {
+    const emailContent = `
       <div style="background-color: #1565C0; color: white; padding: 25px; text-align: center;">
         <h1 style="margin: 0; font-size: 24px;">Password Reset Request</h1>
       </div>
@@ -72,30 +73,30 @@ const sendPasswordResetMail = async (to, resetLink) => {
       </div>
     `;
 
-        const htmlContent = createResponsiveEmailTemplate(emailContent);
+    const htmlContent = createResponsiveEmailTemplate(emailContent);
 
-        const mailOptions = {
-            from: `"RESEARCH EXTENSION CENTER" <${process.env.EMAIL_USERNAME}>`,
-            to,
-            subject: "Password Reset Request",
-            text: `Dear User, \n\nYou have requested to reset your password. Please use the following link: ${resetLink} \n\nIf you did not request this, please ignore this email. This link will expire in 1 hour.`,
-            html: htmlContent,
-        };
+    const mailOptions = {
+      from: `"RESEARCH EXTENSION CENTER" <${process.env.EMAIL_USERNAME}>`,
+      to,
+      subject: "Password Reset Request",
+      text: `Dear User, \n\nYou have requested to reset your password. Please use the following link: ${resetLink} \n\nIf you did not request this, please ignore this email. This link will expire in 1 hour.`,
+      html: htmlContent,
+    };
 
-        const info = await transporter.sendMail(mailOptions);
-        return info;
-    } catch (error) {
-        console.error("Error sending password reset email:", error);
-        throw error;
-    }
+    const info = await transporter.sendMail(mailOptions);
+    return info;
+  } catch (error) {
+    console.error("Error sending password reset email:", error);
+    throw error;
+  }
 };
 
 const sendMailToReviewer = async (to, name, token) => {
-    try {
-        // Construct the review link
-        const reviewLink = `${process.env.FRONTEND_URL}/review?token=${token}`;
+  try {
+    // Construct the review link
+    const reviewLink = `${process.env.FRONTEND_URL}/review?token=${token}`;
 
-        const emailContent = `
+    const emailContent = `
       <div style="background-color: #1565C0; color: white; padding: 25px; text-align: center;">
         <h1 style="margin: 0; font-size: 24px;">Research Proposal Review Request</h1>
       </div>
@@ -116,25 +117,49 @@ const sendMailToReviewer = async (to, name, token) => {
       </div>
     `;
 
-        const htmlContent = createResponsiveEmailTemplate(emailContent);
+    const htmlContent = createResponsiveEmailTemplate(emailContent);
 
-        const mailOptions = {
-            from: `"RESEARCH EXTENSION CENTER" <${process.env.EMAIL_USERNAME}>`,
-            to,
-            subject: "Research Proposal Review Request",
-            text: `Dear ${name},\n\nYou have been assigned to review a research proposal. Please use the following link: ${reviewLink} \n\nThis link will expire in 24 hours.`,
-            html: htmlContent,
-        };
+    const mailOptions = {
+      from: `"RESEARCH EXTENSION CENTER" <${process.env.EMAIL_USERNAME}>`,
+      to,
+      subject: "Research Proposal Review Request",
+      text: `Dear ${name},\n\nYou have been assigned to review a research proposal. Please use the following link: ${reviewLink} \n\nThis link will expire in 24 hours.`,
+      html: htmlContent,
+    };
 
-        const info = await transporter.sendMail(mailOptions);
-        return info;
-    } catch (error) {
-        console.error("Error sending reviewer email:", error);
-        throw error;
-    }
+    const info = await transporter.sendMail(mailOptions);
+    return info;
+  } catch (error) {
+    console.error("Error sending reviewer email:", error);
+    throw error;
+  }
+};
+
+const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => {
+  try {
+    const mailOptions = {
+      from: process.env.MAIL_USER,
+      to: reviewerEmail,
+      subject: "Invoice for Review Work",
+      text: `Dear Reviewer,\n\nPlease find attached the invoice for your review work.\n\nAfter signing, please upload it using the following secure link:\n${uploadUrl}\n\nBest regards,\nResearch Proposal System`,
+      attachments: [
+        {
+          filename: "invoice.pdf",
+          path: filePath
+        }
+      ]
+    };
+
+    await transporter.sendMail(mailOptions);
+    // console.log("Invoice email sent successfully.");
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  } catch (error) {
+    console.error("Error sending invoice email:", error);
+  }
 };
 
 module.exports = {
-    sendPasswordResetMail,
-    sendMailToReviewer
+  sendPasswordResetMail,
+  sendMailToReviewer,
+  sendMailInvoiceToReviewer
 };

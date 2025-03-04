@@ -3,7 +3,7 @@ const router = express.Router();
 const adminController = require('../controllers/admin.controller.js');
 const upload = require('../middlewares/uploadDocument.js');
 const adminMiddileware = require('../middlewares/admin.auth.middleware.js')
-
+const uploads = require('../middlewares/uploadInvoice.js');
 
 router.post('/register', adminMiddileware.authAdmin, adminController.registerAdmin);
 router.post('/login', adminController.loginAdmin);
@@ -19,7 +19,7 @@ router.post('/research-proposal/upload', upload.fields([
     { name: 'proposal_mark_sheet', maxCount: 1 },
 ]),
     adminController.updatedDocument);
-
+router.post('/reviewer-invoice', adminMiddileware.authAdmin, uploads.single("invoice"), adminController.sendInvoice);
 router.get('/research-proposal/', adminMiddileware.authAdmin, adminController.getProposal);
 router.get('/reviewer/review-details', adminMiddileware.authAdmin, adminController.getAllReviewerAssignments);
 router.post('/research-proposal/approval-budget', adminMiddileware.authAdmin, adminController.updateApprovalBudget);

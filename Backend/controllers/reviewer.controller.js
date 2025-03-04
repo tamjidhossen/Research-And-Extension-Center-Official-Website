@@ -3,10 +3,15 @@ const path = require('path');
 const { StudentProposal } = require('../models/student.proposal.model.js');
 const { TeacherProposal } = require('../models/teacher.proposal.model.js');
 const { ReviewerAssignment } = require("../models/reviewer.assignment.model.js");
+const { Reviewer } = require("../models/reviewer.model.js");
 const mongoose = require("mongoose");
 const verifyReviewer = async (req, res) => {
     try {
-        const { proposal_type } = req;
+        const { proposal_type, reviewer_id } = req;
+        const reviewer = await Reviewer.findById(reviewer_id);
+        if (!reviewer) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
         let proposal;
         if (proposal_type === "student") {
             proposal = await StudentProposal.findById(req.proposal_id).select("pdf_url_part_B");
@@ -17,7 +22,7 @@ const verifyReviewer = async (req, res) => {
         else {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
-        res.status(201).json({ succes: true, message: "Verified Reviewer", proposal: proposal });
+        res.status(201).json({ succes: true, message: "Verified Reviewer", proposal: proposal, reviewer: reviewer });
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error" });
     }
