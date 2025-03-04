@@ -1,14 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, Navigate } from "react-router-dom";
-import { 
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { 
-  AlertCircle, Download, Upload, FileText, Loader2, User, CheckCircle, X 
+import {
+  AlertCircle,
+  Download,
+  Upload,
+  FileText,
+  Loader2,
+  User,
+  CheckCircle,
+  X,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
@@ -25,11 +37,11 @@ export default function ReviewerPage() {
   const [totalMark, setTotalMark] = useState("");
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [marksheetUrl, setMarksheetUrl] = useState(null);
-  
+
   // Get token from URL params
   useEffect(() => {
     const token = searchParams.get("token");
-    
+
     if (token) {
       // Store token in localStorage
       localStorage.setItem("reviewerToken", token);
@@ -50,17 +62,20 @@ export default function ReviewerPage() {
     const fetchMarkingSheet = async () => {
       try {
         // Get the marking sheet template URL
-        const overviewResponse = await api.get("/api/admin/research-proposal/overviews");
+        const overviewResponse = await api.get(
+          "/api/admin/research-proposal/overviews"
+        );
         if (overviewResponse.data && overviewResponse.data.proposalDoc) {
-          const marksheetPath = overviewResponse.data.proposalDoc.proposal_mark_sheet;
-          
+          const marksheetPath =
+            overviewResponse.data.proposalDoc.proposal_mark_sheet;
+
           if (marksheetPath) {
             const baseUrl = import.meta.env.VITE_API_URL || "";
             const serverRoot = baseUrl.replace(/\/v1$/, "");
             const normalizedPath = marksheetPath.startsWith("uploads/")
               ? marksheetPath
               : `uploads/${marksheetPath}`;
-              
+
             setMarksheetUrl(`${serverRoot}/${normalizedPath}`);
           }
         }
@@ -68,7 +83,7 @@ export default function ReviewerPage() {
         console.error("Failed to fetch marking sheet template:", error);
       }
     };
-    
+
     fetchMarkingSheet();
   }, []);
 
@@ -79,25 +94,24 @@ export default function ReviewerPage() {
         {},
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      
+
       if (response.data && response.data.succes) {
         setAuthorized(true);
         setProposal(response.data.proposal);
-        
-        // Check if the reviewer has already submitted marks
-        // This would require checking ReviewerAssignment status
-        // Since we can't modify backend, we'll handle this on frontend side
-        
-        // Get reviewer details from token (verify route should return reviewer info)
-        // For now we'll use placeholder
-        setReviewer({
-          name: "Reviewer", // Ideally this should come from API
-          email: "reviewer@example.com" // Ideally this should come from API
-        });
+
+        if (response.data.reviewer) {
+          setReviewer(response.data.reviewer);
+        } else {
+          // Fallback if reviewer data is not available
+          setReviewer({
+            name: "Reviewer",
+            email: "reviewer@example.com",
+          });
+        }
       } else {
         setAuthorized(false);
         toast({
@@ -111,7 +125,8 @@ export default function ReviewerPage() {
       setAuthorized(false);
       toast({
         title: "Authentication Failed",
-        description: error.response?.data?.message || "Could not verify your credentials",
+        description:
+          error.response?.data?.message || "Could not verify your credentials",
         variant: "destructive",
       });
     } finally {
@@ -122,8 +137,9 @@ export default function ReviewerPage() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB limit
       toast({
         title: "File too large",
         description: "File size should not exceed 5MB",
@@ -176,14 +192,14 @@ export default function ReviewerPage() {
       });
       return;
     }
-  
+
     // Open in new tab
     window.open(marksheetUrl, "_blank");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!selectedFile) {
       toast({
         title: "Missing file",
@@ -211,15 +227,15 @@ export default function ReviewerPage() {
       formData.append("total_mark", totalMark);
 
       const token = localStorage.getItem("reviewerToken");
-      
+
       const response = await api.post(
-        "/api/reviewer/research-proposal/submit/mark", 
+        "/api/reviewer/research-proposal/submit/mark",
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -236,7 +252,9 @@ export default function ReviewerPage() {
       console.error("Submission error:", error);
       toast({
         title: "Submission Failed",
-        description: error.response?.data?.message || "An error occurred while submitting your review",
+        description:
+          error.response?.data?.message ||
+          "An error occurred while submitting your review",
         variant: "destructive",
       });
     } finally {
@@ -268,7 +286,9 @@ export default function ReviewerPage() {
           </CardHeader>
           <CardContent className="pt-6">
             <p className="text-center text-gray-600 dark:text-gray-300">
-              To review a research proposal, you need a valid invitation link. Please check your email for an invitation or contact the Research and Extension Center.
+              To review a research proposal, you need a valid invitation link.
+              Please check your email for an invitation or contact the Research
+              and Extension Center.
             </p>
           </CardContent>
         </Card>
@@ -291,7 +311,8 @@ export default function ReviewerPage() {
           </CardHeader>
           <CardContent className="pt-6">
             <p className="text-center text-gray-600 dark:text-gray-300">
-              Your review has been submitted successfully. Thank you for your time and expertise.
+              Your review has been submitted successfully. Thank you for your
+              time and expertise.
             </p>
           </CardContent>
         </Card>
@@ -320,14 +341,17 @@ export default function ReviewerPage() {
                 Welcome, {reviewer?.name || "Reviewer"}
               </h2>
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                Thank you for agreeing to review this research proposal. Your expertise is highly valuable to us.
+                Thank you for agreeing to review this research proposal. Your
+                expertise is highly valuable to us.
               </p>
             </div>
 
             {/* Download Section */}
             <div className="space-y-4">
-              <h3 className="font-medium text-lg">Step 1: Download Documents</h3>
-              
+              <h3 className="font-medium text-lg">
+                Step 1: Download Documents
+              </h3>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="border-gray-200 dark:border-gray-800">
                   <CardHeader className="pb-2">
@@ -340,8 +364,8 @@ export default function ReviewerPage() {
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                       Download the research proposal (Part B) to review.
                     </p>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full flex items-center gap-2"
                       onClick={handleDownloadProposal}
                     >
@@ -362,8 +386,8 @@ export default function ReviewerPage() {
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                       Download the marking sheet to fill out.
                     </p>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full flex items-center gap-2"
                       onClick={handleDownloadMarkingSheet}
                     >
@@ -379,8 +403,10 @@ export default function ReviewerPage() {
 
             {/* Upload Section */}
             <div className="space-y-4">
-              <h3 className="font-medium text-lg">Step 2: Upload Completed Marking Sheet</h3>
-              
+              <h3 className="font-medium text-lg">
+                Step 2: Upload Completed Marking Sheet
+              </h3>
+
               <div className="rounded-md border border-dashed border-gray-300 dark:border-gray-700 px-6 py-8 text-center">
                 <label className="flex flex-col items-center cursor-pointer text-sm">
                   <Upload className="h-8 w-8 text-emerald-600 dark:text-emerald-400 mb-2" />
@@ -400,7 +426,9 @@ export default function ReviewerPage() {
                     variant="outline"
                     size="sm"
                     className="border-emerald-200 dark:border-emerald-800"
-                    onClick={() => document.querySelector('input[type="file"]').click()}
+                    onClick={() =>
+                      document.querySelector('input[type="file"]').click()
+                    }
                   >
                     Select File
                   </Button>
@@ -419,7 +447,7 @@ export default function ReviewerPage() {
             {/* Total Mark */}
             <div className="space-y-4">
               <h3 className="font-medium text-lg">Step 3: Enter Total Mark</h3>
-              
+
               <div className="grid gap-2 max-w-xs">
                 <Label htmlFor="total_mark">Total Mark (out of 100)</Label>
                 <Input
@@ -434,16 +462,16 @@ export default function ReviewerPage() {
                   className="border-emerald-200 dark:border-emerald-800/50"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Enter the total mark you've calculated based on the marking sheet
+                  Enter the total mark you've calculated based on the marking
+                  sheet
                 </p>
               </div>
             </div>
 
             {/* Submit Section */}
-            
           </CardContent>
           <CardFooter className="border-t border-gray-100 dark:border-gray-800 px-6 py-4">
-            <Button 
+            <Button
               className="bg-emerald-600 hover:bg-emerald-700 text-white ml-auto"
               disabled={submitting || !selectedFile || !totalMark}
               onClick={handleSubmit}
