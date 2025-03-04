@@ -101,6 +101,14 @@ const OverviewDashboard = () => {
       url: null,
       selectedFileName: null,
     },
+    {
+      id: "proposal_mark_sheet",
+      name: "Proposal Marking Sheet Template",
+      category: "reviewer",
+      uploaded: false,
+      url: null,
+      selectedFileName: null,
+    },
   ]);
 
   const noFilesUploaded = documents.every((doc) => !doc.uploaded);
@@ -161,6 +169,10 @@ const OverviewDashboard = () => {
                 docPath = teacher?.partB_url?.en;
               else if (doc.id === "teacher_partB_bn")
                 docPath = teacher?.partB_url?.bn;
+            }
+
+            if (doc.id === "proposal_mark_sheet") {
+              docPath = response.data.proposalDoc?.proposal_mark_sheet;
             }
 
             // Convert relative path to full URL if a path exists
@@ -380,6 +392,8 @@ const OverviewDashboard = () => {
             docPath = teacher?.partB_url?.en;
           else if (doc.id === "teacher_partB_bn")
             docPath = teacher?.partB_url?.bn;
+        } else if (doc.id === "proposal_mark_sheet") {
+          docPath = documentData?.proposal_mark_sheet;
         }
 
         // Convert relative path to full URL if a path exists
@@ -411,7 +425,7 @@ const OverviewDashboard = () => {
     <div className="space-y-6">
       {/* Title Section */}
       <div>
-        <h2 className="text-2xl font-bold mb-4">Proposal Management</h2>
+        <h2 className="text-2xl font-bold mb-4">Overview</h2>
         <p className="text-muted-foreground">
           Manage proposal submission and upload documents for research proposals
         </p>
@@ -799,6 +813,169 @@ const OverviewDashboard = () => {
                                 [doc.id]: e.target.files[0],
                               }));
 
+                              setDocuments((docs) =>
+                                docs.map((d) =>
+                                  d.id === doc.id
+                                    ? {
+                                        ...d,
+                                        selectedFileName:
+                                          e.target.files[0].name,
+                                      }
+                                    : d
+                                )
+                              );
+                            }
+                          }}
+                        />
+                      </div>
+                      {doc.selectedFileName && (
+                        <div className="mt-2 text-sm text-green-600 dark:text-green-400">
+                          Selected: {doc.selectedFileName}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+          </div>
+
+          <Separator className="my-6" />
+          
+          <h3 className="text-lg font-medium mb-4">Reviewer Documents</h3>
+          <div className="grid gap-4">
+            {documents
+              .filter((doc) => doc.category === "reviewer")
+              .map((doc) => (
+                <div
+                  key={doc.id}
+                  className="border rounded-md p-4 bg-white dark:bg-emerald-950/30"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <span className="font-medium">{doc.name}</span>
+                    </div>
+                    {doc.uploaded && (
+                      <Badge
+                        variant="outline"
+                        className="bg-purple-50 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300"
+                      >
+                        Uploaded
+                      </Badge>
+                    )}
+                  </div>
+          
+                  {doc.uploaded ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        type="button"
+                        size="sm"
+                        asChild
+                        className="text-blue-600 hover:text-blue-700 border-blue-200"
+                      >
+                        <a href={doc.url} target="_blank" rel="noreferrer">
+                          View Document
+                        </a>
+                      </Button>
+                      <Dialog
+                        open={openDialogId === doc.id}
+                        onOpenChange={(open) =>
+                          setOpenDialogId(open ? doc.id : null)
+                        }
+                      >
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            type="button"
+                            size="sm"
+                            className="text-amber-600 hover:text-amber-700 border-amber-200"
+                          >
+                            <FileText className="h-3.5 w-3.5 mr-1" />
+                            Update
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Update Marking Sheet Template</DialogTitle>
+                            <DialogDescription>
+                              Select a new file to replace the current marking sheet template.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4">
+                            <Label htmlFor={`update-file-${doc.id}`}>
+                              New marking sheet file (PDF, DOC, or DOCX)
+                            </Label>
+                            <Input
+                              id={`update-file-${doc.id}`}
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              className="mt-2"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  setSelectedFiles((prev) => ({
+                                    ...prev,
+                                    [doc.id]: e.target.files[0],
+                                  }));
+          
+                                  setDocuments((docs) =>
+                                    docs.map((d) =>
+                                      d.id === doc.id
+                                        ? {
+                                            ...d,
+                                            selectedFileName:
+                                              e.target.files[0].name,
+                                          }
+                                        : d
+                                    )
+                                  );
+                                }
+                              }}
+                            />
+                          </div>
+                          <DialogFooter>
+                            <DialogClose asChild>
+                              <Button variant="outline" type="button">
+                                Cancel
+                              </Button>
+                            </DialogClose>
+                            <Button
+                              type="button"
+                              onClick={() => {
+                                if (selectedFiles[doc.id]) {
+                                  updateDocument(doc.id);
+                                } else {
+                                  toast.error("Please select a file to update");
+                                }
+                              }}
+                            >
+                              Update Document
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      <Label
+                        htmlFor={`file-${doc.id}`}
+                        className="block mb-2 text-sm"
+                      >
+                        Upload marking sheet template (PDF or DOCX)
+                      </Label>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          id={`file-${doc.id}`}
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          className="text-sm"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              setSelectedFiles((prev) => ({
+                                ...prev,
+                                [doc.id]: e.target.files[0],
+                              }));
+          
                               setDocuments((docs) =>
                                 docs.map((d) =>
                                   d.id === doc.id

@@ -24,6 +24,7 @@ export default function ReviewerPage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [totalMark, setTotalMark] = useState("");
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [marksheetUrl, setMarksheetUrl] = useState(null);
   
   // Get token from URL params
   useEffect(() => {
@@ -44,6 +45,32 @@ export default function ReviewerPage() {
       }
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const fetchMarkingSheet = async () => {
+      try {
+        // Get the marking sheet template URL
+        const overviewResponse = await api.get("/api/admin/research-proposal/overviews");
+        if (overviewResponse.data && overviewResponse.data.proposalDoc) {
+          const marksheetPath = overviewResponse.data.proposalDoc.proposal_mark_sheet;
+          
+          if (marksheetPath) {
+            const baseUrl = import.meta.env.VITE_API_URL || "";
+            const serverRoot = baseUrl.replace(/\/v1$/, "");
+            const normalizedPath = marksheetPath.startsWith("uploads/")
+              ? marksheetPath
+              : `uploads/${marksheetPath}`;
+              
+            setMarksheetUrl(`${serverRoot}/${normalizedPath}`);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch marking sheet template:", error);
+      }
+    };
+    
+    fetchMarkingSheet();
+  }, []);
 
   const verifyToken = async (token) => {
     try {
@@ -141,16 +168,17 @@ export default function ReviewerPage() {
   };
 
   const handleDownloadMarkingSheet = () => {
-    // This would be a template file URL for marking sheet
-    // For now, let's assume there's a standard marking sheet
-    toast({
-      title: "Marking Sheet",
-      description: "Downloading marking sheet template",
-    });
-    
-    // Replace with actual marking sheet URL
-    const markingSheetUrl = "https://example.com/marking-sheet.pdf"; 
-    window.open(markingSheetUrl, "_blank");
+    if (!marksheetUrl) {
+      toast({
+        title: "Download Failed",
+        description: "Marking sheet template is not available",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    // Open in new tab
+    window.open(marksheetUrl, "_blank");
   };
 
   const handleSubmit = async (e) => {

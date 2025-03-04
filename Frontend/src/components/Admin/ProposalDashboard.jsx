@@ -22,7 +22,7 @@ import {
   DollarSign,
   MailCheck,
   Clock,
-  Loader2, 
+  Loader2,
 } from "lucide-react";
 import {
   Card,
@@ -79,6 +79,8 @@ export default function ProposalsDashboard() {
   const [reviewerEmail1, setReviewerEmail1] = useState("");
   const [reviewerEmail2, setReviewerEmail2] = useState("");
   const [existingReviewers, setExistingReviewers] = useState([]);
+  const [showAllocationConfirmDialog, setShowAllocationConfirmDialog] =
+    useState(false);
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [sendingEmails, setSendingEmails] = useState(false);
 
@@ -301,6 +303,7 @@ export default function ProposalsDashboard() {
             status: p.status,
             totalMarks: p.reviewer_avg_mark || null,
             totalBudget: p.total_budget,
+            approvalBudget: p.approval_budget,
             partAPdfUrl: p.pdf_url_part_A,
             partBPdfUrl: p.pdf_url_part_B,
             reviewers: Array.isArray(p.reviewer)
@@ -338,6 +341,7 @@ export default function ProposalsDashboard() {
             status: p.status,
             totalMarks: p.reviewer_avg_mark || null,
             totalBudget: p.total_budget,
+            approvalBudget: p.approval_budget,
             partAPdfUrl: p.pdf_url_part_A,
             partBPdfUrl: p.pdf_url_part_B,
             reviewers: Array.isArray(p.reviewer)
@@ -425,7 +429,7 @@ export default function ProposalsDashboard() {
 
       if (response.data) {
         // If budget is being allocated, update it as well
-        if (newStatus === 1 && allocatedBudget) {
+        if (newStatus === 3 && allocatedBudget) {
           await api.post("/api/admin/research-proposal/approval-budget", {
             proposal_id: proposal.id,
             proposal_type: proposal.applicantType.toLowerCase(),
@@ -442,7 +446,7 @@ export default function ProposalsDashboard() {
               ? {
                   ...p,
                   status: newStatus,
-                  totalBudget: allocatedBudget || p.totalBudget,
+                  approvalBudget: allocatedBudget || p.totalBudget,
                 }
               : p
           )
@@ -463,7 +467,11 @@ export default function ProposalsDashboard() {
       toast.error("Please enter an allocation amount");
       return;
     }
+    setShowAllocationDialog(false);
+    setShowAllocationConfirmDialog(true);
+  };
 
+  const confirmAllocation = () => {
     try {
       api
         .post("/api/admin/research-proposal/approval-budget", {
@@ -473,14 +481,13 @@ export default function ProposalsDashboard() {
           approval_budget: parseFloat(allocatedAmount),
         })
         .then(() => {
-          // Then update the status to allocated (3)
           updateProposalStatus(
             selectedProposalForAllocation,
-            1, // Allocated status
+            3,
             parseFloat(allocatedAmount)
           );
 
-          setShowAllocationDialog(false);
+          setShowAllocationConfirmDialog(false);
           setSelectedProposalForAllocation(null);
           setAllocatedAmount("");
 
@@ -512,8 +519,6 @@ export default function ProposalsDashboard() {
       applicantType: "all",
     });
   };
-
-
 
   const assignReviewers = async (proposal) => {
     if (!proposal) return;
@@ -1314,6 +1319,16 @@ export default function ProposalsDashboard() {
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
+                      ) : proposal.status === 3 ? (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          title="View Allocation Details"
+                          className="bg-green-50 hover:bg-green-100"
+                          onClick={() => openReviewerDetailsDialog(proposal)}
+                        >
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                        </Button>
                       ) : (
                         <Button
                           variant="outline"
@@ -1556,7 +1571,6 @@ export default function ProposalsDashboard() {
                 <span className="text-sm text-green-800 font-medium">
                   Review Score: {selectedProposalForAllocation.totalMarks}/100
                 </span>
-                
               </div>
             )}
           </div>
@@ -1578,6 +1592,74 @@ export default function ProposalsDashboard() {
         </DialogContent>
       </Dialog>
 
+      {/* Allocation Confirmation Dialog */}
+      <Dialog
+        open={showAllocationConfirmDialog}
+        onOpenChange={setShowAllocationConfirmDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Budget Allocation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to allocate the following budget?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+              <h3 className="font-medium text-sm mb-1">
+                {selectedProposalForAllocation?.title}
+              </h3>
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Applicant:</span>
+                  <p className="font-medium">
+                    {selectedProposalForAllocation?.applicant}
+                  </p>
+                </div>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">
+                    Requested Budget:
+                  </span>
+                  <p className="font-medium">
+                    BDT {selectedProposalForAllocation?.totalBudget}
+                  </p>
+                </div>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Allocating:</span>
+                  <p className="font-bold text-green-600">
+                    BDT {allocatedAmount}
+                  </p>
+                </div>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Review Score:</span>
+                  <p className="font-medium">
+                    {selectedProposalForAllocation?.totalMarks || "N/A"}/100
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAllocationConfirmDialog(false);
+                setShowAllocationDialog(true); // Go back to allocation dialog
+              }}
+            >
+              Back
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={confirmAllocation}
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Confirm Allocation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Reviewer Details Dialog */}
       <Dialog
         open={showReviewerDetailsDialog}
@@ -1585,13 +1667,61 @@ export default function ProposalsDashboard() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Assigned Reviewers</DialogTitle>
+            <DialogTitle>
+              {selectedProposalReviewers?.proposal.status === 3
+                ? "Allocation Details"
+                : "Assigned Reviewers"}
+            </DialogTitle>
             <DialogDescription>
-              Reviewers assigned to this proposal and their evaluation status.
+              {selectedProposalReviewers?.proposal.status === 3
+                ? "This proposal has been funded with allocated budget and reviewer evaluations."
+                : "Reviewers assigned to this proposal and their evaluation status."}
             </DialogDescription>
           </DialogHeader>
 
+          {/* Show allocated budget section if status is 3 */}
+          {selectedProposalReviewers?.proposal.status === 3 && (
+            <div className="bg-green-50 p-3 rounded-md border border-green-200 mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <DollarSign className="h-5 w-5 mr-2 text-green-600" />
+                  <span className="font-medium">Allocation Details</span>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="bg-green-100 text-green-800 border-green-200"
+                >
+                  Funded
+                </Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Requested Budget:
+                  </p>
+                  <p className="text-md font-medium">
+                    BDT {selectedProposalReviewers?.proposal.totalBudget}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Allocated Budget:
+                  </p>
+                  <p className="text-md font-bold text-green-700">
+                    BDT {selectedProposalReviewers?.proposal.approvalBudget}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Allocated on {formatDate(new Date())}
+              </p>
+            </div>
+          )}
+
           <div className="space-y-4 py-3">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">
+              Reviewer Evaluations
+            </h3>
             {selectedProposalReviewers?.reviewers.map((reviewer, index) => (
               <div
                 key={index}
