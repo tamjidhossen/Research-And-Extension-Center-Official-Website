@@ -7,16 +7,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  User, 
-  LogOut, 
-  FileText, 
-  BellRing, 
-  Settings, 
-  BookOpen, 
-  MenuIcon, 
+import {
+  User,
+  LogOut,
+  FileText,
+  BellRing,
+  Settings,
+  BookOpen,
+  MenuIcon,
   X,
-  PieChart
+  PieChart,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -24,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import ProposalsDashboard from "./ProposalDashboard";
 import NoticesDashboard from "./NoticesDashboard";
 import OverviewDashboard from "./OverviewDashboard";
+import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -32,6 +35,10 @@ export default function Dashboard() {
   });
   const [adminName, setAdminName] = useState("Admin");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const savedState = localStorage.getItem("sidebarCollapsed");
+    return savedState ? savedState === "true" : false;
+  });
 
   useEffect(() => {
     // Get admin data from localStorage
@@ -39,7 +46,7 @@ export default function Dashboard() {
     if (adminData && adminData.name) {
       setAdminName(adminData.name);
     }
-    
+
     // Save active view to localStorage
     localStorage.setItem("dashboardView", activeView);
   }, [activeView]);
@@ -56,13 +63,19 @@ export default function Dashboard() {
     setSidebarOpen(false);
   };
 
+  const toggleSidebar = () => {
+    const newState = !sidebarCollapsed;
+    setSidebarCollapsed(newState);
+    localStorage.setItem("sidebarCollapsed", newState.toString());
+  };
+
   const renderDashboard = () => {
     switch (activeView) {
       case "proposals":
         return <ProposalsDashboard />;
       case "notices":
         return <NoticesDashboard />;
-      case "overview":
+      case "statistics":
         return <OverviewDashboard />;
       default:
         return <OverviewDashboard />;
@@ -72,14 +85,17 @@ export default function Dashboard() {
   const NavItem = ({ icon, label, value }) => (
     <button
       onClick={() => handleViewChange(value)}
-      className={`flex items-center gap-3 w-full px-4 py-3 rounded-md transition-colors ${
+      className={cn(
+        "flex items-center gap-3 w-full px-4 py-3 rounded-md transition-colors",
         activeView === value
           ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
-          : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-emerald-900/30"
-      }`}
+          : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-emerald-900/30",
+        sidebarCollapsed && "justify-center px-2"
+      )}
+      title={sidebarCollapsed ? label : undefined}
     >
       {icon}
-      <span>{label}</span>
+      {!sidebarCollapsed && <span>{label}</span>}
     </button>
   );
 
@@ -95,31 +111,39 @@ export default function Dashboard() {
                     <MenuIcon className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[240px] sm:w-[300px] p-0">
+                <SheetContent
+                  side="left"
+                  className="w-[240px] sm:w-[300px] p-0"
+                  hideCloseButton={true}
+                >
                   <div className="py-6 px-4">
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-lg font-semibold">Dashboard</h2>
-                      <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setSidebarOpen(false)}
+                        className="rounded-full hover:bg-gray-100"
+                      >
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
                     <nav className="space-y-2">
-                      <NavItem 
-                        icon={<PieChart className="h-5 w-5" />} 
-                        label="Overview" 
-                        value="statistics" 
+                      <NavItem
+                        icon={<PieChart className="h-5 w-5" />}
+                        label="Overview"
+                        value="statistics"
                       />
-                      <NavItem 
-                        icon={<FileText className="h-5 w-5" />} 
-                        label="Proposals" 
-                        value="proposals" 
+                      <NavItem
+                        icon={<FileText className="h-5 w-5" />}
+                        label="Proposals"
+                        value="proposals"
                       />
-                      <NavItem 
-                        icon={<BellRing className="h-5 w-5" />} 
-                        label="Notices" 
-                        value="notices" 
+                      <NavItem
+                        icon={<BellRing className="h-5 w-5" />}
+                        label="Notices"
+                        value="notices"
                       />
-                      
                     </nav>
                   </div>
                 </SheetContent>
@@ -132,9 +156,9 @@ export default function Dashboard() {
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">{adminName}</span>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleLogout}
                 className="gap-2"
               >
@@ -148,32 +172,57 @@ export default function Dashboard() {
 
       <div className="flex flex-1">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-64 border-r p-6">
-          <h2 className="text-lg font-semibold mb-6">Dashboard</h2>
-          <nav className="space-y-2">
-            <NavItem 
-              icon={<PieChart className="h-5 w-5" />} 
-              label="Overview" 
-              value="statistics" 
-            />
-            <NavItem 
-              icon={<FileText className="h-5 w-5" />} 
-              label="Proposals" 
-              value="proposals" 
-            />
-            <NavItem 
-              icon={<BellRing className="h-5 w-5" />} 
-              label="Notices" 
-              value="notices" 
-            />
-            
-          </nav>
+        <aside
+          className={cn(
+            "hidden lg:flex flex-col h-full border-r transition-all duration-300 ease-in-out",
+            sidebarCollapsed ? "w-16" : "w-64"
+          )}
+        >
+          <div className="flex flex-col flex-1 p-4">
+            <div
+              className={cn(
+                "flex items-center mb-6",
+                sidebarCollapsed ? "justify-center" : "justify-between"
+              )}
+            >
+              {!sidebarCollapsed && (
+                <h2 className="text-lg font-semibold">Dashboard</h2>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full hover:bg-gray-100"
+                onClick={toggleSidebar}
+              >
+                {sidebarCollapsed ? (
+                  <ChevronRight className="h-4 w-4" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <nav className="space-y-2">
+              <NavItem
+                icon={<PieChart className="h-5 w-5" />}
+                label="Overview"
+                value="statistics"
+              />
+              <NavItem
+                icon={<FileText className="h-5 w-5" />}
+                label="Proposals"
+                value="proposals"
+              />
+              <NavItem
+                icon={<BellRing className="h-5 w-5" />}
+                label="Notices"
+                value="notices"
+              />
+            </nav>
+          </div>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
-          {renderDashboard()}
-        </main>
+        <main className="flex-1 p-6">{renderDashboard()}</main>
       </div>
     </div>
   );
