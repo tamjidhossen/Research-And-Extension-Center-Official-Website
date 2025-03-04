@@ -425,7 +425,7 @@ export default function ProposalsDashboard() {
 
       if (response.data) {
         // If budget is being allocated, update it as well
-        if (newStatus === 3 && allocatedBudget) {
+        if (newStatus === 1 && allocatedBudget) {
           await api.post("/api/admin/research-proposal/approval-budget", {
             proposal_id: proposal.id,
             proposal_type: proposal.applicantType.toLowerCase(),
@@ -476,7 +476,7 @@ export default function ProposalsDashboard() {
           // Then update the status to allocated (3)
           updateProposalStatus(
             selectedProposalForAllocation,
-            3, // Allocated status
+            1, // Allocated status
             parseFloat(allocatedAmount)
           );
 
@@ -513,50 +513,7 @@ export default function ProposalsDashboard() {
     });
   };
 
-  // const updateProposalMarks = async (proposalId, r1marks, r2marks) => {
-  //   try {
-  //     const proposal = proposals.find((p) => p.id === proposalId);
-  //     if (!proposal) return;
 
-  //     if (!r1marks || !r2marks) {
-  //       toast.error("Please enter marks for both reviewers");
-  //       return;
-  //     }
-
-  //     const r1 = parseInt(r1marks) || 0;
-  //     const r2 = parseInt(r2marks) || 0;
-
-  //     // Calculate average
-  //     const avgMark = (r1 + r2) / 2;
-
-  //     // Api needed
-
-  //     // Update the reviewers' marks in local state first
-  //     setProposals((prevProposals) =>
-  //       prevProposals.map((p) =>
-  //         p.id === proposalId
-  //           ? {
-  //               ...p,
-  //               totalMarks: avgMark,
-  //               reviewers: [
-  //                 { ...p.reviewers[0], marksGiven: r1 },
-  //                 { ...p.reviewers[1], marksGiven: r2 },
-  //               ],
-  //               status: 2, // Set to "Reviewed"
-  //             }
-  //           : p
-  //       )
-  //     );
-
-  //     // Update the proposal status to "Reviewed" (2)
-  //     await updateProposalStatus(proposal, 2);
-
-  //     toast.success("Marks updated successfully");
-  //   } catch (error) {
-  //     console.error("Failed to update marks:", error);
-  //     toast.error(error.response?.data?.message || "Failed to update marks");
-  //   }
-  // };
 
   const assignReviewers = async (proposal) => {
     if (!proposal) return;
@@ -1599,16 +1556,7 @@ export default function ProposalsDashboard() {
                 <span className="text-sm text-green-800 font-medium">
                   Review Score: {selectedProposalForAllocation.totalMarks}/100
                 </span>
-                <Badge
-                  variant="outline"
-                  className="bg-green-100 text-green-800"
-                >
-                  {selectedProposalForAllocation.totalMarks >= 70
-                    ? "High Priority"
-                    : selectedProposalForAllocation.totalMarks >= 50
-                    ? "Medium Priority"
-                    : "Low Priority"}
-                </Badge>
+                
               </div>
             )}
           </div>
@@ -1676,7 +1624,7 @@ export default function ProposalsDashboard() {
                   <div className="space-y-2">
                     <div className="text-sm flex items-center font-medium text-green-700">
                       <CheckCircle className="h-3.5 w-3.5 mr-1 text-green-600" />
-                      Marks Given: {reviewer.marks}/50
+                      Marks Given: {reviewer.marks}/100
                     </div>
                     {reviewer.markSheetUrl && (
                       <Button
