@@ -24,7 +24,7 @@ const submitProposal = async (req, res, next) => {
             designation,
             department,
             faculty,
-            project_title: JSON.parse(project_title),
+            project_title: project_title,
             research_location,
             project_details: JSON.parse(project_details),
             total_budget,

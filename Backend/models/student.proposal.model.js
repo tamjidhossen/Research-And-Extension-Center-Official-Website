@@ -7,7 +7,6 @@ const studentProposalSchema = new mongoose.Schema(
         proposal_type: { type: String, required: true },
         fiscal_year: { type: String, required: true },
         project_director: {
-            name_bn: { type: String, required: true },
             name_en: { type: String, required: true },
             mobile: { type: String, required: true },
             email: { type: String, required: true }
@@ -21,10 +20,7 @@ const studentProposalSchema = new mongoose.Schema(
             name: { type: String, required: true },
             designation: { type: String, required: true }
         },
-        project_title: {
-            title_bn: { type: String, required: true },
-            title_en: { type: String, required: true }
-        },
+        project_title: { type: String, required: true },
         project_details: {
             approx_pages: { type: Number, required: true },
             approx_words: { type: Number, required: true }

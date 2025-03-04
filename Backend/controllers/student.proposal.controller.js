@@ -27,7 +27,7 @@ const submitProposal = async (req, res) => {
             roll_no,
             cgpa_honours,
             supervisor: JSON.parse(supervisor),
-            project_title: JSON.parse(project_title),
+            project_title: project_title,
             project_details: JSON.parse(project_details),
             total_budget,
             pdf_url_part_A: req.files['partA'] ? req.files['partA'][0].path : null,
