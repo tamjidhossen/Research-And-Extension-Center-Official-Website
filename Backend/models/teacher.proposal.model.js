@@ -59,6 +59,7 @@ const teacherProposalSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+// Pre-save hook to generate proposal_number
 teacherProposalSchema.pre("save", async function (next) {
     if (!this.isNew) return next(); // Only generate number for new proposals
 
@@ -71,11 +72,15 @@ teacherProposalSchema.pre("save", async function (next) {
         // Extract last two digits of each year
         const yearCode = yearParts[0].slice(-2) + yearParts[1].slice(-2);
 
+        // Lazy load StudentProposal to avoid circular dependency
+        const StudentProposal = require("./student.proposal.model.js").StudentProposal;
+
         // Count existing proposals for the same fiscal year
-        const count = await mongoose.model("TeacherProposal").countDocuments({ fiscal_year: this.fiscal_year });
+        const count1 = await mongoose.models.TeacherProposal.countDocuments({ fiscal_year: this.fiscal_year });
+        const count2 = await StudentProposal.countDocuments({ fiscal_year: this.fiscal_year });
 
         // Generate proposal number (e.g., 2526001, 2526002, ...)
-        this.proposal_number = parseInt(yearCode + String(count + 1).padStart(3, "0"));
+        this.proposal_number = parseInt(yearCode + String(count1 + count2 + 1).padStart(3, "0"));
 
         next();
     } catch (error) {
@@ -83,20 +88,25 @@ teacherProposalSchema.pre("save", async function (next) {
     }
 });
 
+// Generate token for update link
 teacherProposalSchema.methods.generateUpdateToken = function () {
     return jwt.sign(
         { _id: this._id, proposal: "teacher" },
         process.env.SECRET_KEY_TEACHER,
-        { expiresIn: '7d' }
+        { expiresIn: "7d" }
     );
 };
 
+// Generate token for reviewer access
 teacherProposalSchema.methods.generateReviewerToken = function (reviewer_id) {
-    const token = jwt.sign({ proposal_id: this._id, reviewer_id: reviewer_id, proposal_type: "teacher" }, process.env.SECRET_KEY_REVIEWER, { expiresIn: '7d' });
-    return token;
+    return jwt.sign(
+        { proposal_id: this._id, reviewer_id: reviewer_id, proposal_type: "teacher" },
+        process.env.SECRET_KEY_REVIEWER,
+        { expiresIn: "7d" }
+    );
 };
 
-
-const TeacherProposal = mongoose.model('TeacherProposal', teacherProposalSchema);
+// Register the model safely
+const TeacherProposal = mongoose.models.TeacherProposal || mongoose.model("TeacherProposal", teacherProposalSchema);
 
 module.exports = { TeacherProposal };
