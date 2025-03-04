@@ -21,6 +21,8 @@ router.post('/research-proposal/upload', upload.fields([
     adminController.updatedDocument);
 router.post('/reviewer-invoice', adminMiddileware.authAdmin, uploads.single("invoice"), adminController.sendInvoice);
 router.get('/research-proposal/', adminMiddileware.authAdmin, adminController.getProposal);
+router.get('/invoices', adminMiddileware.authAdmin, adminController.getAllInvoices);
+router.delete('/invoice/delete/:id', adminMiddileware.authAdmin, adminController.deleteInvoice);
 router.get('/reviewer/review-details', adminMiddileware.authAdmin, adminController.getAllReviewerAssignments);
 router.post('/research-proposal/approval-budget', adminMiddileware.authAdmin, adminController.updateApprovalBudget);
 router.post('/research-proposal/request-reset-password', adminController.requestPasswordReset);

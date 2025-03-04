@@ -7,6 +7,7 @@ const { TeacherProposal } = require('../models/teacher.proposal.model.js');
 const { StudentProposal } = require('../models/student.proposal.model.js');
 const { ReviewerAssignment } = require("../models/reviewer.assignment.model.js");
 const { Reviewer } = require("../models/reviewer.model.js");
+const { Invoice } = require("../models/invoice.model.js");
 const Admin = require('../models/admin.model.js');
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
@@ -663,9 +664,46 @@ const sendInvoice = async (req, res) => {
     }
 };
 
+const getAllInvoices = async (req, res) => {
+    try {
+        const invoices = await Invoice.find().populate("reviewer_id", "name email");
+
+        if (invoices.length === 0) {
+            return res.status(404).json({ success: false, message: "No invoices found!" });
+        }
+
+        res.status(200).json({ success: true, invoices });
+    } catch (error) {
+        console.error("Error retrieving all invoices:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+const deleteInvoice = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const invoice = await Invoice.findById(id);
+
+        if (!invoice) {
+            return res.status(404).json({ success: false, message: "Invoice not found!" });
+        }
+
+        const filePath = path.join(__dirname, "..", invoice.invoice_url);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+
+        await Invoice.findByIdAndDelete(id);
+
+        res.status(200).json({ success: true, message: "Invoice deleted successfully!" });
+    } catch (error) {
+        console.error("Error deleting invoice:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
 
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
     sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers, getProposalOverviews,
-    updateProposalStatus, updateRegistrationOpen, updateApprovalBudget, getAllReviewerAssignments, sendInvoice
+    updateProposalStatus, updateRegistrationOpen, updateApprovalBudget, getAllReviewerAssignments, sendInvoice, getAllInvoices, deleteInvoice
 };

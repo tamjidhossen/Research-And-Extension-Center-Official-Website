@@ -3,8 +3,9 @@ const { StudentProposal } = require('../models/student.proposal.model.js');
 const mongoose = require("mongoose");
 
 const jwt = require('jsonwebtoken');
+const { Reviewer } = require('../models/reviewer.model.js');
 
-module.exports.authReview = async (req, res, next) => {
+const authReview = async (req, res, next) => {
     let token = null;
     token = req.headers.authorization?.split(' ')[1];
     if (!token && req.cookies && req.cookies.token) {
@@ -48,4 +49,37 @@ module.exports.authReview = async (req, res, next) => {
         console.error("Authentication Error:", err);
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
+};
+
+const authenticate = async (req, res, next) => {
+    try {
+        let token = req.headers.authorization?.split(' ')[1] || req.cookies?.token || req.query?.token;
+
+        if (!token) {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
+
+        const decoded = jwt.verify(token, process.env.SECRET_KEY_REVIEWER);
+
+        if (!decoded.reviewer_id || !decoded.fiscal_year || decoded.message !== "invoice") {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
+
+        const reviewer = await Reviewer.findById(decoded.reviewer_id);
+        if (!reviewer) {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
+
+        req.reviewer = reviewer;
+        req.fiscal_year = decoded.fiscal_year;
+
+        next();
+    } catch (err) {
+        return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+};
+
+module.exports = {
+    authReview,
+    authenticate
 };

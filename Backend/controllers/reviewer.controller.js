@@ -4,6 +4,7 @@ const { StudentProposal } = require('../models/student.proposal.model.js');
 const { TeacherProposal } = require('../models/teacher.proposal.model.js');
 const { ReviewerAssignment } = require("../models/reviewer.assignment.model.js");
 const { Reviewer } = require("../models/reviewer.model.js");
+const { Invoice } = require("../models/invoice.model.js");
 const mongoose = require("mongoose");
 const verifyReviewer = async (req, res) => {
     try {
@@ -93,4 +94,41 @@ const addMark = async (req, res) => {
     }
 };
 
-module.exports = { verifyReviewer, addMark };
+const submitInvoice = async (req, res) => {
+    try {
+        const { reviewer, fiscal_year } = req;
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "File upload failed" });
+        }
+
+        const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
+        const fileUrl = `uploads/invoice/${req.file.filename}`;
+        const invoice = new Invoice({
+            reviewer_id: reviewer._id,
+            fiscal_year,
+            invoice_url: fileUrl
+        });
+
+        await invoice.save();
+
+        res.status(200).json({ success: true, message: "Invoice submitted successfully!" });
+
+    } catch (error) {
+        console.error("Invoice Submission Error:", error);
+
+        if (req.file) {
+            const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
+            console.log("Attempting to delete:", filePath);
+
+            try {
+                await fs.unlink(filePath);
+                console.log("File deleted successfully.");
+            } catch (unlinkError) {
+                console.error("Error deleting file:", unlinkError);
+            }
+        }
+
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+module.exports = { verifyReviewer, addMark, submitInvoice };
