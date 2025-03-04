@@ -23,8 +23,8 @@ const proposalDocumentSchema = new mongoose.Schema({
             en: { type: String, required: true, default: "" },
             bn: { type: String, required: true, default: "" }
         }
-    }
-
+    },
+    proposal_mark_sheet: { type: String, required: true, default: "" }
 }, { timestamps: true });
 
 const ProposalDocument = mongoose.model('ProposalDocument', proposalDocumentSchema);

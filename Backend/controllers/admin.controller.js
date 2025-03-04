@@ -233,7 +233,8 @@ const updatedDocument = async (req, res, next) => {
                 teacher: {
                     partA_url: { en: null, bn: null },
                     partB_url: { en: null, bn: null }
-                }
+                },
+                proposal_mark_sheet: null
             });
         }
 
@@ -267,7 +268,7 @@ const updatedDocument = async (req, res, next) => {
         proposalDoc.teacher.partA_url.bn = setFilePath('teacher_partA_bn', proposalDoc.teacher.partA_url.bn);
         proposalDoc.teacher.partB_url.en = setFilePath('teacher_partB_en', proposalDoc.teacher.partB_url.en);
         proposalDoc.teacher.partB_url.bn = setFilePath('teacher_partB_bn', proposalDoc.teacher.partB_url.bn);
-
+        proposalDoc.proposal_mark_sheet = setFilePath('proposal_mark_sheet', proposalDoc.proposal_mark_sheet);
         // Save the updated document
         const updatedDocument = await proposalDoc.save();
         res.status(200).json({ message: "Proposal document updated successfully", updatedDocument });

@@ -15,7 +15,8 @@ router.post('/research-proposal/upload', upload.fields([
     { name: 'teacher_partA_en', maxCount: 1 },
     { name: 'teacher_partA_bn', maxCount: 1 },
     { name: 'teacher_partB_en', maxCount: 1 },
-    { name: 'teacher_partB_bn', maxCount: 1 }
+    { name: 'teacher_partB_bn', maxCount: 1 },
+    { name: 'proposal_mark_sheet', maxCount: 1 },
 ]),
     adminController.updatedDocument);
 
