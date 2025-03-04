@@ -375,8 +375,8 @@ const addReviewer = async (req, res) => {
     try {
         const { name, email, designation, department, address } = req.body;
 
-        if (!name || !email || !designation || !department || !address) {
-            return res.status(400).json({ success: false, message: "All fields are required" });
+        if (!name || !email) {
+            return res.status(400).json({ success: false, message: "Name and email required!" });
         }
 
         const existingReviewer = await Reviewer.findOne({ email });
