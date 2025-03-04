@@ -19,6 +19,9 @@ import {
   ChevronUp,
   ChevronDown,
   X,
+  DollarSign,
+  MailCheck,
+  Clock,
 } from "lucide-react";
 import {
   Card,
@@ -63,33 +66,29 @@ import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 
 export default function ProposalsDashboard() {
-  // States
+  // State variables
   const [proposals, setProposals] = useState([]);
-  const [filteredProposals, setFilteredProposals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeDocumentTab, setActiveDocumentTab] = useState("partA");
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [reviewerName1, setReviewerName1] = useState("");
+  const [reviewerName2, setReviewerName2] = useState("");
+  const [reviewerEmail1, setReviewerEmail1] = useState("");
+  const [reviewerEmail2, setReviewerEmail2] = useState("");
+  const [existingReviewers, setExistingReviewers] = useState([]);
+  const [selectedProposal, setSelectedProposal] = useState(null);
+
+  const [showReviewerDetailsDialog, setShowReviewerDetailsDialog] =
+    useState(false);
+  const [selectedProposalReviewers, setSelectedProposalReviewers] =
+    useState(null);
+  const [reviewAssignments, setReviewAssignments] = useState([]);
+
   const [sortConfig, setSortConfig] = useState({
     key: "submissionDate",
     direction: "desc",
-  });
-  const [statistics, setStatistics] = useState({
-    total: 0,
-    pending: 0,
-    pending_review: 0,
-    reviewed: 0,
-    student: 0,
-    teacher: 0,
-  });
-  const [selectedProposal, setSelectedProposal] = useState(null);
-  const [reviewerEmail1, setReviewerEmail1] = useState("");
-  const [reviewerName1, setReviewerName1] = useState("");
-  const [reviewerEmail2, setReviewerEmail2] = useState("");
-  const [reviewerName2, setReviewerName2] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [activeDocumentTab, setActiveDocumentTab] = useState("partB");
-  const [filterOptions, setFilterOptions] = useState({
-    departments: [],
-    fiscalYears: [],
-    applicantTypes: ["student", "teacher"],
   });
   const [filters, setFilters] = useState({
     status: "all",
@@ -97,258 +96,411 @@ export default function ProposalsDashboard() {
     fiscalYear: "all",
     applicantType: "all",
   });
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [filterOptions, setFilterOptions] = useState({
+    departments: [],
+    fiscalYears: [],
+  });
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    student: 0,
+    teacher: 0,
+    pending: 0,
+    pending_review: 0,
+    reviewed: 0,
+    allocated: 0,
+  });
 
-  // Fetch proposal
+  // New state for allocation dialog
+  const [showAllocationDialog, setShowAllocationDialog] = useState(false);
+  const [selectedProposalForAllocation, setSelectedProposalForAllocation] =
+    useState(null);
+  const [allocatedAmount, setAllocatedAmount] = useState("");
+
   useEffect(() => {
-    const fetchProposals = async () => {
-      try {
-        setLoading(true);
-        
-        // Uncomment to use actual API
-        // const response = await api.get("/api/admin/research-proposal");
-        // const proposalsData = response.data;
-        // setProposals(proposalsData);
-        // setFilteredProposals(proposalsData);
-        
-        // Extract filter options from real data
-        // const departments = [...new Set(proposalsData.map(p => p.department))];
-        // const fiscalYears = [...new Set(proposalsData.map(p => p.fiscalYear))];
-        // setFilterOptions({
-        //   departments,
-        //   fiscalYears,
-        //   applicantTypes: ["student", "teacher"],
-        // });
-        
-        // calculateStatistics(proposalsData);
-        
-        // DUMMY DATA - Comment out when using actual API
-        const mockProposals = [
-          {
-            id: "PRJ-2001",
-            title: "Research on Machine Learning Algorithms for Climate Prediction",
-            applicant: "Dr. Rahima Khan",
-            applicantType: "teacher",
-            faculty: "Science and Engineering",
-            department: "Computer Science",
-            fiscalYear: "2023-2024",
-            submissionDate: "2023-09-15T10:30:00Z",
-            status: "reviewed",
-            totalMarks: 85,
-            reviewers: [
-              { name: "Dr. Ahmed Hassan", email: "ahmed@example.com", marksGiven: 42 },
-              { name: "Dr. Nadia Islam", email: "nadia@example.com", marksGiven: 43 }
-            ]
-          },
-          {
-            id: "PRJ-2002",
-            title: "Study on Biodiversity in the Sundarbans",
-            applicant: "Tanvir Ahmed",
-            applicantType: "student",
-            faculty: "Science and Engineering",
-            department: "Environmental Science",
-            fiscalYear: "2023-2024",
-            submissionDate: "2023-09-20T14:15:00Z",
-            status: "pending",
-            totalMarks: null,
-            reviewers: []
-          },
-          {
-            id: "PRJ-2003",
-            title: "Economic Impact of Climate Change on Agriculture",
-            applicant: "Dr. Farhana Rahman",
-            applicantType: "teacher",
-            faculty: "Business Studies",
-            department: "Economics",
-            fiscalYear: "2023-2024",
-            submissionDate: "2023-09-10T09:45:00Z",
-            status: "pending_review",
-            totalMarks: null,
-            reviewers: [
-              { name: "Dr. Kamal Hossain", email: "kamal@example.com", marksGiven: null },
-              { name: "Dr. Sadia Khan", email: "sadia@example.com", marksGiven: null }
-            ]
-          },
-          {
-            id: "PRJ-2004",
-            title: "Analysis of Mental Health Issues Among University Students",
-            applicant: "Sabrina Akter",
-            applicantType: "student",
-            faculty: "Arts and Humanities",
-            department: "Psychology",
-            fiscalYear: "2022-2023",
-            submissionDate: "2022-11-05T11:20:00Z",
-            status: "reviewed",
-            totalMarks: 78,
-            reviewers: [
-              { name: "Dr. Rashid Ali", email: "rashid@example.com", marksGiven: 38 },
-              { name: "Dr. Nasreen Begum", email: "nasreen@example.com", marksGiven: 40 }
-            ]
-          },
-          {
-            id: "PRJ-2005",
-            title: "Renewable Energy Implementation in Rural Areas",
-            applicant: "Dr. Masud Rana",
-            applicantType: "teacher",
-            faculty: "Science and Engineering",
-            department: "Electrical Engineering",
-            fiscalYear: "2022-2023",
-            submissionDate: "2022-10-12T16:00:00Z",
-            status: "pending",
-            totalMarks: null,
-            reviewers: []
-          }
+    fetchProposals();
+    fetchReviewers();
+    fetchReviewerAssignments();
+  }, []);
+
+  const fetchReviewers = async () => {
+    try {
+      const response = await api.get("/api/admin/get-reviewers");
+      if (response.data && response.data.reviewers) {
+        setExistingReviewers(response.data.reviewers);
+      }
+    } catch (error) {
+      console.error("Failed to fetch reviewers:", error);
+    }
+  };
+
+  const openReviewerDetailsDialog = (proposal) => {
+    const proposalAssignments = reviewAssignments.filter((assignment) => {
+      const proposalIdStr = proposal.id.toString();
+      const assignmentProposalIdStr = (
+        typeof assignment.proposal_id === "object" && assignment.proposal_id._id
+          ? assignment.proposal_id._id
+          : assignment.proposal_id
+      ).toString();
+
+      return proposalIdStr === assignmentProposalIdStr;
+    });
+
+    // Prepare reviewer details with marks - with more robust ID matching
+    const reviewerDetails = proposal.reviewers.map((reviewer) => {
+      const reviewerIdStr = (
+        typeof reviewer.id === "object" && reviewer.id._id
+          ? reviewer.id._id
+          : reviewer.id
+      ).toString();
+
+      // Find matching assignment with careful ID comparison
+      const assignment = proposalAssignments.find((a) => {
+        const assignmentReviewerIdStr = (
+          typeof a.reviewer_id === "object" && a.reviewer_id._id
+            ? a.reviewer_id._id
+            : a.reviewer_id
+        ).toString();
+
+        return reviewerIdStr === assignmentReviewerIdStr;
+      });
+
+      let reviewerName = reviewer.name || "Unknown Name";
+      let reviewerEmail = reviewer.email || "No email available";
+
+      // Try to get full details from assignment
+      if (
+        assignment &&
+        typeof assignment.reviewer_id === "object" &&
+        assignment.reviewer_id.name
+      ) {
+        reviewerName = assignment.reviewer_id.name;
+        reviewerEmail = assignment.reviewer_id.email || reviewerEmail;
+      }
+      // If not found, try to find in existingReviewers
+      else {
+        const fullReviewerDetails = existingReviewers.find(
+          (r) => r._id && r._id.toString() === reviewerIdStr
+        );
+
+        if (fullReviewerDetails) {
+          reviewerName = fullReviewerDetails.name;
+          reviewerEmail = fullReviewerDetails.email || reviewerEmail;
+        }
+      }
+
+      return {
+        id: reviewer.id,
+        name: reviewerName,
+        email: reviewerEmail,
+        marks: assignment?.total_mark || null,
+        status: assignment?.status || 0,
+        markSheetUrl: assignment?.mark_sheet_url || null,
+      };
+    });
+
+    setSelectedProposalReviewers({
+      proposal: proposal,
+      reviewers: reviewerDetails,
+    });
+    setShowReviewerDetailsDialog(true);
+  };
+
+  const fetchReviewerAssignments = async () => {
+    try {
+      const response = await api.get("/api/admin/reviewer/review-details");
+      if (response.data) {
+        setReviewAssignments(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch reviewer assignments:", error);
+    }
+  };
+
+  // Status badge renderer with all 5 status types
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 0:
+        return (
+          <Badge
+            variant="outline"
+            className="bg-yellow-100 text-yellow-800 border-yellow-200"
+          >
+            Pending
+          </Badge>
+        );
+      case 1:
+        return (
+          <Badge
+            variant="outline"
+            className="bg-blue-100 text-blue-800 border-blue-200"
+          >
+            Under Review
+          </Badge>
+        );
+      case 2:
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-100 text-green-800 border-green-200"
+          >
+            Reviewed
+          </Badge>
+        );
+      case 3:
+        return (
+          <Badge
+            variant="outline"
+            className="bg-purple-100 text-purple-800 border-purple-200"
+          >
+            Allocated
+          </Badge>
+        );
+      default:
+        return (
+          <Badge
+            variant="outline"
+            className="bg-gray-100 text-gray-800 border-gray-200"
+          >
+            Unknown
+          </Badge>
+        );
+    }
+  };
+
+  const getApplicantIcon = (type) => {
+    return type === "Student" ? (
+      <GraduationCap className="h-4 w-4 text-blue-500 dark:text-blue-400 mr-2" />
+    ) : (
+      <UserSquare className="h-4 w-4 text-purple-500 dark:text-purple-400 mr-2" />
+    );
+  };
+
+  // Fetch all proposals with complete details
+  const fetchProposals = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/api/admin/research-proposal");
+
+      if (response.data) {
+        const { studentProposals, teacherProposals } = response.data;
+
+        // Format proposals with a common structure
+        const formattedProposals = [
+          ...studentProposals.map((p) => ({
+            id: p._id,
+            proposalNumber: p.proposal_number,
+            title: p.project_title,
+            applicant: p.project_director.name_en,
+            applicantType: "Student",
+            department: p.department,
+            faculty: p.faculty,
+            fiscalYear: p.fiscal_year,
+            submissionDate: p.createdAt,
+            status: p.status,
+            totalMarks: p.reviewer_avg_mark || null,
+            totalBudget: p.total_budget,
+            partAPdfUrl: p.pdf_url_part_A,
+            partBPdfUrl: p.pdf_url_part_B,
+            reviewers: Array.isArray(p.reviewer)
+              ? p.reviewer.map((r) => {
+                  // Extract the correct ID format
+                  const reviewerId =
+                    typeof r.id === "object" && r.id.$oid
+                      ? r.id.$oid
+                      : r.id?._id || r.id;
+
+                  // Find matching reviewer details
+                  const reviewerDetails = existingReviewers.find(
+                    (reviewer) =>
+                      reviewer._id.toString() === reviewerId.toString()
+                  );
+
+                  return {
+                    id: reviewerId,
+                    name: reviewerDetails?.name || "Unknown",
+                    email: reviewerDetails?.email || "",
+                  };
+                })
+              : [],
+          })),
+          ...teacherProposals.map((p) => ({
+            id: p._id,
+            proposalNumber: p.proposal_number,
+            title: p.project_title,
+            applicant: p.project_director.name_en,
+            applicantType: "Teacher",
+            department: p.department,
+            faculty: p.faculty,
+            fiscalYear: p.fiscal_year,
+            submissionDate: p.createdAt,
+            status: p.status,
+            totalMarks: p.reviewer_avg_mark || null,
+            totalBudget: p.total_budget,
+            partAPdfUrl: p.pdf_url_part_A,
+            partBPdfUrl: p.pdf_url_part_B,
+            reviewers: Array.isArray(p.reviewer)
+              ? p.reviewer.map((r) => {
+                  // Extract the correct ID format
+                  const reviewerId =
+                    typeof r.id === "object" && r.id.$oid
+                      ? r.id.$oid
+                      : r.id?._id || r.id;
+
+                  // Find matching reviewer details
+                  const reviewerDetails = existingReviewers.find(
+                    (reviewer) =>
+                      reviewer._id.toString() === reviewerId.toString()
+                  );
+
+                  return {
+                    id: reviewerId,
+                    name: reviewerDetails?.name || "Unknown",
+                    email: reviewerDetails?.email || "",
+                  };
+                })
+              : [],
+          })),
         ];
-        
-        setProposals(mockProposals);
-        setFilteredProposals(mockProposals);
-        
-        // Extract filter options from mock data
-        const departments = [...new Set(mockProposals.map((p) => p.department))];
-        const fiscalYears = [...new Set(mockProposals.map((p) => p.fiscalYear))];
-        
+
+        setProposals(formattedProposals);
+
+        // Extract filter options
+        const departments = [
+          ...new Set(formattedProposals.map((p) => p.department)),
+        ];
+        const fiscalYears = [
+          ...new Set(formattedProposals.map((p) => p.fiscalYear)),
+        ];
+
         setFilterOptions({
           departments,
           fiscalYears,
-          applicantTypes: ["student", "teacher"],
         });
-        
-        calculateStatistics(mockProposals);
-      } catch (error) {
-        console.error("Failed to fetch proposals:", error);
-        toast({
-          variant: "destructive", 
-          title: "Error", 
-          description: "Failed to fetch proposals"
-        });
-      } finally {
-        setLoading(false);
+
+        // Update statistics
+        const stats = {
+          total: formattedProposals.length,
+          student: formattedProposals.filter(
+            (p) => p.applicantType === "Student"
+          ).length,
+          teacher: formattedProposals.filter(
+            (p) => p.applicantType === "Teacher"
+          ).length,
+          pending: formattedProposals.filter((p) => p.status === 0).length,
+          pending_review: formattedProposals.filter((p) => p.status === 1)
+            .length,
+          reviewed: formattedProposals.filter((p) => p.status === 2).length,
+          allocated: formattedProposals.filter((p) => p.status === 3).length,
+        };
+
+        setStatistics(stats);
       }
-    };
-
-    fetchProposals();
-  }, []);
-
-  // Assign reviewers function
-  const handleAssignReviewers = async () => {
-    if (!selectedProposal) return;
-    
-    try {
-      // Uncomment to use actual API
-      // const response = await api.post("/api/admin/research-proposal/sent-to-reviewer", {
-      //   name: reviewerName1,
-      //   email: reviewerEmail1,
-      //   proposal_id: selectedProposal.id,
-      //   proposal_type: selectedProposal.applicantType
-      // });
-      
-      // Update the selected proposal with the new reviewers
-      const updatedProposal = {
-        ...selectedProposal,
-        reviewers: [
-          { email: reviewerEmail1, name: reviewerName1 },
-          { email: reviewerEmail2, name: reviewerName2 }
-        ],
-        status: "pending_review"
-      };
-      
-      // Update proposals state
-      const updatedProposals = proposals.map(p => 
-        p.id === selectedProposal.id ? updatedProposal : p
-      );
-      
-      setProposals(updatedProposals);
-      setFilteredProposals(updatedProposals.filter(p => 
-        // Apply your filters here
-        (filters.status === "all" || p.status === filters.status) &&
-        (filters.department === "all" || p.department === filters.department) &&
-        (filters.fiscalYear === "all" || p.fiscalYear === filters.fiscalYear) &&
-        (filters.applicantType === "all" || p.applicantType === filters.applicantType)
-      ));
-      
-      calculateStatistics(updatedProposals);
-      
-      toast({
-        title: "Success",
-        description: "Reviewers assigned successfully"
-      });
-      
-      // Reset form
-      setReviewerEmail1("");
-      setReviewerName1("");
-      setReviewerEmail2("");
-      setReviewerName2("");
-      setSelectedProposal(null);
-      
     } catch (error) {
-      console.error("Failed to assign reviewers:", error);
+      console.error("Failed to fetch proposals:", error);
       toast({
-        variant: "destructive",
         title: "Error",
-        description: error.response?.data?.message || "Failed to assign reviewers"
+        description: "Failed to fetch proposals",
+        variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Calculate statistics from proposals data
-  const calculateStatistics = (proposalsData) => {
-    const stats = {
-      total: proposalsData.length,
-      pending: proposalsData.filter((p) => p.status === "pending").length,
-      pending_review: proposalsData.filter((p) => p.status === "pending_review")
-        .length,
-      reviewed: proposalsData.filter((p) => p.status === "reviewed").length,
-      student: proposalsData.filter((p) => p.applicantType === "student")
-        .length,
-      teacher: proposalsData.filter((p) => p.applicantType === "teacher")
-        .length,
-    };
+  // Update proposal status and handle allocation
+  const updateProposalStatus = async (
+    proposal,
+    newStatus,
+    allocatedBudget = null
+  ) => {
+    try {
+      // First, update the status via API
+      const response = await api.put(
+        `/api/admin/research-proposal/status-update/${proposal.applicantType.toLowerCase()}/${
+          proposal.id
+        }/${newStatus}`
+      );
 
-    setStatistics(stats);
+      if (response.data) {
+        // If budget is being allocated, update it as well
+        if (newStatus === 3 && allocatedBudget) {
+          await api.post("/api/admin/research-proposal/approval-budget", {
+            proposal_id: proposal.id,
+            proposal_type: proposal.applicantType.toLowerCase(),
+            approval_budget: allocatedBudget,
+          });
+        }
+
+        toast.success("Status updated successfully");
+
+        // Update the proposal in the local state
+        setProposals((prevProposals) =>
+          prevProposals.map((p) =>
+            p.id === proposal.id
+              ? {
+                  ...p,
+                  status: newStatus,
+                  totalBudget: allocatedBudget || p.totalBudget,
+                }
+              : p
+          )
+        );
+
+        // Update statistics
+        fetchProposals();
+      }
+    } catch (error) {
+      console.error("Failed to update proposal status:", error);
+      toast.error(error.response?.data?.message || "Failed to update status");
+    }
   };
 
-  // Apply all filters
-  useEffect(() => {
-    let results = proposals;
-
-    // Search filter
-    if (searchQuery) {
-      results = results.filter(
-        (proposal) =>
-          proposal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          proposal.applicant
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          proposal.department.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Handle allocation submission
+  const handleAllocation = () => {
+    if (!selectedProposalForAllocation || !allocatedAmount) {
+      toast.error("Please enter an allocation amount");
+      return;
     }
 
-    // Status filter
-    if (filters.status !== "all") {
-      results = results.filter((p) => p.status === filters.status);
+    try {
+      api
+        .post("/api/admin/research-proposal/approval-budget", {
+          proposal_id: selectedProposalForAllocation.id,
+          proposal_type:
+            selectedProposalForAllocation.applicantType.toLowerCase(),
+          approval_budget: parseFloat(allocatedAmount),
+        })
+        .then(() => {
+          // Then update the status to allocated (3)
+          updateProposalStatus(
+            selectedProposalForAllocation,
+            3, // Allocated status
+            parseFloat(allocatedAmount)
+          );
+
+          setShowAllocationDialog(false);
+          setSelectedProposalForAllocation(null);
+          setAllocatedAmount("");
+
+          toast.success("Budget allocated successfully");
+
+          // Refresh proposals
+          fetchProposals();
+        });
+    } catch (error) {
+      console.error("Failed to allocate budget:", error);
+      toast.error(error.response?.data?.message || "Failed to allocate budget");
     }
+  };
 
-    // Department filter
-    if (filters.department !== "all") {
-      results = results.filter((p) => p.department === filters.department);
-    }
+  const handleSort = (key) => {
+    const isAsc = sortConfig.key === key && sortConfig.direction === "asc";
+    setSortConfig({
+      key,
+      direction: isAsc ? "desc" : "asc",
+    });
+  };
 
-    // Fiscal year filter
-    if (filters.fiscalYear !== "all") {
-      results = results.filter((p) => p.fiscalYear === filters.fiscalYear);
-    }
-
-    // Applicant type filter
-    if (filters.applicantType !== "all") {
-      results = results.filter(
-        (p) => p.applicantType === filters.applicantType
-      );
-    }
-
-    setFilteredProposals(results);
-  }, [searchQuery, proposals, filters]);
-
-  // Reset all filters
   const resetFilters = () => {
     setSearchQuery("");
     setFilters({
@@ -357,195 +509,279 @@ export default function ProposalsDashboard() {
       fiscalYear: "all",
       applicantType: "all",
     });
-    setFiltersExpanded(false);
   };
 
-  // Handle sorting
-  const handleSort = (key) => {
-    let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
+  // const updateProposalMarks = async (proposalId, r1marks, r2marks) => {
+  //   try {
+  //     const proposal = proposals.find((p) => p.id === proposalId);
+  //     if (!proposal) return;
 
-    const sortedProposals = [...filteredProposals].sort((a, b) => {
-      if (key === "submissionDate") {
-        // For dates
-        const dateA = new Date(a[key]);
-        const dateB = new Date(b[key]);
-        return direction === "asc" ? dateA - dateB : dateB - dateA;
-      } else {
-        // For other fields
-        if (a[key] === null) return direction === "asc" ? 1 : -1;
-        if (b[key] === null) return direction === "asc" ? -1 : 1;
+  //     if (!r1marks || !r2marks) {
+  //       toast.error("Please enter marks for both reviewers");
+  //       return;
+  //     }
 
-        if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
-        if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
-        return 0;
-      }
-    });
+  //     const r1 = parseInt(r1marks) || 0;
+  //     const r2 = parseInt(r2marks) || 0;
 
-    setFilteredProposals(sortedProposals);
-  };
+  //     // Calculate average
+  //     const avgMark = (r1 + r2) / 2;
 
-  // Assign reviewers
-  const assignReviewers = async () => {
-    if (!selectedProposal) return;
+  //     // Api needed
+
+  //     // Update the reviewers' marks in local state first
+  //     setProposals((prevProposals) =>
+  //       prevProposals.map((p) =>
+  //         p.id === proposalId
+  //           ? {
+  //               ...p,
+  //               totalMarks: avgMark,
+  //               reviewers: [
+  //                 { ...p.reviewers[0], marksGiven: r1 },
+  //                 { ...p.reviewers[1], marksGiven: r2 },
+  //               ],
+  //               status: 2, // Set to "Reviewed"
+  //             }
+  //           : p
+  //       )
+  //     );
+
+  //     // Update the proposal status to "Reviewed" (2)
+  //     await updateProposalStatus(proposal, 2);
+
+  //     toast.success("Marks updated successfully");
+  //   } catch (error) {
+  //     console.error("Failed to update marks:", error);
+  //     toast.error(error.response?.data?.message || "Failed to update marks");
+  //   }
+  // };
+
+  const assignReviewers = async (proposal) => {
+    if (!proposal) return;
+
     if (
-      !reviewerEmail1 ||
       !reviewerName1 ||
-      !reviewerEmail2 ||
-      !reviewerName2
+      !reviewerEmail1 ||
+      !reviewerName2 ||
+      !reviewerEmail2
     ) {
-      toast.error("Please enter both reviewers' names and emails");
+      toast.error("Please enter all reviewer details");
+      return;
+    }
+
+    if (reviewerEmail1.toLowerCase() === reviewerEmail2.toLowerCase()) {
+      toast.error("Cannot assign the same reviewer twice");
       return;
     }
 
     try {
-      // Replace with actual API call when backend is ready
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Handle first reviewer
+      let reviewer1Id;
+      const existingReviewer1 = existingReviewers.find(
+        (r) => r.email.toLowerCase() === reviewerEmail1.toLowerCase()
+      );
 
-      // Update proposal with reviewers
-      const updatedProposals = proposals.map((p) => {
-        if (p.id === selectedProposal.id) {
-          return {
-            ...p,
-            reviewers: [
-              { name: reviewerName1, email: reviewerEmail1, marksGiven: null },
-              { name: reviewerName2, email: reviewerEmail2, marksGiven: null },
-            ],
-            status: "pending_review",
-          };
+      if (existingReviewer1) {
+        reviewer1Id = existingReviewer1._id;
+      } else {
+        // Create new reviewer
+        const newReviewer1Res = await api.post("/api/admin/reviewer/add", {
+          name: reviewerName1,
+          email: reviewerEmail1,
+        });
+
+        if (newReviewer1Res.data && newReviewer1Res.data.reviewer) {
+          reviewer1Id = newReviewer1Res.data.reviewer._id;
+          // Add to existing reviewers
+          setExistingReviewers([
+            ...existingReviewers,
+            newReviewer1Res.data.reviewer,
+          ]);
+        } else {
+          throw new Error("Failed to create reviewer 1");
         }
-        return p;
+      }
+
+      // Handle second reviewer
+      let reviewer2Id;
+      const existingReviewer2 = existingReviewers.find(
+        (r) => r.email.toLowerCase() === reviewerEmail2.toLowerCase()
+      );
+
+      if (existingReviewer2) {
+        reviewer2Id = existingReviewer2._id;
+      } else {
+        // Create new reviewer
+        const newReviewer2Res = await api.post("/api/admin/reviewer/add", {
+          name: reviewerName2,
+          email: reviewerEmail2,
+        });
+
+        if (newReviewer2Res.data && newReviewer2Res.data.reviewer) {
+          reviewer2Id = newReviewer2Res.data.reviewer._id;
+          // Add to existing reviewers
+          setExistingReviewers([
+            ...existingReviewers,
+            newReviewer2Res.data.reviewer,
+          ]);
+        } else {
+          throw new Error("Failed to create reviewer 2");
+        }
+      }
+
+      // USE THE PROPOSAL PASSED AS ARGUMENT INSTEAD OF selectedProposal
+      // Send first reviewer invitation
+      await api.post("/api/admin/research-proposal/sent-to-reviewer", {
+        proposal_id: proposal.id,
+        proposal_type: proposal.applicantType.toLowerCase(),
+        reviewer_id: reviewer1Id,
       });
 
-      setProposals(updatedProposals);
-      setFilteredProposals(updatedProposals);
-      calculateStatistics(updatedProposals);
+      // Send second reviewer invitation
+      await api.post("/api/admin/research-proposal/sent-to-reviewer", {
+        proposal_id: proposal.id,
+        proposal_type: proposal.applicantType.toLowerCase(),
+        reviewer_id: reviewer2Id,
+      });
 
-      toast.success("Reviewers assigned and emails sent successfully");
+      toast.success("Reviewer invitations sent successfully");
+
+      // Update the proposal in the local state using proposal.id
+      setProposals((prevProposals) =>
+        prevProposals.map((p) =>
+          p.id === proposal.id
+            ? {
+                ...p,
+                reviewers: [
+                  {
+                    id: reviewer1Id,
+                    name: reviewerName1,
+                    email: reviewerEmail1,
+                  },
+                  {
+                    id: reviewer2Id,
+                    name: reviewerName2,
+                    email: reviewerEmail2,
+                  },
+                ],
+                status: 1, // Set to "Under Review"
+              }
+            : p
+        )
+      );
+
+      // Reset reviewer inputs
       setReviewerName1("");
       setReviewerEmail1("");
       setReviewerName2("");
       setReviewerEmail2("");
-      setSelectedProposal(null);
+
+      // Update statistics
+      fetchProposals();
     } catch (error) {
       console.error("Failed to assign reviewers:", error);
-      toast.error("Failed to assign reviewers");
+      toast.error(
+        error.response?.data?.message || "Failed to assign reviewers"
+      );
     }
   };
 
-  // Update proposal marks
-  const updateProposalMarks = async (
-    proposalId,
-    reviewer1Marks,
-    reviewer2Marks
-  ) => {
-    if (!reviewer1Marks || !reviewer2Marks) {
-      toast.error("Please enter marks for both reviewers");
-      return;
-    }
-
-    try {
-      const totalMarks = parseInt(reviewer1Marks) + parseInt(reviewer2Marks);
-      const status = "reviewed";
-
-      // Replace with actual API call when backend is ready
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Update proposal with marks
-      const updatedProposals = proposals.map((p) => {
-        if (p.id === proposalId) {
-          return {
-            ...p,
-            reviewers: [
-              { ...p.reviewers[0], marksGiven: parseInt(reviewer1Marks) },
-              { ...p.reviewers[1], marksGiven: parseInt(reviewer2Marks) },
-            ],
-            totalMarks,
-            status,
-          };
-        }
-        return p;
-      });
-
-      setProposals(updatedProposals);
-      setFilteredProposals(updatedProposals);
-      calculateStatistics(updatedProposals);
-
-      toast.success("Proposal marks updated");
-    } catch (error) {
-      console.error("Failed to update marks:", error);
-      toast.error("Failed to update marks");
-    }
-  };
-
-  // Delete proposal
   const deleteProposal = async (proposalId) => {
     try {
-      // Replace with actual API call when backend is ready
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const proposal = proposals.find((p) => p.id === proposalId);
+      if (!proposal) return;
 
-      const updatedProposals = proposals.filter((p) => p.id !== proposalId);
+      const response = await api.put(
+        `/api/admin/research-proposal/status-update/${proposal.applicantType.toLowerCase()}/${proposalId}/2`
+      );
 
-      setProposals(updatedProposals);
-      setFilteredProposals(updatedProposals);
-      calculateStatistics(updatedProposals);
+      if (response.data) {
+        toast.success("Proposal deleted successfully");
 
-      toast.success("Proposal deleted successfully");
+        // Remove the proposal from local state
+        setProposals((prevProposals) =>
+          prevProposals.filter((p) => p.id !== proposalId)
+        );
+
+        // Update statistics
+        fetchProposals();
+      }
     } catch (error) {
       console.error("Failed to delete proposal:", error);
-      toast.error("Failed to delete proposal");
+      toast.error(error.response?.data?.message || "Failed to delete proposal");
     }
   };
 
-  // Get status badge
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "pending":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-          >
-            Pending
-          </Badge>
-        );
-      case "pending_review":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-          >
-            Under Review
-          </Badge>
-        );
-      case "reviewed":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-          >
-            Reviewed
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  // Filter and sort proposals
+  const filteredProposals = proposals
+    .filter((proposal) => {
+      const matchesSearch =
+        searchQuery === "" ||
+        proposal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        proposal.applicant.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        proposal.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (proposal.proposalNumber &&
+          proposal.proposalNumber.toString().includes(searchQuery));
 
-  // Get applicant icon based on type
-  const getApplicantIcon = (applicantType) => {
-    if (applicantType === "student") {
+      const matchesDepartment =
+        filters.department === "all" ||
+        proposal.department === filters.department;
+
+      const matchesFiscalYear =
+        filters.fiscalYear === "all" ||
+        proposal.fiscalYear === filters.fiscalYear;
+
+      const matchesApplicantType =
+        filters.applicantType === "all" ||
+        proposal.applicantType.toLowerCase() === filters.applicantType;
+
+      const matchesStatus =
+        filters.status === "all" ||
+        (filters.status === "pending" && proposal.status === 0) ||
+        (filters.status === "pending_review" && proposal.status === 1) ||
+        (filters.status === "reviewed" && proposal.status === 2) ||
+        (filters.status === "allocated" && proposal.status === 3);
+
       return (
-        <GraduationCap className="h-4 w-4 text-blue-500 dark:text-blue-400 mr-2" />
+        matchesSearch &&
+        matchesDepartment &&
+        matchesFiscalYear &&
+        matchesApplicantType &&
+        matchesStatus
       );
-    } else {
-      return (
-        <UserSquare className="h-4 w-4 text-purple-500 dark:text-purple-400 mr-2" />
-      );
-    }
+    })
+    .sort((a, b) => {
+      const key = sortConfig.key;
+
+      if (key === "submissionDate") {
+        return sortConfig.direction === "asc"
+          ? new Date(a[key]) - new Date(b[key])
+          : new Date(b[key]) - new Date(a[key]);
+      }
+
+      if (key === "totalMarks") {
+        // Handle null values in sorting
+        if (a[key] === null && b[key] === null) return 0;
+        if (a[key] === null) return 1;
+        if (b[key] === null) return -1;
+
+        return sortConfig.direction === "asc"
+          ? a[key] - b[key]
+          : b[key] - a[key];
+      }
+
+      return sortConfig.direction === "asc"
+        ? a[key]?.localeCompare(b[key] || "")
+        : b[key]?.localeCompare(a[key] || "");
+    });
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.getDate().toString().padStart(2, "0")}/${(
+      date.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}/${date.getFullYear()}`;
   };
 
   return (
@@ -617,7 +853,7 @@ export default function ProposalsDashboard() {
           <div className="relative w-full sm:w-96">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by title, applicant or department..."
+              placeholder="Search by ID, title, applicant or department..."
               className="pl-8"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -673,6 +909,7 @@ export default function ProposalsDashboard() {
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="pending_review">Under Review</SelectItem>
                     <SelectItem value="reviewed">Reviewed</SelectItem>
+                    <SelectItem value="allocated">Allocated</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -808,6 +1045,7 @@ export default function ProposalsDashboard() {
         <Table>
           <TableHeader>
             <TableRow className="bg-emerald-50/50 dark:bg-emerald-900/20">
+              <TableHead>ID</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Applicant</TableHead>
               <TableHead>Department</TableHead>
@@ -822,7 +1060,7 @@ export default function ProposalsDashboard() {
             {filteredProposals.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={9}
                   className="text-center py-8 text-muted-foreground"
                 >
                   {loading ? "Loading proposals..." : "No proposals found"}
@@ -834,8 +1072,11 @@ export default function ProposalsDashboard() {
                   key={proposal.id}
                   className="hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-colors"
                 >
+                  <TableCell className="font-mono text-slate-600">
+                    {proposal.proposalNumber || "N/A"}
+                  </TableCell>
                   <TableCell className="font-medium">
-                    {proposal.title}
+                    <div className="flex items-center">{proposal.title}</div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
@@ -845,9 +1086,7 @@ export default function ProposalsDashboard() {
                   </TableCell>
                   <TableCell>{proposal.department}</TableCell>
                   <TableCell>{proposal.fiscalYear}</TableCell>
-                  <TableCell>
-                    {new Date(proposal.submissionDate).toLocaleDateString()}
-                  </TableCell>
+                  <TableCell>{formatDate(proposal.submissionDate)}</TableCell>
                   <TableCell>{getStatusBadge(proposal.status)}</TableCell>
                   <TableCell>
                     {proposal.totalMarks !== null ? proposal.totalMarks : "—"}
@@ -887,16 +1126,25 @@ export default function ProposalsDashboard() {
                                     <div className="text-center p-6">
                                       <FileText className="h-12 w-12 text-slate-400 mb-4 mx-auto" />
                                       <h3 className="font-medium text-lg mb-2">
-                                        PDF Preview Unavailable
+                                        View Document
                                       </h3>
                                       <p className="text-muted-foreground text-sm mb-4">
-                                        The PDF file is not available in
-                                        development mode.
+                                        Download the document to view its
+                                        contents
                                       </p>
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        disabled
+                                        onClick={() => {
+                                          const baseUrl =
+                                            import.meta.env.VITE_API_URL || "";
+                                          const serverRoot = baseUrl.replace(
+                                            /\/v1$/,
+                                            ""
+                                          );
+                                          const fileUrl = `${serverRoot}/${proposal.partAPdfUrl}`;
+                                          window.open(fileUrl, "_blank");
+                                        }}
                                       >
                                         <Download className="mr-2 h-4 w-4" />{" "}
                                         Download Part A
@@ -905,11 +1153,9 @@ export default function ProposalsDashboard() {
                                   </div>
                                 </>
                               ) : (
-                                <iframe
-                                  src={proposal.partAPdfUrl}
-                                  className="w-full h-full border rounded"
-                                  title={`${proposal.title} Part A`}
-                                />
+                                <div className="flex items-center justify-center h-full">
+                                  <p>No document available</p>
+                                </div>
                               )}
                             </TabsContent>
                             <TabsContent value="partB" className="h-[60vh]">
@@ -919,16 +1165,25 @@ export default function ProposalsDashboard() {
                                     <div className="text-center p-6">
                                       <FileText className="h-12 w-12 text-slate-400 mb-4 mx-auto" />
                                       <h3 className="font-medium text-lg mb-2">
-                                        PDF Preview Unavailable
+                                        View Document
                                       </h3>
                                       <p className="text-muted-foreground text-sm mb-4">
-                                        The PDF file is not available in
-                                        development mode.
+                                        Download the document to view its
+                                        contents
                                       </p>
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        disabled
+                                        onClick={() => {
+                                          const baseUrl =
+                                            import.meta.env.VITE_API_URL || "";
+                                          const serverRoot = baseUrl.replace(
+                                            /\/v1$/,
+                                            ""
+                                          );
+                                          const fileUrl = `${serverRoot}/${proposal.partBPdfUrl}`;
+                                          window.open(fileUrl, "_blank");
+                                        }}
                                       >
                                         <Download className="mr-2 h-4 w-4" />{" "}
                                         Download Part B
@@ -937,11 +1192,9 @@ export default function ProposalsDashboard() {
                                   </div>
                                 </>
                               ) : (
-                                <iframe
-                                  src={proposal.partBPdfUrl}
-                                  className="w-full h-full border rounded"
-                                  title={`${proposal.title} Part B`}
-                                />
+                                <div className="flex items-center justify-center h-full">
+                                  <p>No document available</p>
+                                </div>
                               )}
                             </TabsContent>
                           </Tabs>
@@ -949,103 +1202,159 @@ export default function ProposalsDashboard() {
                       </Dialog>
 
                       {/* Assign Reviewers */}
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            disabled={proposal.reviewers.length > 0}
-                            title="Assign Reviewers"
-                          >
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Assign Reviewers</DialogTitle>
-                            <DialogDescription>
-                              Send this proposal to two reviewers for
-                              evaluation.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div>
-                              <h3 className="text-sm font-medium mb-2 flex items-center">
-                                <User className="h-4 w-4 mr-2 text-emerald-600" />
-                                Reviewer 1
-                              </h3>
-                              <div className="grid gap-2">
-                                <Label htmlFor="reviewer1Name">Name</Label>
-                                <Input
-                                  id="reviewer1Name"
-                                  placeholder="Dr. John Doe"
-                                  value={reviewerName1}
-                                  onChange={(e) =>
-                                    setReviewerName1(e.target.value)
-                                  }
-                                />
-                              </div>
-                              <div className="grid gap-2 mt-2">
-                                <Label htmlFor="reviewer1Email">Email</Label>
-                                <Input
-                                  id="reviewer1Email"
-                                  placeholder="reviewer1@example.com"
-                                  value={reviewerEmail1}
-                                  onChange={(e) =>
-                                    setReviewerEmail1(e.target.value)
-                                  }
-                                />
-                              </div>
-                            </div>
-
-                            <Separator className="my-2" />
-
-                            <div>
-                              <h3 className="text-sm font-medium mb-2 flex items-center">
-                                <User className="h-4 w-4 mr-2 text-emerald-600" />
-                                Reviewer 2
-                              </h3>
-                              <div className="grid gap-2">
-                                <Label htmlFor="reviewer2Name">Name</Label>
-                                <Input
-                                  id="reviewer2Name"
-                                  placeholder="Dr. Jane Smith"
-                                  value={reviewerName2}
-                                  onChange={(e) =>
-                                    setReviewerName2(e.target.value)
-                                  }
-                                />
-                              </div>
-                              <div className="grid gap-2 mt-2">
-                                <Label htmlFor="reviewer2Email">Email</Label>
-                                <Input
-                                  id="reviewer2Email"
-                                  placeholder="reviewer2@example.com"
-                                  value={reviewerEmail2}
-                                  onChange={(e) =>
-                                    setReviewerEmail2(e.target.value)
-                                  }
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <DialogFooter>
+                      {proposal.reviewers && proposal.reviewers.length === 0 ? (
+                        <Dialog>
+                          <DialogTrigger asChild>
                             <Button
-                              onClick={() => {
-                                setSelectedProposal(proposal);
-                                assignReviewers();
-                              }}
-                              className="bg-emerald-600 hover:bg-emerald-700"
+                              variant="outline"
+                              size="icon"
+                              title="Assign Reviewers"
                             >
-                              <Mail className="mr-2 h-4 w-4" />
-                              Send Invitations
+                              <Mail className="h-4 w-4" />
                             </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Assign Reviewers</DialogTitle>
+                              <DialogDescription>
+                                Send this proposal to two reviewers for
+                                evaluation.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div>
+                                <h3 className="text-sm font-medium mb-2 flex items-center">
+                                  <User className="h-4 w-4 mr-2 text-emerald-600" />
+                                  Reviewer 1
+                                </h3>
+                                <div className="grid gap-2 mt-2">
+                                  <Label htmlFor="reviewer1Email">Email</Label>
+                                  <Input
+                                    id="reviewer1Email"
+                                    placeholder="reviewer1@example.com"
+                                    value={reviewerEmail1}
+                                    onChange={(e) => {
+                                      setReviewerEmail1(e.target.value);
+                                      // Look for matching reviewer in existing reviewers
+                                      const matchingReviewer =
+                                        existingReviewers?.find(
+                                          (r) =>
+                                            r.email.toLowerCase() ===
+                                            e.target.value.toLowerCase()
+                                        );
+                                      if (matchingReviewer) {
+                                        setReviewerName1(matchingReviewer.name);
+                                      } else {
+                                        setReviewerName1("");
+                                      }
+                                    }}
+                                  />
+                                </div>
+                                <div className="grid gap-2">
+                                  <Label htmlFor="reviewer1Name">Name</Label>
+                                  <Input
+                                    id="reviewer1Name"
+                                    placeholder="Reviewer 1 name"
+                                    value={reviewerName1}
+                                    onChange={(e) =>
+                                      setReviewerName1(e.target.value)
+                                    }
+                                    disabled={
+                                      reviewerEmail1 === "" ||
+                                      existingReviewers?.some(
+                                        (r) =>
+                                          r.email.toLowerCase() ===
+                                          reviewerEmail1.toLowerCase()
+                                      )
+                                    }
+                                  />
+                                </div>
+                              </div>
 
+                              <Separator className="my-2" />
+
+                              <div>
+                                <h3 className="text-sm font-medium mb-2 flex items-center">
+                                  <User className="h-4 w-4 mr-2 text-emerald-600" />
+                                  Reviewer 2
+                                </h3>
+                                <div className="grid gap-2 mt-2">
+                                  <Label htmlFor="reviewer2Email">Email</Label>
+                                  <Input
+                                    id="reviewer2Email"
+                                    placeholder="reviewer2@example.com"
+                                    value={reviewerEmail2}
+                                    onChange={(e) => {
+                                      setReviewerEmail2(e.target.value);
+                                      // Look for matching reviewer in existing reviewers
+                                      const matchingReviewer =
+                                        existingReviewers?.find(
+                                          (r) =>
+                                            r.email.toLowerCase() ===
+                                            e.target.value.toLowerCase()
+                                        );
+                                      if (matchingReviewer) {
+                                        setReviewerName2(matchingReviewer.name);
+                                      } else {
+                                        setReviewerName2("");
+                                      }
+                                    }}
+                                  />
+                                </div>
+                                <div className="grid gap-2">
+                                  <Label htmlFor="reviewer2Name">Name</Label>
+                                  <Input
+                                    id="reviewer2Name"
+                                    placeholder="Reviewer 2 name"
+                                    value={reviewerName2}
+                                    onChange={(e) =>
+                                      setReviewerName2(e.target.value)
+                                    }
+                                    disabled={
+                                      reviewerEmail2 === "" ||
+                                      existingReviewers?.some(
+                                        (r) =>
+                                          r.email.toLowerCase() ===
+                                          reviewerEmail2.toLowerCase()
+                                      )
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button
+                                onClick={() => {
+                                  assignReviewers(proposal);
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700"
+                                disabled={
+                                  !reviewerName1 ||
+                                  !reviewerEmail1 ||
+                                  !reviewerName2 ||
+                                  !reviewerEmail2 ||
+                                  reviewerEmail1 === reviewerEmail2
+                                }
+                              >
+                                <Mail className="mr-2 h-4 w-4" />
+                                Send Invitations
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          title="View Assigned Reviewers"
+                          className="bg-blue-50 hover:bg-blue-100"
+                          onClick={() => openReviewerDetailsDialog(proposal)}
+                        >
+                          <MailCheck className="h-4 w-4 text-blue-600" />
+                        </Button>
+                      )}
                       {/* Update Marks */}
-                      {proposal.reviewers.length > 0 && (
+                      {/* {proposal.reviewers.length > 0 && (
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
@@ -1141,7 +1450,29 @@ export default function ProposalsDashboard() {
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
-                      )}
+                      )} */}
+
+                      {/* Status Update Buttons */}
+                      <div className="flex gap-2 mt-2">
+                        {/* Only show the Allocate button - other statuses should be automatic */}
+                        {proposal.status !== 3 && proposal.status === 2 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedProposalForAllocation(proposal);
+                              setAllocatedAmount(
+                                proposal.totalBudget?.toString() || ""
+                              );
+                              setShowAllocationDialog(true);
+                            }}
+                            className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700"
+                            title="Allocate Funding"
+                          >
+                            <DollarSign className="h-3 w-3 mr-1" /> Allocate
+                          </Button>
+                        )}
+                      </div>
 
                       {/* Delete Proposal */}
                       <Dialog>
@@ -1182,7 +1513,14 @@ export default function ProposalsDashboard() {
                             </div>
                           </div>
                           <DialogFooter>
-                            <Button variant="outline">Cancel</Button>
+                            <Button
+                              variant="outline"
+                              onClick={() =>
+                                document.querySelector("dialog").close()
+                              }
+                            >
+                              Cancel
+                            </Button>
                             <Button
                               variant="destructive"
                               onClick={() => deleteProposal(proposal.id)}
@@ -1200,6 +1538,158 @@ export default function ProposalsDashboard() {
           </TableBody>
         </Table>
       </div>
+      {/* Allocation Dialog */}
+      <Dialog
+        open={showAllocationDialog}
+        onOpenChange={setShowAllocationDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Allocate Funding</DialogTitle>
+            <DialogDescription>
+              Set the allocated budget for this proposal. This will also mark
+              the proposal as Allocated.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div>
+              <h3 className="text-sm font-medium mb-2">
+                {selectedProposalForAllocation?.title}
+              </h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                {selectedProposalForAllocation?.applicant} -{" "}
+                {selectedProposalForAllocation?.department}
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="allocatedBudget" className="flex items-center">
+                <DollarSign className="h-4 w-4 mr-2 text-green-600" />
+                Allocated Budget Amount
+              </Label>
+              <Input
+                id="allocatedBudget"
+                type="number"
+                min="0"
+                step="1000"
+                placeholder="Enter amount"
+                value={allocatedAmount}
+                onChange={(e) => setAllocatedAmount(e.target.value)}
+                className="border-green-200"
+              />
+            </div>
+
+            {selectedProposalForAllocation?.totalMarks && (
+              <div className="bg-green-50 p-3 rounded-md border border-green-200 flex items-center justify-between">
+                <span className="text-sm text-green-800 font-medium">
+                  Review Score: {selectedProposalForAllocation.totalMarks}/100
+                </span>
+                <Badge
+                  variant="outline"
+                  className="bg-green-100 text-green-800"
+                >
+                  {selectedProposalForAllocation.totalMarks >= 70
+                    ? "High Priority"
+                    : selectedProposalForAllocation.totalMarks >= 50
+                    ? "Medium Priority"
+                    : "Low Priority"}
+                </Badge>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowAllocationDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handleAllocation}
+            >
+              <DollarSign className="h-4 w-4 mr-2" />
+              Allocate Funding
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reviewer Details Dialog */}
+      <Dialog
+        open={showReviewerDetailsDialog}
+        onOpenChange={setShowReviewerDetailsDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assigned Reviewers</DialogTitle>
+            <DialogDescription>
+              Reviewers assigned to this proposal and their evaluation status.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            {selectedProposalReviewers?.reviewers.map((reviewer, index) => (
+              <div
+                key={index}
+                className="p-3 bg-slate-50 rounded-md border border-slate-200"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 mr-2 text-blue-600" />
+                    <span className="font-medium">
+                      {reviewer.name || "Unknown Name"}
+                    </span>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={
+                      reviewer.status === 1
+                        ? "bg-green-100 text-green-800 border-green-200"
+                        : "bg-amber-100 text-amber-800 border-amber-200"
+                    }
+                  >
+                    {reviewer.status === 1 ? "Reviewed" : "Pending"}
+                  </Badge>
+                </div>
+
+                <div className="text-sm text-muted-foreground mb-2">
+                  {reviewer.email || "No email available"}
+                </div>
+
+                {reviewer.status === 1 ? (
+                  <div className="space-y-2">
+                    <div className="text-sm flex items-center font-medium text-green-700">
+                      <CheckCircle className="h-3.5 w-3.5 mr-1 text-green-600" />
+                      Marks Given: {reviewer.marks}/50
+                    </div>
+                    {reviewer.markSheetUrl && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs mt-1 w-full"
+                        onClick={() => {
+                          const baseUrl = import.meta.env.VITE_API_URL || "";
+                          const serverRoot = baseUrl.replace(/\/v1$/, "");
+                          const fileUrl = `${serverRoot}/${reviewer.markSheetUrl}`;
+                          window.open(fileUrl, "_blank");
+                        }}
+                      >
+                        <Download className="h-3 w-3 mr-1" /> View Marksheet
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-sm flex items-center text-amber-700">
+                    <Clock className="h-3.5 w-3.5 mr-1 text-amber-600" />
+                    Awaiting review
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
