@@ -12,6 +12,7 @@ import Dashboard from './components/Admin/Dashboard'
 import ProtectedRoute from './components/Admin/ProtectedRoute'
 import AdminRegister from './components/Admin/Register'
 import ReviewerPage from './components/Reviewer/ReviewerPage';
+import InvoiceSubmissionPage from './components/Reviewer/InvoiceSubmission';
 
 import {
   Route,
@@ -30,6 +31,7 @@ const router = createBrowserRouter(
         <Route path="notices" element={<Notices />} />
         <Route path="archive" element={<PrevProposals />} />
         <Route path="review" element={<ReviewerPage />} />
+        <Route path="invoice/upload" element={<InvoiceSubmissionPage />} />
       </Route>
       <Route path="/admin">
         <Route path="register" element={<AdminRegister />} />

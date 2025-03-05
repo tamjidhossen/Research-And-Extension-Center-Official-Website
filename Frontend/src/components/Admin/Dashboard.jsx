@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import ProposalsDashboard from "./ProposalDashboard";
 import NoticesDashboard from "./NoticesDashboard";
 import OverviewDashboard from "./OverviewDashboard";
+import InvoiceManagement from "./InvoiceManagement";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
@@ -71,12 +72,14 @@ export default function Dashboard() {
 
   const renderDashboard = () => {
     switch (activeView) {
+      case "overview":
+        return <OverviewDashboard />;
       case "proposals":
         return <ProposalsDashboard />;
       case "notices":
         return <NoticesDashboard />;
-      case "statistics":
-        return <OverviewDashboard />;
+      case "invoices": // Add this new case
+        return <InvoiceManagement />;
       default:
         return <OverviewDashboard />;
     }
@@ -143,6 +146,11 @@ export default function Dashboard() {
                         icon={<BellRing className="h-5 w-5" />}
                         label="Notices"
                         value="notices"
+                      />
+                      <NavItem
+                        icon={<FileText className="h-5 w-5" />}
+                        label="Invoices"
+                        value="invoices"
                       />
                     </nav>
                   </div>
@@ -216,6 +224,11 @@ export default function Dashboard() {
                 icon={<BellRing className="h-5 w-5" />}
                 label="Notices"
                 value="notices"
+              />
+              <NavItem
+                icon={<FileText className="h-5 w-5" />}
+                label="Invoices"
+                value="invoices"
               />
             </nav>
           </div>
