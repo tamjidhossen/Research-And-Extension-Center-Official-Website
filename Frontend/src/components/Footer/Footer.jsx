@@ -24,8 +24,8 @@ const Footer = () => {
           <ul className="list-none space-y-3">
             {[
               { to: "/", label: "Home" },
-              { to: "/registration", label: "Registration" },
-              { to: "/announcements", label: "Announcements" },
+              { to: "/archive", label: "Archive" },
+              { to: "/notices", label: "Notice" },
               { to: "/developer-info", label: "Developer Info" },
             ].map((link) => (
               <li key={link.label} className="text-sm md:text-base">

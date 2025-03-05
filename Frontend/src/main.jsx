@@ -28,7 +28,7 @@ const router = createBrowserRouter(
         <Route path="submit/student" element={<StudentSubmission />} />
         <Route path="submit/teacher" element={<TeacherSubmission />} />
         <Route path="notices" element={<Notices />} />
-        <Route path="proposals" element={<PrevProposals />} />
+        <Route path="archive" element={<PrevProposals />} />
         <Route path="review" element={<ReviewerPage />} />
       </Route>
       <Route path="/admin">

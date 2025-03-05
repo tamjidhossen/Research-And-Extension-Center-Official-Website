@@ -66,7 +66,7 @@ const Navbar = () => {
             </NavLink>
 
             <NavLink
-              to="/proposals"
+              to="/archive"
               className={({ isActive }) =>
                 `px-4 py-2 rounded-md transition-all duration-200 flex items-center gap-2 ${
                   isActive
@@ -76,7 +76,7 @@ const Navbar = () => {
               }
             >
               <FileText size={18} />
-              <span>Proposals</span>
+              <span>Archive</span>
             </NavLink>
 
             <NavLink
@@ -197,7 +197,7 @@ const Navbar = () => {
                   </div>
 
                   <NavLink
-                    to="/proposals"
+                    to="/archive"
                     onClick={handleLinkClick}
                     className={({ isActive }) =>
                       `p-3 rounded-md flex items-center gap-3 transition-colors ${
@@ -208,7 +208,7 @@ const Navbar = () => {
                     }
                   >
                     <FileText size={20} />
-                    <span>Proposals</span>
+                    <span>Archive</span>
                   </NavLink>
 
                   <NavLink
