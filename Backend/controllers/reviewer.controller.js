@@ -103,14 +103,29 @@ const submitInvoice = async (req, res) => {
 
         const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
         const fileUrl = `uploads/invoice/${req.file.filename}`;
-        const invoice = new Invoice({
-            reviewer_id: reviewer._id,
-            fiscal_year,
-            invoice_url: fileUrl
-        });
 
-        await invoice.save();
+        const updatedInvoice = await Invoice.findOneAndUpdate(
+            { reviewer_id: reviewer._id, fiscal_year }, // Search criteria
+            {
+                status: 2,
+                invoice_url: fileUrl
+            }, // Update status and invoice_url
+            { new: true } // Return the updated document
+        );
+        if (!updatedInvoice) {
+            if (req.file) {
+                const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
+                console.log("Attempting to delete:", filePath);
 
+                try {
+                    await fs.unlink(filePath);
+                    console.log("File deleted successfully.");
+                } catch (unlinkError) {
+                    console.error("Error deleting file:", unlinkError);
+                }
+            }
+            return res.status(400).json({ success: false, message: "Invoice not found!" });
+        }
         res.status(200).json({ success: true, message: "Invoice submitted successfully!" });
 
     } catch (error) {

@@ -653,6 +653,15 @@ const sendInvoice = async (req, res) => {
         // Send invoice email
         await sendMailInvoiceToReviewer(reviewer.email, filePath, uploadUrl);
 
+        const invoice = new Invoice({
+            reviewer_id: reviewer._id,
+            fiscal_year,
+            invoice_url: "",
+            status: 1
+        });
+
+        await invoice.save();
+
         res.status(200).json({
             success: true,
             message: "Invoice Sent!",
