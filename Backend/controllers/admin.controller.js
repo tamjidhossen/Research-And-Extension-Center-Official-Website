@@ -492,6 +492,7 @@ const updateProposalStatus = async (req, res) => {
         status = Number(status)
         if (status === 3) {
             proposal.approval_status = status;
+            proposal.status = status;
             await proposal.save();
             return res.status(200).json({ message: "Proposal approved", proposal });
         } else if (status === 0) {

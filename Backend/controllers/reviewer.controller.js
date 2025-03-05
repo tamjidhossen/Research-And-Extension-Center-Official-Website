@@ -131,4 +131,14 @@ const submitInvoice = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
+const invoiceVerify = async (req, res) => {
+    try {
+        res.status(201).json({ succes: true, message: "Verified Reviewer!", reviewer: req.reviewer, fiscal_year: req.fiscal_year });
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+
 module.exports = { verifyReviewer, addMark, submitInvoice };
