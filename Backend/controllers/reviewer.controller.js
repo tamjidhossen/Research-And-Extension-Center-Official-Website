@@ -23,7 +23,7 @@ const verifyReviewer = async (req, res) => {
         else {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
-        res.status(201).json({ succes: true, message: "Verified Reviewer", proposal: proposal, reviewer: reviewer });
+        res.status(201).json({ success: true, message: "Verified Reviewer", proposal: proposal, reviewer: reviewer });
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error" });
     }
@@ -134,7 +134,7 @@ const submitInvoice = async (req, res) => {
 
 const invoiceVerify = async (req, res) => {
     try {
-        res.status(201).json({ succes: true, message: "Verified Reviewer!", reviewer: req.reviewer, fiscal_year: req.fiscal_year });
+        res.status(201).json({ success: true, message: "Verified Reviewer!", reviewer: req.reviewer, fiscal_year: req.fiscal_year });
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error" });
     }
