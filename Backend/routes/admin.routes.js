@@ -7,7 +7,7 @@ const uploads = require('../middlewares/uploadInvoice.js');
 
 router.post('/register', adminMiddileware.authAdmin, adminController.registerAdmin);
 router.post('/login', adminController.loginAdmin);
-router.post('/research-proposal/upload', upload.fields([
+router.post('/research-proposal/upload', adminMiddileware.authAdmin, upload.fields([
     { name: 'student_partA_en', maxCount: 1 },
     { name: 'student_partA_bn', maxCount: 1 },
     { name: 'student_partB_en', maxCount: 1 },
@@ -17,8 +17,7 @@ router.post('/research-proposal/upload', upload.fields([
     { name: 'teacher_partB_en', maxCount: 1 },
     { name: 'teacher_partB_bn', maxCount: 1 },
     { name: 'proposal_mark_sheet', maxCount: 1 },
-]),
-    adminController.updatedDocument);
+]), adminController.updatedDocument);
 router.post('/reviewer-invoice', adminMiddileware.authAdmin, uploads.single("invoice"), adminController.sendInvoice);
 router.get('/research-proposal/', adminMiddileware.authAdmin, adminController.getProposal);
 router.get('/invoices', adminMiddileware.authAdmin, adminController.getAllInvoices);
