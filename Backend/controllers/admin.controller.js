@@ -364,7 +364,8 @@ const sentToReviewer = async (req, res) => {
         proposal_id: proposalId,
         proposal_type,
         total_mark: 0,  // Default to 0
-        mark_sheet_url: "",
+        mark_sheet_url: "/",
+        evaluation_sheet_url: "/",
         status: 0        // Pending by default
     });
     await newAssignment.save();

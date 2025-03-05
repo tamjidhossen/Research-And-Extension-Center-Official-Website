@@ -29,17 +29,24 @@ const verifyReviewer = async (req, res) => {
     }
 };
 
+
+
 const addMark = async (req, res) => {
     try {
         const { total_mark } = req.body;
         const { proposal_type, proposal_id, reviewer_id } = req;
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: "File upload failed" });
+
+        if (!req.files || !req.files.marksheet || !req.files.evaluation_sheet) {
+            return res.status(400).json({ success: false, message: "Both marksheet and evaluation sheet are required" });
         }
 
-        const filePath = path.join(__dirname, "..", "uploads", "marksheet", req.file.filename);
-        const fileUrl = `uploads/marksheet/${req.file.filename}`;
+        // File Paths
+        const marksheetPath = path.join(__dirname, "..", "uploads", "marksheet", req.files.marksheet[0].filename);
+        const evaluationPath = path.join(__dirname, "..", "uploads", "evaluation_sheet", req.files.evaluation_sheet[0].filename);
+        const marksheetUrl = `uploads/marksheet/${req.files.marksheet[0].filename}`;
+        const evaluationUrl = `uploads/evaluation_sheet/${req.files.evaluation_sheet[0].filename}`;
 
+        // Validate Proposal Type
         let ProposalModel;
         if (proposal_type === "student") {
             ProposalModel = StudentProposal;
@@ -48,51 +55,72 @@ const addMark = async (req, res) => {
         } else {
             return res.status(400).json({ success: false, message: "Invalid proposal type" });
         }
+
+        // Update Reviewer Assignment
         const assignment = await ReviewerAssignment.findOneAndUpdate(
             { reviewer_id: reviewer_id, proposal_id: proposal_id },
             {
                 $set: {
-                    "mark_sheet_url": fileUrl,
-                    "total_mark": total_mark,
-                    "status": 1,
+                    mark_sheet_url: marksheetUrl,
+                    evaluation_sheet_url: evaluationUrl,
+                    total_mark: total_mark,
+                    status: 1, // Mark as reviewed
                 }
             },
             { new: true }
         );
+
         if (!assignment) {
-            // Delete file if proposal update failed
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-            return res.status(404).json({ success: false, message: "Reviewer not found" });
+            // Delete files if the database update fails
+            if (fs.existsSync(marksheetPath)) fs.unlinkSync(marksheetPath);
+            if (fs.existsSync(evaluationPath)) fs.unlinkSync(evaluationPath);
+            return res.status(404).json({ success: false, message: "Reviewer assignment not found" });
         }
+
+        // Aggregate to calculate average marks
         const result = await ReviewerAssignment.aggregate([
-            { $match: { proposal_id: new mongoose.Types.ObjectId(proposal_id), status: 1 } }, // Filter by proposal_id & reviewed status
+            { $match: { proposal_id: new mongoose.Types.ObjectId(proposal_id), status: 1 } },
             {
                 $group: {
                     _id: "$proposal_id",
-                    totalAssignments: { $sum: 1 }, // Count total reviewed assignments
-                    averageMark: { $avg: "$total_mark" } // Calculate average mark
+                    totalAssignments: { $sum: 1 },
+                    averageMark: { $avg: "$total_mark" }
                 }
             }
         ]);
-        console.log(result);
+
+
+        // If both reviewers have submitted marks, update Proposal status & average mark
         if (result.length > 0 && result[0].totalAssignments === 2) {
-            await ProposalModel.findByIdAndUpdate(proposal_id, { reviewer_avg_mark: result[0].averageMark, status: 2 });
+            await ProposalModel.findByIdAndUpdate(proposal_id, {
+                reviewer_avg_mark: result[0].averageMark,
+                status: 2 // Mark as fully reviewed
+            });
         }
 
         res.status(200).json({
             success: true,
-            message: "Mark sheet & marks updated successfully",
+            message: "Mark sheet & evaluation sheet uploaded successfully",
         });
 
     } catch (error) {
         console.error("Upload Error:", error);
-        if (req.file) {
-            const filePath = path.join(__dirname, "..", "uploads", "marksheet", req.file.filename);
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // Delete file on error
+
+        // Delete files if an error occurs
+        if (req.files) {
+            if (req.files.marksheet && fs.existsSync(req.files.marksheet[0].path)) {
+                fs.unlinkSync(req.files.marksheet[0].path);
+            }
+            if (req.files.evaluation_sheet && fs.existsSync(req.files.evaluation_sheet[0].path)) {
+                fs.unlinkSync(req.files.evaluation_sheet[0].path);
+            }
         }
+
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
+
 
 const submitInvoice = async (req, res) => {
     try {

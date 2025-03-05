@@ -5,15 +5,22 @@ const fs = require("fs");
 // Ensure Directory Exists
 const ensureDirectoryExists = (dir) => {
     if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true }); // Create the directory (and parent directories if needed)
+        fs.mkdirSync(dir, { recursive: true });
     }
 };
 
 // Storage Engine
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const uploadPath = "uploads/marksheet/";
-        ensureDirectoryExists(uploadPath); // Ensure directory exists before saving
+        let uploadPath;
+        if (file.fieldname === "marksheet") {
+            uploadPath = "uploads/marksheet/";
+        } else if (file.fieldname === "evaluation_sheet") {
+            uploadPath = "uploads/evaluation_sheet/";
+        } else {
+            return cb(new Error("Invalid field name"), null);
+        }
+        ensureDirectoryExists(uploadPath);
         cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
@@ -32,11 +39,14 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Upload Middleware
+// Upload Middleware (Handling multiple files)
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB file limit
-});
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+}).fields([
+    { name: "marksheet", maxCount: 1 },
+    { name: "evaluation_sheet", maxCount: 1 }
+]);
 
 module.exports = upload;
