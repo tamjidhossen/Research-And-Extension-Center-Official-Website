@@ -141,4 +141,4 @@ const invoiceVerify = async (req, res) => {
 };
 
 
-module.exports = { verifyReviewer, addMark, submitInvoice };
+module.exports = { verifyReviewer, addMark, submitInvoice, invoiceVerify };
