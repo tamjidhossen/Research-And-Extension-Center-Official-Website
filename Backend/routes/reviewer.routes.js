@@ -8,7 +8,7 @@ const uploadInvoice = require("../middlewares/uploadInvoice.js");
 router.post('/research-proposal/review/verify', reviewerMiddileware.authReview, reviewerController.verifyReviewer);
 router.post('/research-proposal/submit/mark', reviewerMiddileware.authReview, upload.single("marksheet"), reviewerController.addMark);
 router.post('/research-proposal/submit/invoice', reviewerMiddileware.authenticate, uploadInvoice.single("invoice"), reviewerController.submitInvoice);
-router.post('/research-proposal/submit/invoice/verify', reviewerMiddileware.authenticate, reviewerController.verifyInvoice);
+router.post('/research-proposal/submit/invoice/verify', reviewerMiddileware.authenticate, reviewerController.invoiceVerify);
 
 
 module.exports = router;

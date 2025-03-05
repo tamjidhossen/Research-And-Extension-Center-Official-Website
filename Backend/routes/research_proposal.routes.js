@@ -8,5 +8,6 @@ router.post('/teacher/submit', upload.fields([{ name: 'partA' }, { name: 'partB'
 router.post('/teacher/update', upload.fields([{ name: 'partA' }, { name: 'partB' }]), teacherProposalController.updateProposal);
 router.post('/student/submit', upload.fields([{ name: 'partA' }, { name: 'partB' }]), studentProposalController.submitProposal);
 router.post('/student/update', upload.fields([{ name: 'partA' }, { name: 'partB' }]), studentProposalController.updateProposal);
+router.get('/proposals', studentProposalController.getApprovedProposals, teacherProposalController.getApprovedProposals);
 
 module.exports = router;

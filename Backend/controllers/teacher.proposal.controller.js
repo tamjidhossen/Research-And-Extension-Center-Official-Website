@@ -2,6 +2,7 @@ const { TeacherProposal } = require('../models/teacher.proposal.model.js');
 const ProposalDocument = require('../models/proposal.document.model.js');
 const ProposalUpdateRequest = require('../models/update.request.model.js');
 const fs = require('fs');
+const { StudentProposal } = require('../models/student.proposal.model.js');
 
 const submitProposal = async (req, res, next) => {
     try {
@@ -136,4 +137,14 @@ const updateProposal = async (req, res) => {
     }
 };
 
-module.exports = { submitProposal, updateProposal, requestUpdate };
+const getApprovedProposals = async (req, res) => {
+    try {
+        const teacherProposals = await TeacherProposal.find({ approval_status: 3 });
+        res.status(200).json({ message: "All approved proposals !", StudentProposal: req.student_proposals, TeacherProposal: teacherProposals });
+    } catch (error) {
+        console.error("Error fetching proposals:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+module.exports = { submitProposal, updateProposal, requestUpdate, getApprovedProposals };

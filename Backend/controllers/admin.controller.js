@@ -334,6 +334,7 @@ const getProposal = async (req, res) => {
 };
 
 
+
 const sentToReviewer = async (req, res) => {
     const { reviewer_id, proposal_id, proposal_type } = req.body;
     if (!mongoose.Types.ObjectId.isValid(proposal_id) || !mongoose.Types.ObjectId.isValid(reviewer_id)) {
@@ -545,6 +546,8 @@ const updateApprovalBudget = async (req, res) => {
         }
 
         Proposal.approval_budget = approval_budget;
+        Proposal.approval_status = 3;
+        Proposal.status = 3;
         await Proposal.save();
 
         return res.status(200).json({ message: "Approval budget updated successfully", Proposal });

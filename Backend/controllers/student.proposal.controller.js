@@ -132,4 +132,15 @@ const updateProposal = async (req, res) => {
     }
 };
 
-module.exports = { submitProposal, requestUpdate, updateProposal };
+const getApprovedProposals = async (req, res, next) => {
+    try {
+        const studentProposals = await StudentProposal.find({ approval_status: 3 });
+        req.student_proposals = studentProposals;
+        next();
+    } catch (error) {
+        console.error("Error fetching proposals:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+module.exports = { submitProposal, requestUpdate, updateProposal, getApprovedProposals };
