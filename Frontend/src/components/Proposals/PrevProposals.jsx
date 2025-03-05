@@ -125,41 +125,106 @@ export default function PrevProposals() {
     const fetchProjects = async () => {
       try {
         setLoading(true);
+
+        // need to change this route to not be admin only
+        const response = await api.get("/api/admin/research-proposal/");
         
-        // Uncomment to use actual API
-        // const response = await api.get("/api/research-proposal/all");
-        // const realProjects = response.data;
-        // setProjects(realProjects);
-        
+        let realProjects = [];
+
+        if (response.data) {
+          if (response.data.studentProposals) {
+            // Process student proposals - only include status = 3 (funded proposals)
+            realProjects = [
+              ...realProjects,
+              ...response.data.studentProposals
+                .filter(p => p.status === 3) // Only include funded proposals
+                .map((p) => ({
+                  id: p._id,
+                  title: p.project_title,
+                  applicantName: p.project_director.name_en,
+                  applicantType: "Student",
+                  faculty: p.faculty,
+                  department: p.department,
+                  fiscalYear: p.fiscal_year,
+                  submissionDate: p.createdAt,
+                  status: p.status,
+                  approvalBudget: p.approval_budget, // Include approval budget for display
+                })),
+            ];
+          }
+  
+          if (response.data.teacherProposals) {
+            // Process teacher proposals - only include status = 3 (funded proposals)
+            realProjects = [
+              ...realProjects,
+              ...response.data.teacherProposals
+                .filter(p => p.status === 3) // Only include funded proposals
+                .map((p) => ({
+                  id: p._id,
+                  title: p.project_title,
+                  applicantName: p.project_director.name_en,
+                  applicantType: "Teacher",
+                  faculty: p.faculty,
+                  department: p.department,
+                  fiscalYear: p.fiscal_year,
+                  submissionDate: p.createdAt,
+                  status: p.status,
+                  approvalBudget: p.approval_budget, // Include approval budget for display
+                })),
+            ];
+          }
+        }
+
+        setProjects(realProjects);
+
+        // Extract unique filter options
+        const faculties = [...new Set(realProjects.map((p) => p.faculty))];
+
+        // Create departments object grouped by faculty
+        const departments = {};
+        faculties.forEach((faculty) => {
+          departments[faculty] = [
+            ...new Set(
+              realProjects
+                .filter((p) => p.faculty === faculty)
+                .map((p) => p.department)
+            ),
+          ];
+        });
+
+        const fiscalYears = [...new Set(realProjects.map((p) => p.fiscalYear))];
+
+        setFilterOptions({ faculties, departments, fiscalYears });
+        setLoading(false);
+
         // Extract unique filter options
         // const faculties = [...new Set(realProjects.map(p => p.faculty))];
         // ... handle other filter options from real data
-        
+
         // DUMMY DATA - Comment out when using actual API
-        setTimeout(() => {
-          const mockProjects = generateMockProjects();
-          setProjects(mockProjects);
+        // setTimeout(() => {
+        //   const mockProjects = generateMockProjects();
+        //   setProjects(mockProjects);
 
-          // Extract unique filter options from mock data
-          const faculties = [...new Set(mockProjects.map((p) => p.faculty))];
-          const departments = {};
-          faculties.forEach((faculty) => {
-            departments[faculty] = [
-              ...new Set(
-                mockProjects
-                  .filter((p) => p.faculty === faculty)
-                  .map((p) => p.department)
-              ),
-            ];
-          });
-          const fiscalYears = [
-            ...new Set(mockProjects.map((p) => p.fiscalYear)),
-          ];
+        //   // Extract unique filter options from mock data
+        //   const faculties = [...new Set(mockProjects.map((p) => p.faculty))];
+        //   const departments = {};
+        //   faculties.forEach((faculty) => {
+        //     departments[faculty] = [
+        //       ...new Set(
+        //         mockProjects
+        //           .filter((p) => p.faculty === faculty)
+        //           .map((p) => p.department)
+        //       ),
+        //     ];
+        //   });
+        //   const fiscalYears = [
+        //     ...new Set(mockProjects.map((p) => p.fiscalYear)),
+        //   ];
 
-          setFilterOptions({ faculties, departments, fiscalYears });
-          setLoading(false);
-        }, 1000);
-        
+        //   setFilterOptions({ faculties, departments, fiscalYears });
+        //   setLoading(false);
+        // }, 1000);
       } catch (err) {
         console.error("API fetch error:", err);
         setError(err.response?.data?.message || "Failed to load proposals");
