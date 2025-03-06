@@ -336,42 +336,67 @@ const getProposal = async (req, res) => {
 
 
 const sentToReviewer = async (req, res) => {
-    const { reviewer_id, proposal_id, proposal_type } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(proposal_id) || !mongoose.Types.ObjectId.isValid(reviewer_id)) {
-        res.status(404).json({ success: false, message: "ID not valid!" });
-    }
-    const proposalId = new mongoose.Types.ObjectId(proposal_id);
-    const reviewerId = new mongoose.Types.ObjectId(reviewer_id);
-    const reviewer = await Reviewer.findById(reviewerId);
-    if (!reviewer) {
-        res.status(404).json({ success: false, message: "Reviewer not found!" });
-    }
-    let proposal;
-    if (proposal_type === "teacher") {
-        proposal = await TeacherProposal.findById(proposalId);
-    }
-    else if (proposal_type === "student") {
-        proposal = await StudentProposal.findById(proposalId);
-    }
-    if (!proposal) return res.status(404).json({ success: false, message: "Proposal not found" });
+    try {
+        const { reviewer_id, proposal_id, proposal_type } = req.body;
 
-    const token = proposal.generateReviewerToken(reviewerId);
-    proposal.reviewer.push({ id: reviewer._id });
-    proposal.status = 1;
-    await proposal.save();
-    const newAssignment = new ReviewerAssignment({
-        reviewer_id: reviewerId,
-        proposal_id: proposalId,
-        proposal_type,
-        total_mark: 0,  // Default to 0
-        mark_sheet_url: "/",
-        evaluation_sheet_url: "/",
-        status: 0        // Pending by default
-    });
-    await newAssignment.save();
-    await sendMailToReviewer(reviewer.email, reviewer.name, token);
+        // Validate Object IDs
+        if (!mongoose.Types.ObjectId.isValid(proposal_id) || !mongoose.Types.ObjectId.isValid(reviewer_id)) {
+            return res.status(400).json({ success: false, message: "Invalid ID format!" });
+        }
 
-    res.status(200).json({ success: true, message: "Sent Email to reviewer!" });
+        const proposalId = new mongoose.Types.ObjectId(proposal_id);
+        const reviewerId = new mongoose.Types.ObjectId(reviewer_id);
+
+        // Check if reviewer exists
+        const reviewer = await Reviewer.findById(reviewerId);
+        if (!reviewer) {
+            return res.status(404).json({ success: false, message: "Reviewer not found!" });
+        }
+
+        // Validate proposal type
+        if (!["teacher", "student"].includes(proposal_type)) {
+            return res.status(400).json({ success: false, message: "Invalid proposal type!" });
+        }
+
+        // Fetch the correct proposal based on type
+        let proposal = proposal_type === "teacher"
+            ? await TeacherProposal.findById(proposalId)
+            : await StudentProposal.findById(proposalId);
+
+        if (!proposal) {
+            return res.status(404).json({ success: false, message: "Proposal not found!" });
+        }
+
+        // Generate token for the reviewer
+        const token = proposal.generateReviewerToken(reviewerId);
+
+        // Assign reviewer and update status
+        proposal.reviewer.push(reviewerId); // Store reviewerId directly
+        proposal.status = 1;
+        await proposal.save();
+
+        // Create a new reviewer assignment
+        const newAssignment = new ReviewerAssignment({
+            reviewer_id: reviewerId,
+            proposal_id: proposalId,
+            proposal_type,
+            total_mark: 0,  // Default to 0
+            mark_sheet_url: "/",
+            evaluation_sheet_url: "/",
+            status: 0        // Pending by default
+        });
+
+        await newAssignment.save();
+
+        // Send email to the reviewer
+        await sendMailToReviewer(reviewer.email, reviewer.name, token);
+
+        return res.status(200).json({ success: true, message: "Email sent to reviewer!" });
+
+    } catch (error) {
+        console.error("Error in sentToReviewer:", error);
+        return res.status(500).json({ success: false, message: "Internal server error!" });
+    }
 };
 
 const addReviewer = async (req, res) => {
