@@ -80,7 +80,7 @@ export default function TeacherSubmission() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fiscalYear, setFiscalYear] = useState("2025-2026");
-  const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("personal");
   const [documentUrls, setDocumentUrls] = useState({
@@ -125,7 +125,7 @@ export default function TeacherSubmission() {
           const { fiscal_year, registrationOpen, teacher } =
             response.data.proposalDoc;
 
-          setIsRegistrationOpen(!!registrationOpen);
+          setIsRegistrationOpen(registrationOpen === true);
           setFiscalYear(fiscal_year || "2025-2026");
 
           // Get base URL from environment variable
