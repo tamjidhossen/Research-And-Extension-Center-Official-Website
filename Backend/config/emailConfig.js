@@ -52,31 +52,42 @@ const createResponsiveEmailTemplate = (content) => `
  */
 const sendPasswordResetMail = async (to, resetLink) => {
   try {
+    // Construct the email content with the new color scheme
     const emailContent = `
-      <div style="background-color: #1565C0; color: white; padding: 25px; text-align: center;">
-        <h1 style="margin: 0; font-size: 24px;">Password Reset Request</h1>
+      <div style="background-color: #065f46; color: white; padding: 40px 30px; text-align: center;">
+        <h1 style="font-size: 28px; font-weight: bold; margin: 0;">Password Reset Request</h1>
+        <p style="font-size: 18px; margin-top: 10px;">Jatiya Kabi Kazi Nazrul Islam University</p>
       </div>
-      <div style="padding: 30px; color: #333;">
-        <p style="font-size: 16px; line-height: 1.5;">Dear User,</p>
-        <p style="font-size: 16px; line-height: 1.5;">You have requested to reset your password. Please click the button below to reset your password:</p>
-        <div style="text-align: center; margin: 20px 0;">
-          <a href="${resetLink}" style="background-color: #1565C0; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
+      
+      <div style="padding: 30px; background-color: #fafefd; color: #065f46; font-family: Arial, sans-serif;">
+        <p style="font-size: 16px; line-height: 1.6;">Dear User,</p>
+        <p style="font-size: 16px; line-height: 1.6;">You have requested to reset your password. Please click the button below to reset your password:</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetLink}" style="background-color: #056e51; color: white; padding: 15px 25px; text-decoration: none; font-size: 18px; border-radius: 5px; display: inline-block; font-weight: bold;">
+            Reset Password
+          </a>
         </div>
-        <p style="font-size: 16px; line-height: 1.5;">If you did not request this, please ignore this email. This link will expire in 1 hour.</p>
+
+        <p style="font-size: 16px; line-height: 1.6;">If you did not request this, please ignore this email. This link will expire in 1 hour.</p>
       </div>
-      <div style="background-color: #f1f1f1; padding: 25px; text-align: center;">
-        <p style="margin: 0 0 15px 0;">For any inquiries, please contact us at:<br/>
-        <a href="mailto:alumnijkkniucse@gmail.com" style="color: #1565C0; text-decoration: none;">alumnijkkniucse@gmail.com</a></p>
+
+      <div style="background-color: #065f46; padding: 25px; text-align: center; font-size: 14px; color: white;">
+        <p style="margin: 0;">For any inquiries, please contact us at:</p>
+        <p style="margin: 10px 0;">
+          <a href="mailto:alumnijkkniucse@gmail.com" style="color: #fafefd; text-decoration: none;">alumnijkkniucse@gmail.com</a>
+        </p>
         <p style="margin: 0;">Best regards,<br/>
         <strong>CSE Alumni Community</strong><br/>
         <span style="font-size: 14px;">Jatiya Kabi Kazi Nazrul Islam University</span></p>
       </div>
     `;
 
+    // Create responsive template for mobile-friendliness
     const htmlContent = createResponsiveEmailTemplate(emailContent);
 
     const mailOptions = {
-      from: `"RESEARCH EXTENSION CENTER" <${process.env.EMAIL_USERNAME}>`,
+      from: `"CSE Alumni Community" <${process.env.EMAIL_USERNAME}>`,
       to,
       subject: "Password Reset Request",
       text: `Dear User, \n\nYou have requested to reset your password. Please use the following link: ${resetLink} \n\nIf you did not request this, please ignore this email. This link will expire in 1 hour.`,
@@ -97,22 +108,33 @@ const sendMailToReviewer = async (to, name, token) => {
     const reviewLink = `${process.env.FRONTEND_URL}/review?token=${token}`;
 
     const emailContent = `
-      <div style="background-color: #1565C0; color: white; padding: 25px; text-align: center;">
-        <h1 style="margin: 0; font-size: 24px;">Research Proposal Review Request</h1>
+      <div style="background-color: #065f46; color: white; padding: 40px 30px; text-align: center;">
+        <h1 style="font-size: 28px; font-weight: bold; margin: 0;">Research Proposal Review Request</h1>
+        <p style="font-size: 18px; margin-top: 10px;">Jatiya Kabi Kazi Nazrul Islam University</p>
       </div>
-      <div style="padding: 30px; color: #333;">
-        <p style="font-size: 16px; line-height: 1.5;">Dear ${name},</p>
-        <p style="font-size: 16px; line-height: 1.5;">You have been assigned to review a research proposal. Please click the button below to provide your evaluation:</p>
-        <div style="text-align: center; margin: 20px 0;">
-          <a href="${reviewLink}" style="background-color: #1565C0; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Review Proposal</a>
+      
+      <div style="padding: 30px; background-color: #fafefd; color: #065f46; font-family: Arial, sans-serif;">
+        <p style="font-size: 16px; line-height: 1.6;">Dear <strong>${name}</strong>,</p>
+        <p style="font-size: 16px; line-height: 1.6;">You have been selected as the reviewer for an important research proposal. Please click the button below to provide your evaluation:</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${reviewLink}" style="background-color: #056e51; color: white; padding: 15px 25px; text-decoration: none; font-size: 18px; border-radius: 5px; display: inline-block; font-weight: bold;">
+            Review Proposal
+          </a>
         </div>
-        <p style="font-size: 16px; line-height: 1.5;">This link will expire in 24 hours.</p>
+
+        <p style="font-size: 16px; line-height: 1.6;">Please note: The review link will expire in 24 hours.</p>
+
+        <p style="font-size: 16px; line-height: 1.6;">Should you have any questions or require further assistance, please do not hesitate to contact us.</p>
       </div>
-      <div style="background-color: #f1f1f1; padding: 25px; text-align: center;">
-        <p style="margin: 0 0 15px 0;">For any inquiries, please contact us at:<br/>
-        <a href="mailto:alumnijkkniucse@gmail.com" style="color: #1565C0; text-decoration: none;">alumnijkkniucse@gmail.com</a></p>
+
+      <div style="background-color: #065f46; padding: 25px; text-align: center; font-size: 14px; color: white;">
+        <p style="margin: 0;">For any inquiries, please contact us at:</p>
+        <p style="margin: 10px 0;">
+          <a href="mailto:alumnijkkniucse@gmail.com" style="color: #fafefd; text-decoration: none;">alumnijkkniucse@gmail.com</a>
+        </p>
         <p style="margin: 0;">Best regards,<br/>
-        <strong>RESEARCH EXTENSION CENTER</strong><br/>
+        <strong>Research Extension Center</strong><br/>
         <span style="font-size: 14px;">Jatiya Kabi Kazi Nazrul Islam University</span></p>
       </div>
     `;
@@ -120,10 +142,10 @@ const sendMailToReviewer = async (to, name, token) => {
     const htmlContent = createResponsiveEmailTemplate(emailContent);
 
     const mailOptions = {
-      from: `"RESEARCH EXTENSION CENTER" <${process.env.EMAIL_USERNAME}>`,
+      from: `"Research Extension Center" <${process.env.EMAIL_USERNAME}>`,
       to,
       subject: "Research Proposal Review Request",
-      text: `Dear ${name},\n\nYou have been assigned to review a research proposal. Please use the following link: ${reviewLink} \n\nThis link will expire in 24 hours.`,
+      text: `Dear ${name},\n\nYou have been assigned to review a research proposal. Please use the following link: ${reviewLink} \n\nThis link will expire in 7 Days.`,
       html: htmlContent,
     };
 
@@ -137,11 +159,51 @@ const sendMailToReviewer = async (to, name, token) => {
 
 const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => {
   try {
+    const emailContent = `
+      <div style="background-color: #065f46; color: white; padding: 40px 30px; text-align: center;">
+        <h1 style="font-size: 28px; font-weight: bold; margin: 0;">Invoice for Review Work</h1>
+        <p style="font-size: 18px; margin-top: 10px;">Jatiya Kabi Kazi Nazrul Islam University</p>
+      </div>
+
+      <div style="padding: 30px; background-color: #fafefd; color: #065f46; font-family: Arial, sans-serif;">
+        <p style="font-size: 16px; line-height: 1.6;">Dear Reviewer,</p>
+        
+        <p style="font-size: 16px; line-height: 1.6;">We appreciate your contribution to reviewing the research proposal. Please find attached the invoice for your review work.</p>
+
+        <p style="font-size: 16px; line-height: 1.6;">Kindly sign the invoice and upload it using the secure link provided below:</p>
+
+        <!-- Card Design for the Link -->
+        <div style="background-color: #ffffff; padding: 25px; margin: 30px 0; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); max-width: 400px; margin-left: auto; margin-right: auto;">
+          <p style="font-size: 18px; font-weight: bold; text-align: center; color: #065f46;">Click the button below to upload your signed invoice</p>
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="${uploadUrl}" style="background-color: #056e51; color: white; padding: 15px 25px; text-decoration: none; font-size: 18px; border-radius: 5px; display: inline-block; font-weight: bold;">
+              Upload Signed Invoice
+            </a>
+          </div>
+        </div>
+
+        <p style="font-size: 16px; line-height: 1.6;">If you have any questions or concerns, please do not hesitate to contact us at the email below.</p>
+      </div>
+
+      <div style="background-color: #065f46; padding: 25px; text-align: center; font-size: 14px; color: white;">
+        <p style="margin: 0;">For any inquiries, please contact us at:</p>
+        <p style="margin: 10px 0;">
+          <a href="mailto:alumnijkkniucse@gmail.com" style="color: #fafefd; text-decoration: none;">alumnijkkniucse@gmail.com</a>
+        </p>
+        <p style="margin: 0;">Best regards,<br/>
+        <strong>Research Proposal System</strong><br/>
+        <span style="font-size: 14px;">Jatiya Kabi Kazi Nazrul Islam University</span></p>
+      </div>
+    `;
+
+    const htmlContent = createResponsiveEmailTemplate(emailContent);
+
     const mailOptions = {
       from: process.env.MAIL_USER,
       to: reviewerEmail,
       subject: "Invoice for Review Work",
       text: `Dear Reviewer,\n\nPlease find attached the invoice for your review work.\n\nAfter signing, please upload it using the following secure link:\n${uploadUrl}\n\nBest regards,\nResearch Proposal System`,
+      html: htmlContent,
       attachments: [
         {
           filename: "invoice.pdf",
@@ -151,10 +213,12 @@ const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => 
     };
 
     await transporter.sendMail(mailOptions);
+
   } catch (error) {
     console.error("Error sending invoice email:", error);
   }
 };
+
 
 module.exports = {
   sendPasswordResetMail,

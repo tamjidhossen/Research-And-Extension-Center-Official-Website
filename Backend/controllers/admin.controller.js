@@ -367,11 +367,21 @@ const sentToReviewer = async (req, res) => {
             return res.status(404).json({ success: false, message: "Proposal not found!" });
         }
 
+        // Check if the reviewer is already assigned
+        const existingAssignment = await ReviewerAssignment.findOne({
+            reviewer_id: reviewerId,
+            proposal_id: proposalId
+        });
+
+        if (existingAssignment) {
+            return res.status(400).json({ success: false, message: "Reviewer already assigned to this proposal!" });
+        }
+
         // Generate token for the reviewer
         const token = proposal.generateReviewerToken(reviewerId);
 
         // Assign reviewer and update status
-        proposal.reviewer.push(reviewerId); // Store reviewerId directly
+        proposal.reviewer.push({ id: reviewerId }); // Store reviewerId directly
         proposal.status = 1;
         await proposal.save();
 
@@ -650,7 +660,9 @@ const sendInvoice = async (req, res) => {
         // Ensure the reviewer exists in the specified fiscal year
         const exists = await searchReviewerByFiscalYear(reviewer_id, fiscal_year);
         if (!exists) {
-            return res.status(404).json({ message: "No such data!" });
+            // Delete uploaded file if the reviewer does not exist
+            fs.unlinkSync(req.file.path);
+            return res.status(404).json({ success: false, message: "No such data!" });
         }
 
         // File Path
@@ -665,7 +677,8 @@ const sendInvoice = async (req, res) => {
         // Find reviewer details
         const reviewer = await Reviewer.findById(reviewer_id);
         if (!reviewer) {
-            return res.status(404).json({ message: "Reviewer not found!" });
+            fs.unlinkSync(filePath);
+            return res.status(404).json({ success: false, message: "Reviewer not found!" });
         }
 
         // Generate a secure upload link for the reviewer to upload a signed invoice
@@ -676,9 +689,7 @@ const sendInvoice = async (req, res) => {
         );
         const uploadUrl = `${process.env.FRONTEND_BASE_URL}/invoice/upload?token=${token}`;
 
-        // Send invoice email
-        await sendMailInvoiceToReviewer(reviewer.email, filePath, uploadUrl);
-
+        // Create invoice record in DB before sending email
         const invoice = new Invoice({
             reviewer_id: reviewer._id,
             fiscal_year,
@@ -688,16 +699,27 @@ const sendInvoice = async (req, res) => {
 
         await invoice.save();
 
+        // Send response **before** sending the email
         res.status(200).json({
             success: true,
             message: "Invoice Sent!",
             uploadUrl, // Include upload URL in the response
         });
 
+        // Send email asynchronously
+        setImmediate(async () => {
+            try {
+                await sendMailInvoiceToReviewer(reviewer.email, filePath, uploadUrl);
+                console.log(`Invoice email sent successfully to ${reviewer.email}`);
+            } catch (emailError) {
+                console.error("Error sending invoice email:", emailError);
+            }
+        });
+
     } catch (error) {
         console.error("Upload Error:", error);
 
-        // Delete file if there is an error
+        // Delete uploaded file if there is an error
         if (req.file) {
             const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
@@ -706,7 +728,6 @@ const sendInvoice = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
-
 const getAllInvoices = async (req, res) => {
     try {
         const invoices = await Invoice.find().populate("reviewer_id", "name email");
