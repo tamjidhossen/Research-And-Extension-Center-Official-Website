@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -82,12 +82,17 @@ export default function TeacherSubmission() {
   const [fiscalYear, setFiscalYear] = useState("2025-2026");
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("personal");
   const [documentUrls, setDocumentUrls] = useState({
     partA_en: null,
     partA_bn: null,
     partB_en: null,
     partB_bn: null,
   });
+
+  // Refs for scroll targets
+  const personalTabRef = useRef(null);
+  const projectTabRef = useRef(null);
 
   // Initialize form
   const form = useForm({
@@ -215,6 +220,54 @@ export default function TeacherSubmission() {
     }
   };
 
+  // Check for errors and navigate to the tab with errors
+  const checkForErrorsAndNavigate = (errors) => {
+    if (Object.keys(errors).length === 0) return;
+
+    // Define which fields belong to which tabs
+    const personalFields = [
+      "project_director_name_en",
+      "project_director_mobile",
+      "project_director_email",
+      "designation",
+      "department",
+      "faculty",
+    ];
+
+    const projectFields = [
+      "project_title",
+      "research_location",
+      "associate_investigator",
+      "approx_pages",
+      "approx_words",
+      "total_budget",
+    ];
+
+    // Get all error field names
+    const errorFields = Object.keys(errors);
+
+    // Check which tab has errors and navigate to it
+    if (errorFields.some((field) => personalFields.includes(field))) {
+      setActiveTab("personal");
+      setTimeout(
+        () => personalTabRef.current?.scrollIntoView({ behavior: "smooth" }),
+        100
+      );
+    } else if (errorFields.some((field) => projectFields.includes(field))) {
+      setActiveTab("project");
+      setTimeout(
+        () => projectTabRef.current?.scrollIntoView({ behavior: "smooth" }),
+        100
+      );
+    }
+  };
+
+  // Handle form errors
+  const handleFormError = (errors) => {
+    checkForErrorsAndNavigate(errors);
+    return false; // Prevent default form submission
+  };
+
   const onSubmit = async (data) => {
     if (!files.partA || !files.partB) {
       toast({
@@ -248,7 +301,10 @@ export default function TeacherSubmission() {
     formData.append("faculty", data.faculty);
     formData.append("project_title", data.project_title);
     formData.append("research_location", data.research_location);
-    formData.append("associate_investigator", data.associate_investigator);
+    formData.append(
+      "associate_investigator",
+      data.associate_investigator || ""
+    );
     formData.append(
       "project_details",
       JSON.stringify({
@@ -611,318 +667,335 @@ export default function TeacherSubmission() {
                 <Alert className="mb-4 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 mt-4">
                   <AlertDescription className="text-red-700 dark:text-red-400">
                     বিঃ দ্রঃ- গবেষণা প্রকল্পের ভাষা ইংরেজি হলে প্রস্তাবনা ইংরেজি
-                    ভাষায় উপস্থাপন করতে হবে।
+                    ভাষায় উপস্থাপন করতে হবে।
                   </AlertDescription>
                 </Alert>
               </CardContent>
             </Card>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
-                <Tabs defaultValue="personal" className="mb-8">
+              <form
+                onSubmit={form.handleSubmit(onSubmit, handleFormError)}
+                noValidate
+              >
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="mb-8"
+                >
                   <TabsList className="grid grid-cols-2 w-full">
                     <TabsTrigger value="personal">Personal Details</TabsTrigger>
                     <TabsTrigger value="project">Project Details</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="personal">
-                    <Card className="border-emerald-100 dark:border-emerald-800/50 shadow-sm">
-                      <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
-                        <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-                          <User className="h-5 w-5" />
-                          Personal Information
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-6 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="project_director_name_en"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Applicants Name</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Name in English"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="project_director_mobile"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Mobile Number</FormLabel>
-                                <FormControl>
-                                  <div className="flex">
-                                    <Phone className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                    <div ref={personalTabRef}>
+                      <Card className="border-emerald-100 dark:border-emerald-800/50 shadow-sm">
+                        <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
+                          <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+                            <User className="h-5 w-5" />
+                            Personal Information
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-6 space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="project_director_name_en"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Applicants Name</FormLabel>
+                                  <FormControl>
                                     <Input
-                                      placeholder="01XXXXXXXXX"
+                                      placeholder="Name in English"
                                       {...field}
                                     />
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
 
-                          <FormField
-                            control={form.control}
-                            name="project_director_email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Email</FormLabel>
-                                <FormControl>
-                                  <div className="flex">
-                                    <Mail className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="project_director_mobile"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Mobile Number</FormLabel>
+                                  <FormControl>
+                                    <div className="flex">
+                                      <Phone className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                                      <Input
+                                        placeholder="01XXXXXXXXX"
+                                        {...field}
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="project_director_email"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Email</FormLabel>
+                                  <FormControl>
+                                    <div className="flex">
+                                      <Mail className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                                      <Input
+                                        placeholder="email@example.com"
+                                        {...field}
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <Separator className="my-4" />
+
+                          <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                            <Briefcase className="h-5 w-5" />
+                            Professional Information
+                          </h3>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="designation"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Designation</FormLabel>
+                                  <FormControl>
                                     <Input
-                                      placeholder="email@example.com"
+                                      placeholder="e.g. Professor"
                                       {...field}
                                     />
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
 
-                        <Separator className="my-4" />
+                            <FormField
+                              control={form.control}
+                              name="department"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Department</FormLabel>
+                                  <FormControl>
+                                    <div className="flex">
+                                      <Building className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                                      <Input
+                                        placeholder="Your department"
+                                        {...field}
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
 
-                        <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
-                          <Briefcase className="h-5 w-5" />
-                          Professional Information
-                        </h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="designation"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Designation</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="e.g. Professor"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="department"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Department</FormLabel>
-                                <FormControl>
-                                  <div className="flex">
-                                    <Building className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                            <FormField
+                              control={form.control}
+                              name="faculty"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Faculty</FormLabel>
+                                  <FormControl>
                                     <Input
-                                      placeholder="Your department"
+                                      placeholder="Your faculty"
                                       {...field}
                                     />
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="faculty"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Faculty</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Your faculty"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="project">
-                    <Card className="border-emerald-100 dark:border-emerald-800/50 shadow-sm">
-                      <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
-                        <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-                          <BookOpen className="h-5 w-5" />
-                          Project Details
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-6 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div ref={projectTabRef}>
+                      <Card className="border-emerald-100 dark:border-emerald-800/50 shadow-sm">
+                        <CardHeader className="bg-emerald-50/50 dark:bg-emerald-900/20">
+                          <CardTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+                            <BookOpen className="h-5 w-5" />
+                            Project Details
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-6 space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="project_title"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    Project Title (Bangla/ English)
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="Project title in Bangla or English"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
                           <FormField
                             control={form.control}
-                            name="project_title"
+                            name="research_location"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>
-                                  Project Title (Bangla/ English)
-                                </FormLabel>
+                                <FormLabel>Research Location</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="Project title in Bangla or English"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <FormField
-                          control={form.control}
-                          name="research_location"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Research Location</FormLabel>
-                              <FormControl>
-                                <div className="flex">
-                                  <MapPin className="h-4 w-4 mr-2 text-gray-500 self-center" />
-                                  <Input
-                                    placeholder="Location where research will be conducted"
-                                    {...field}
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <Separator className="my-4" />
-                        <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
-                          <Users className="h-5 w-5" />
-                          Associate Investigator (If any)
-                        </h3>
-
-                        <div className="grid grid-cols-1 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="associate_investigator"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>
-                                  Details of Associate Investigator
-                                </FormLabel>
-                                <FormControl>
-                                  <textarea
-                                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    placeholder="Enter details of associate investigator"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormDescription className="text-xs text-gray-500">
-                                  Include name, designation, department, and
-                                  contact information if applicable.
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <Separator className="my-4" />
-
-                        <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
-                          <ClipboardList className="h-5 w-5" />
-                          Project Specifications
-                        </h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="approx_pages"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Approximate Pages</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="e.g. 50" {...field} />
+                                  <div className="flex">
+                                    <MapPin className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                                    <Input
+                                      placeholder="Location where research will be conducted"
+                                      {...field}
+                                    />
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
 
-                          <FormField
-                            control={form.control}
-                            name="approx_words"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Approximate Words</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="e.g. 15000" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <Separator className="my-4" />
+                          <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                            <Users className="h-5 w-5" />
+                            Associate Investigator (If any)
+                          </h3>
 
-                          <FormField
-                            control={form.control}
-                            name="total_budget"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Total Budget (BDT)</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="e.g. 150000" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                          <div className="grid grid-cols-1 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="associate_investigator"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>
+                                    Details of Associate Investigator
+                                  </FormLabel>
+                                  <FormControl>
+                                    <textarea
+                                      className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                      placeholder="Enter details of associate investigator"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormDescription className="text-xs text-gray-500">
+                                    Include name, designation, department, and
+                                    contact information if applicable.
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <Separator className="my-4" />
 
-                        <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900 mt-4">
-                          <AlertTitle className="text-blue-800 dark:text-blue-300">
-                            Important Note / গুরুত্বপূর্ণ তথ্য
-                          </AlertTitle>
-                          <AlertDescription className="text-blue-700 dark:text-blue-400">
-                            <p>
-                              Please ensure part A is signed by the Applicant,
-                              Head of the Department, and Faculty Dean before
-                              submission.
-                            </p>
-                            <p className="mt-1">
-                              জমা দেওয়ার পুর্বে আবেদন ফর্ম এর 'ক' অংশে
-                              আবেদনকারী, বিভাগীয় প্রধান এবং ডীনের স্বাক্ষর আছে
-                              কিনা তা নিশ্চিত করুন।
-                            </p>
-                          </AlertDescription>
-                        </Alert>
-                      </CardContent>
-                      <CardFooter>
-                        <Button
-                          type="submit"
-                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting
-                            ? "Submitting..."
-                            : "Submit Research Proposal"}
-                        </Button>
-                      </CardFooter>
-                    </Card>
+                          <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                            <ClipboardList className="h-5 w-5" />
+                            Project Specifications
+                          </h3>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="approx_pages"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Approximate Pages</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="e.g. 50" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="approx_words"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Approximate Words</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g. 15000"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="total_budget"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Total Budget (BDT)</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g. 150000"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900 mt-4">
+                            <AlertTitle className="text-blue-800 dark:text-blue-300">
+                              Important Note / গুরুত্বপূর্ণ তথ্য
+                            </AlertTitle>
+                            <AlertDescription className="text-blue-700 dark:text-blue-400">
+                              <p>
+                                Please ensure part A is signed by the Applicant,
+                                Head of the Department, and Faculty Dean before
+                                submission.
+                              </p>
+                              <p className="mt-1">
+                                জমা দেওয়ার পুর্বে আবেদন ফর্ম এর 'ক' অংশে
+                                আবেদনকারী, বিভাগীয় প্রধান এবং ডীনের স্বাক্ষর
+                                আছে কিনা তা নিশ্চিত করুন।
+                              </p>
+                            </AlertDescription>
+                          </Alert>
+                        </CardContent>
+                        <CardFooter>
+                          <Button
+                            type="submit"
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting
+                              ? "Submitting..."
+                              : "Submit Research Proposal"}
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    </div>
                   </TabsContent>
                 </Tabs>
               </form>
