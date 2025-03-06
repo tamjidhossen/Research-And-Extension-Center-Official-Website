@@ -361,7 +361,7 @@ export default function TeacherSubmission() {
             Fiscal Year: {fiscalYear}
           </div>
           <p className="text-gray-600 dark:text-gray-300">
-            Submit your research proposal for review
+            Submit your research proposal
           </p>
         </div>
 
