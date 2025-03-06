@@ -381,7 +381,7 @@ const sentToReviewer = async (req, res) => {
         const token = proposal.generateReviewerToken(reviewerId);
 
         // Assign reviewer and update status
-        proposal.reviewer.push({ id: reviewerId }); // Store reviewerId directly
+        proposal.reviewer.push({ id: reviewerId });
         proposal.status = 1;
         await proposal.save();
 
@@ -396,18 +396,36 @@ const sentToReviewer = async (req, res) => {
             status: 0        // Pending by default
         });
 
+        // Save the assignment first
         await newAssignment.save();
 
-        // Send email to the reviewer
-        await sendMailToReviewer(reviewer.email, reviewer.name, token);
+        try {
+            // Try sending the email
+            await sendMailToReviewer(reviewer.email, reviewer.name, token);
+            console.log("Email sent successfully");
 
-        return res.status(200).json({ success: true, message: "Email sent to reviewer!" });
+            return res.status(200).json({ success: true, message: "Reviewer assigned! Email sent successfully." });
+
+        } catch (emailError) {
+            console.error("Error sending email:", emailError);
+
+            // **Rollback: Delete the newly created assignment**
+            await ReviewerAssignment.findByIdAndDelete(newAssignment._id);
+
+            // **Rollback: Remove reviewer from proposal and reset status**
+            proposal.reviewer = proposal.reviewer.filter(r => !r.id.equals(reviewerId));
+            proposal.status = 0;  // Reset to original state
+            await proposal.save();
+
+            return res.status(500).json({ success: false, message: "Failed to send email. Assignment rolled back." });
+        }
 
     } catch (error) {
         console.error("Error in sentToReviewer:", error);
         return res.status(500).json({ success: false, message: "Internal server error!" });
     }
 };
+
 
 const addReviewer = async (req, res) => {
     try {

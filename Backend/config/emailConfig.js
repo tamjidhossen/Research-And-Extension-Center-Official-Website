@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 const fs = require('fs')
+const path = require("path");
 
 // Configure transporter for Gmail
 const transporter = nodemailer.createTransport({
@@ -157,8 +158,18 @@ const sendMailToReviewer = async (to, name, token) => {
   }
 };
 
+
 const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => {
   try {
+    // Convert relative path to absolute path
+    const absoluteFilePath = path.resolve(__dirname, filePath);
+
+    // Check if file exists before attaching
+    if (!fs.existsSync(absoluteFilePath)) {
+      console.error("Invoice file not found:", absoluteFilePath);
+      return;
+    }
+
     const emailContent = `
       <div style="background-color: #065f46; color: white; padding: 40px 30px; text-align: center;">
         <h1 style="font-size: 28px; font-weight: bold; margin: 0;">Invoice for Review Work</h1>
@@ -167,22 +178,20 @@ const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => 
 
       <div style="padding: 30px; background-color: #fafefd; color: #065f46; font-family: Arial, sans-serif;">
         <p style="font-size: 16px; line-height: 1.6;">Dear Reviewer,</p>
-        
         <p style="font-size: 16px; line-height: 1.6;">We appreciate your contribution to reviewing the research proposal. Please find attached the invoice for your review work.</p>
 
-        <p style="font-size: 16px; line-height: 1.6;">Kindly sign the invoice and upload it using the secure link provided below:</p>
+        <p style="font-size: 16px; font-weight: bold; color: #065f46;">📎 Attachment Included:</p>
+        <ul style="background-color: #ffffff; padding: 15px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+          <li style="font-size: 16px; color: #065f46;">Invoice File: <strong>invoice.pdf</strong></li>
+        </ul>
 
-        <!-- Card Design for the Link -->
-        <div style="background-color: #ffffff; padding: 25px; margin: 30px 0; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); max-width: 400px; margin-left: auto; margin-right: auto;">
-          <p style="font-size: 18px; font-weight: bold; text-align: center; color: #065f46;">Click the button below to upload your signed invoice</p>
-          <div style="text-align: center; margin-top: 20px;">
-            <a href="${uploadUrl}" style="background-color: #056e51; color: white; padding: 15px 25px; text-decoration: none; font-size: 18px; border-radius: 5px; display: inline-block; font-weight: bold;">
-              Upload Signed Invoice
-            </a>
-          </div>
+        <p style="font-size: 16px; line-height: 1.6; margin-top: 20px;">After signing, please upload the invoice using the secure link below:</p>
+
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="${uploadUrl}" target="_blank" style="background-color: #056e51; color: white; padding: 15px 25px; text-decoration: none; font-size: 18px; border-radius: 5px; display: inline-block; font-weight: bold;">
+            Upload Signed Invoice
+          </a>
         </div>
-
-        <p style="font-size: 16px; line-height: 1.6;">If you have any questions or concerns, please do not hesitate to contact us at the email below.</p>
       </div>
 
       <div style="background-color: #065f46; padding: 25px; text-align: center; font-size: 14px; color: white;">
@@ -196,28 +205,29 @@ const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => 
       </div>
     `;
 
-    const htmlContent = createResponsiveEmailTemplate(emailContent);
-
     const mailOptions = {
       from: process.env.MAIL_USER,
       to: reviewerEmail,
       subject: "Invoice for Review Work",
-      text: `Dear Reviewer,\n\nPlease find attached the invoice for your review work.\n\nAfter signing, please upload it using the following secure link:\n${uploadUrl}\n\nBest regards,\nResearch Proposal System`,
-      html: htmlContent,
+      text: `Dear Reviewer,\n\nWe appreciate your contribution to reviewing the research proposal. The invoice is attached to this email.\n\nAfter signing, please upload it using the secure link:\n${uploadUrl}\n\nBest regards,\nResearch Proposal System`,
+      html: emailContent,
       attachments: [
         {
           filename: "invoice.pdf",
-          path: filePath
+          path: absoluteFilePath, // ✅ Absolute path used here
+          contentType: "application/pdf"
         }
       ]
     };
 
     await transporter.sendMail(mailOptions);
-
+    console.log("Invoice email sent successfully to:", reviewerEmail);
   } catch (error) {
     console.error("Error sending invoice email:", error);
   }
 };
+
+
 
 
 module.exports = {
