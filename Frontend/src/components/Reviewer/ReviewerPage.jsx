@@ -21,6 +21,7 @@ import {
   User,
   CheckCircle,
   X,
+  ClipboardList,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
@@ -33,7 +34,8 @@ export default function ReviewerPage() {
   const [authorized, setAuthorized] = useState(false);
   const [reviewer, setReviewer] = useState(null);
   const [proposal, setProposal] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedMarksheet, setSelectedMarksheet] = useState(null);
+  const [selectedEvaluationSheet, setSelectedEvaluationSheet] = useState(null);
   const [totalMark, setTotalMark] = useState("");
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [marksheetUrl, setMarksheetUrl] = useState(null);
@@ -134,7 +136,7 @@ export default function ReviewerPage() {
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (fileType, e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -157,11 +159,19 @@ export default function ReviewerPage() {
       return;
     }
 
-    setSelectedFile(file);
-    toast({
-      title: "File selected",
-      description: "Marking sheet has been selected",
-    });
+    if (fileType === "marksheet") {
+      setSelectedMarksheet(file);
+      toast({
+        title: "File selected",
+        description: "Marking sheet has been selected",
+      });
+    } else if (fileType === "evaluation") {
+      setSelectedEvaluationSheet(file);
+      toast({
+        title: "File selected",
+        description: "Evaluation sheet has been selected",
+      });
+    }
   };
 
   const handleDownloadProposal = () => {
@@ -200,7 +210,7 @@ export default function ReviewerPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedFile) {
+    if (!selectedMarksheet) {
       toast({
         title: "Missing file",
         description: "Please upload your completed marking sheet",
@@ -208,7 +218,7 @@ export default function ReviewerPage() {
       });
       return;
     }
-
+    
     if (!totalMark || isNaN(parseFloat(totalMark))) {
       toast({
         title: "Invalid mark",
@@ -223,7 +233,8 @@ export default function ReviewerPage() {
     try {
       // Create form data for submission
       const formData = new FormData();
-      formData.append("marksheet", selectedFile);
+      formData.append("marksheet", selectedMarksheet);
+      formData.append("evaluation_sheet", selectedEvaluationSheet);
       formData.append("total_mark", totalMark);
 
       const token = localStorage.getItem("reviewerToken");
@@ -401,7 +412,7 @@ export default function ReviewerPage() {
 
             <Separator />
 
-            {/* Upload Section */}
+            {/* Upload Section 1: Marking Sheet */}
             <div className="space-y-4">
               <h3 className="font-medium text-lg">
                 Step 2: Upload Completed Marking Sheet
@@ -419,23 +430,66 @@ export default function ReviewerPage() {
                   <input
                     type="file"
                     className="hidden"
+                    id="marksheet-file"
                     accept=".pdf"
-                    onChange={handleFileChange}
+                    onChange={(e) => handleFileChange("marksheet", e)}
                   />
                   <Button
                     variant="outline"
                     size="sm"
                     className="border-emerald-200 dark:border-emerald-800"
                     onClick={() =>
-                      document.querySelector('input[type="file"]').click()
+                      document.getElementById("marksheet-file").click()
                     }
                   >
                     Select File
                   </Button>
-                  {selectedFile && (
+                  {selectedMarksheet && (
                     <div className="mt-3 flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
                       <CheckCircle className="h-4 w-4" />
-                      {selectedFile.name}
+                      {selectedMarksheet.name}
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+            
+            {/* Upload Section 2: Evaluation Sheet */}
+            <div className="space-y-4">
+              <h3 className="font-medium text-lg">
+                Step 3: Upload Evaluation Sheet
+              </h3>
+
+              <div className="rounded-md border border-dashed border-gray-300 dark:border-gray-700 px-6 py-8 text-center">
+                <label className="flex flex-col items-center cursor-pointer text-sm">
+                  <ClipboardList className="h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" />
+                  <span className="font-medium text-blue-800 dark:text-blue-300 mb-1">
+                    Upload Evaluation Sheet (PDF)
+                  </span>
+                  <span className="text-gray-500 dark:text-gray-400 text-xs mb-4">
+                    Max size: 5MB
+                  </span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    id="evaluation-file"
+                    accept=".pdf"
+                    onChange={(e) => handleFileChange("evaluation", e)}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-200 dark:border-blue-800"
+                    onClick={() =>
+                      document.getElementById("evaluation-file").click()
+                    }
+                  >
+                    Select File
+                  </Button>
+                  {selectedEvaluationSheet && (
+                    <div className="mt-3 flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                      <CheckCircle className="h-4 w-4" />
+                      {selectedEvaluationSheet.name}
                     </div>
                   )}
                 </label>
@@ -446,7 +500,7 @@ export default function ReviewerPage() {
 
             {/* Total Mark */}
             <div className="space-y-4">
-              <h3 className="font-medium text-lg">Step 3: Enter Total Mark</h3>
+              <h3 className="font-medium text-lg">Step 4: Enter Total Mark</h3>
 
               <div className="grid gap-2 max-w-xs">
                 <Label htmlFor="total_mark">Total Mark (out of 100)</Label>
@@ -455,7 +509,7 @@ export default function ReviewerPage() {
                   type="number"
                   placeholder="enter total mark"
                   min="0"
-                  max="50"
+                  max="100"
                   step="0.01"
                   value={totalMark}
                   onChange={(e) => setTotalMark(e.target.value)}
@@ -473,7 +527,7 @@ export default function ReviewerPage() {
           <CardFooter className="border-t border-gray-100 dark:border-gray-800 px-6 py-4">
             <Button
               className="bg-emerald-600 hover:bg-emerald-700 text-white ml-auto"
-              disabled={submitting || !selectedFile || !totalMark}
+              disabled={submitting || !selectedMarksheet || !totalMark}
               onClick={handleSubmit}
             >
               {submitting ? (

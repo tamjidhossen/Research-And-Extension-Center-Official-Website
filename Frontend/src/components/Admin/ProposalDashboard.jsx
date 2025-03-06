@@ -23,6 +23,9 @@ import {
   MailCheck,
   Clock,
   Loader2,
+  Star,
+  Info,
+  UserCheck,
 } from "lucide-react";
 import {
   Card,
@@ -59,6 +62,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -78,6 +92,11 @@ export default function ProposalsDashboard() {
   const [reviewerName2, setReviewerName2] = useState("");
   const [reviewerEmail1, setReviewerEmail1] = useState("");
   const [reviewerEmail2, setReviewerEmail2] = useState("");
+
+  const [reviewer1Sent, setReviewer1Sent] = useState(false);
+  const [reviewer2Sent, setReviewer2Sent] = useState(false);
+  const [sending1Email, setSending1Email] = useState(false);
+  const [sending2Email, setSending2Email] = useState(false);
   const [existingReviewers, setExistingReviewers] = useState([]);
   const [showAllocationConfirmDialog, setShowAllocationConfirmDialog] =
     useState(false);
@@ -138,6 +157,7 @@ export default function ProposalsDashboard() {
   };
 
   const openReviewerDetailsDialog = (proposal) => {
+    // Match reviewer assignments with the proposal
     const proposalAssignments = reviewAssignments.filter((assignment) => {
       const proposalIdStr = proposal.id.toString();
       const assignmentProposalIdStr = (
@@ -149,56 +169,68 @@ export default function ProposalsDashboard() {
       return proposalIdStr === assignmentProposalIdStr;
     });
 
-    // Prepare reviewer details with marks - with more robust ID matching
+    // Prepare reviewer details with marks
     const reviewerDetails = proposal.reviewers.map((reviewer) => {
-      const reviewerIdStr = (
-        typeof reviewer.id === "object" && reviewer.id._id
-          ? reviewer.id._id
-          : reviewer.id
-      ).toString();
+      // Ensure consistent string ID for comparison
+      const reviewerId =
+        typeof reviewer.id === "object"
+          ? reviewer.id._id?.toString() || reviewer.id.toString()
+          : reviewer.id.toString();
 
-      // Find matching assignment with careful ID comparison
+      // Initial values from proposal's reviewers array
+      let reviewerName = reviewer.name || "";
+      let reviewerEmail = reviewer.email || "";
+
+      // First try to find in existingReviewers by ID
+      const fullDetailsById = existingReviewers.find(
+        (r) => r._id && r._id.toString() === reviewerId
+      );
+
+      // Also try by email as fallback
+      const fullDetailsByEmail =
+        !fullDetailsById && reviewerEmail
+          ? existingReviewers.find(
+              (r) => r.email.toLowerCase() === reviewerEmail.toLowerCase()
+            )
+          : null;
+
+      // Use the best data source
+      if (fullDetailsById) {
+        reviewerName = fullDetailsById.name;
+        reviewerEmail = fullDetailsById.email;
+      } else if (fullDetailsByEmail) {
+        reviewerName = fullDetailsByEmail.name;
+        reviewerEmail = fullDetailsByEmail.email;
+      }
+
+      // Look for matching assignment
       const assignment = proposalAssignments.find((a) => {
-        const assignmentReviewerIdStr = (
-          typeof a.reviewer_id === "object" && a.reviewer_id._id
-            ? a.reviewer_id._id
-            : a.reviewer_id
-        ).toString();
+        const assignmentReviewerId =
+          typeof a.reviewer_id === "object"
+            ? a.reviewer_id._id?.toString() || a.reviewer_id.toString()
+            : a.reviewer_id.toString();
 
-        return reviewerIdStr === assignmentReviewerIdStr;
+        return assignmentReviewerId === reviewerId;
       });
 
-      let reviewerName = reviewer.name || "Unknown Name";
-      let reviewerEmail = reviewer.email || "No email available";
-
-      // Try to get full details from assignment
-      if (
-        assignment &&
-        typeof assignment.reviewer_id === "object" &&
-        assignment.reviewer_id.name
-      ) {
-        reviewerName = assignment.reviewer_id.name;
-        reviewerEmail = assignment.reviewer_id.email || reviewerEmail;
-      }
-      // If not found, try to find in existingReviewers
-      else {
-        const fullReviewerDetails = existingReviewers.find(
-          (r) => r._id && r._id.toString() === reviewerIdStr
-        );
-
-        if (fullReviewerDetails) {
-          reviewerName = fullReviewerDetails.name;
-          reviewerEmail = fullReviewerDetails.email || reviewerEmail;
+      // Get detailed reviewer info from assignment
+      if (assignment && typeof assignment.reviewer_id === "object") {
+        if (assignment.reviewer_id.name) {
+          reviewerName = assignment.reviewer_id.name;
+        }
+        if (assignment.reviewer_id.email) {
+          reviewerEmail = assignment.reviewer_id.email;
         }
       }
 
       return {
-        id: reviewer.id,
-        name: reviewerName,
-        email: reviewerEmail,
+        id: reviewerId,
+        name: reviewerName || "Unknown", // Provide fallback
+        email: reviewerEmail || "No email available",
         marks: assignment?.total_mark || null,
         status: assignment?.status || 0,
         markSheetUrl: assignment?.mark_sheet_url || null,
+        evaluationSheetUrl: assignment?.evaluation_sheet_url || null,
       };
     });
 
@@ -306,24 +338,33 @@ export default function ProposalsDashboard() {
             approvalBudget: p.approval_budget,
             partAPdfUrl: p.pdf_url_part_A,
             partBPdfUrl: p.pdf_url_part_B,
+            cgpa: p.cgpa_honours,
+            supervisor: p.supervisor,
             reviewers: Array.isArray(p.reviewer)
               ? p.reviewer.map((r) => {
-                  // Extract the correct ID format
                   const reviewerId =
                     typeof r.id === "object" && r.id.$oid
                       ? r.id.$oid
                       : r.id?._id || r.id;
-
-                  // Find matching reviewer details
                   const reviewerDetails = existingReviewers.find(
                     (reviewer) =>
                       reviewer._id.toString() === reviewerId.toString()
+                  );
+
+                  // Find matching assignment to get marks and files
+                  const assignment = reviewAssignments.find(
+                    (a) =>
+                      a.reviewer_id._id.toString() === reviewerId.toString() &&
+                      a.proposal_id.toString() === p._id.toString()
                   );
 
                   return {
                     id: reviewerId,
                     name: reviewerDetails?.name || "Unknown",
                     email: reviewerDetails?.email || "",
+                    markSheetUrl: assignment?.mark_sheet_url || null,
+                    evaluationSheetUrl:
+                      assignment?.evaluation_sheet_url || null,
                   };
                 })
               : [],
@@ -336,6 +377,7 @@ export default function ProposalsDashboard() {
             applicantType: "Teacher",
             department: p.department,
             faculty: p.faculty,
+            associateInvestigator: p.associate_investigator || null,
             fiscalYear: p.fiscal_year,
             submissionDate: p.createdAt,
             status: p.status,
@@ -346,22 +388,29 @@ export default function ProposalsDashboard() {
             partBPdfUrl: p.pdf_url_part_B,
             reviewers: Array.isArray(p.reviewer)
               ? p.reviewer.map((r) => {
-                  // Extract the correct ID format
                   const reviewerId =
                     typeof r.id === "object" && r.id.$oid
                       ? r.id.$oid
                       : r.id?._id || r.id;
-
-                  // Find matching reviewer details
                   const reviewerDetails = existingReviewers.find(
                     (reviewer) =>
                       reviewer._id.toString() === reviewerId.toString()
+                  );
+
+                  // Find matching assignment to get marks and files
+                  const assignment = reviewAssignments.find(
+                    (a) =>
+                      a.reviewer_id._id.toString() === reviewerId.toString() &&
+                      a.proposal_id.toString() === p._id.toString()
                   );
 
                   return {
                     id: reviewerId,
                     name: reviewerDetails?.name || "Unknown",
                     email: reviewerDetails?.email || "",
+                    markSheetUrl: assignment?.mark_sheet_url || null,
+                    evaluationSheetUrl:
+                      assignment?.evaluation_sheet_url || null,
                   };
                 })
               : [],
@@ -679,6 +728,171 @@ export default function ProposalsDashboard() {
     }
   };
 
+  const assignReviewer1 = async (proposal) => {
+    if (!reviewerName1 || !reviewerEmail1) {
+      toast.error("Please enter reviewer 1 details");
+      return;
+    }
+
+    try {
+      setSending1Email(true);
+
+      // Handle first reviewer
+      let reviewer1Id;
+      const existingReviewer1 = existingReviewers.find(
+        (r) => r.email.toLowerCase() === reviewerEmail1.toLowerCase()
+      );
+
+      if (existingReviewer1) {
+        reviewer1Id = existingReviewer1._id;
+      } else {
+        // Create new reviewer
+        const newReviewer1Res = await api.post("/api/admin/reviewer/add", {
+          name: reviewerName1,
+          email: reviewerEmail1,
+        });
+
+        if (newReviewer1Res.data && newReviewer1Res.data.reviewer) {
+          reviewer1Id = newReviewer1Res.data.reviewer._id;
+          // Add to existing reviewers immediately
+          setExistingReviewers((prev) => [
+            ...prev,
+            newReviewer1Res.data.reviewer,
+          ]);
+        } else {
+          throw new Error("Failed to create reviewer 1");
+        }
+      }
+
+      // Send first reviewer invitation
+      await api.post("/api/admin/research-proposal/sent-to-reviewer", {
+        proposal_id: proposal.id,
+        proposal_type: proposal.applicantType.toLowerCase(),
+        reviewer_id: reviewer1Id,
+      });
+
+      toast.success("Invitation sent to Reviewer 1");
+      setReviewer1Sent(true);
+
+      // Update the proposal in the local state - add reviewer1
+      setProposals((prevProposals) =>
+        prevProposals.map((p) =>
+          p.id === proposal.id
+            ? {
+                ...p,
+                reviewers: [
+                  ...(p.reviewers || []),
+                  {
+                    id: reviewer1Id,
+                    name: reviewerName1,
+                    email: reviewerEmail1,
+                  },
+                ],
+                status: 1, // Set to "Under Review"
+              }
+            : p
+        )
+      );
+
+      // Fetch reviewer assignments to update status info
+      fetchReviewerAssignments();
+    } catch (error) {
+      console.error("Failed to assign reviewer 1:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to assign reviewer 1"
+      );
+    } finally {
+      setSending1Email(false);
+    }
+  };
+
+  const assignReviewer2 = async (proposal) => {
+    if (!reviewerName2 || !reviewerEmail2) {
+      toast.error("Please enter reviewer 2 details");
+      return;
+    }
+
+    // Check if we're trying to use the same email as reviewer 1 (if it exists)
+    if (
+      proposal.reviewers &&
+      proposal.reviewers.length > 0 &&
+      proposal.reviewers[0].email.toLowerCase() === reviewerEmail2.toLowerCase()
+    ) {
+      toast.error("Cannot assign the same reviewer twice");
+      return;
+    }
+
+    try {
+      setSending2Email(true);
+
+      // Handle second reviewer
+      let reviewer2Id;
+      const existingReviewer2 = existingReviewers.find(
+        (r) => r.email.toLowerCase() === reviewerEmail2.toLowerCase()
+      );
+
+      if (existingReviewer2) {
+        reviewer2Id = existingReviewer2._id;
+      } else {
+        // Create new reviewer
+        const newReviewer2Res = await api.post("/api/admin/reviewer/add", {
+          name: reviewerName2,
+          email: reviewerEmail2,
+        });
+
+        if (newReviewer2Res.data && newReviewer2Res.data.reviewer) {
+          reviewer2Id = newReviewer2Res.data.reviewer._id;
+          // Add to existing reviewers immediately
+          setExistingReviewers((prev) => [
+            ...prev,
+            newReviewer2Res.data.reviewer,
+          ]);
+        } else {
+          throw new Error("Failed to create reviewer 2");
+        }
+      }
+
+      // Send second reviewer invitation
+      await api.post("/api/admin/research-proposal/sent-to-reviewer", {
+        proposal_id: proposal.id,
+        proposal_type: proposal.applicantType.toLowerCase(),
+        reviewer_id: reviewer2Id,
+      });
+
+      toast.success("Invitation sent to Reviewer 2");
+      setReviewer2Sent(true);
+
+      // Update the proposal in the local state - add reviewer2
+      setProposals((prevProposals) =>
+        prevProposals.map((p) =>
+          p.id === proposal.id
+            ? {
+                ...p,
+                reviewers: [
+                  ...(p.reviewers || []), // This will include the first reviewer if they exist
+                  {
+                    id: reviewer2Id,
+                    name: reviewerName2,
+                    email: reviewerEmail2,
+                  },
+                ],
+                status: 1, // Keep status as "Under Review"
+              }
+            : p
+        )
+      );
+
+      // Fetch assignments to update UI
+      fetchReviewerAssignments();
+    } catch (error) {
+      console.error("Failed to assign reviewer 2:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to assign reviewer 2"
+      );
+    } finally {
+      setSending2Email(false);
+    }
+  };
   // Filter and sort proposals
   const filteredProposals = proposals
     .filter((proposal) => {
@@ -735,6 +949,14 @@ export default function ProposalsDashboard() {
         return sortConfig.direction === "asc"
           ? a[key] - b[key]
           : b[key] - a[key];
+      }
+
+      if (key === "cgpa") {
+        // Only student proposals have CGPA
+        const aCgpa = a.applicantType === "Student" ? Number(a.cgpa) || 0 : 0;
+        const bCgpa = b.applicantType === "Student" ? Number(b.cgpa) || 0 : 0;
+
+        return sortConfig.direction === "asc" ? aCgpa - bCgpa : bCgpa - aCgpa;
       }
 
       return sortConfig.direction === "asc"
@@ -1004,6 +1226,23 @@ export default function ProposalsDashboard() {
                 <ChevronDown className="h-3 w-3 ml-1" />
               ))}
           </Button>
+          {proposals.some((p) => p.applicantType === "Student") && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleSort("cgpa")}
+              className="border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
+            >
+              <GraduationCap className="h-4 w-4 mr-2" />
+              CGPA
+              {sortConfig.key === "cgpa" &&
+                (sortConfig.direction === "asc" ? (
+                  <ChevronUp className="h-3 w-3 ml-1" />
+                ) : (
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                ))}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1049,9 +1288,89 @@ export default function ProposalsDashboard() {
                     <div className="flex items-center">
                       {getApplicantIcon(proposal.applicantType)}
                       <span>{proposal.applicant}</span>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 ml-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+                          >
+                            <Info className="h-4 w-4 text-slate-500" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80 p-4">
+                          {proposal.applicantType === "Teacher" ? (
+                            <>
+                              <h4 className="font-medium text-sm mb-2 flex items-center">
+                                <UserCheck className="h-4 w-4 mr-2 text-purple-600" />
+                                Associate Investigator
+                              </h4>
+                              {proposal.associateInvestigator ? (
+                                <div className="text-sm text-slate-700 dark:text-slate-300">
+                                  {proposal.associateInvestigator}
+                                </div>
+                              ) : (
+                                <div className="text-sm text-slate-500 italic">
+                                  No associate investigator specified
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <h4 className="font-medium text-sm mb-2 flex items-center">
+                                <UserCheck className="h-4 w-4 mr-2 text-blue-600" />
+                                Supervisor Information
+                              </h4>
+                              {proposal.supervisor ? (
+                                <div className="space-y-1">
+                                  <div className="text-sm">
+                                    <span className="font-medium">Name:</span>{" "}
+                                    {proposal.supervisor.name}
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className="font-medium">
+                                      Designation:
+                                    </span>{" "}
+                                    {proposal.supervisor.designation}
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className="font-medium">
+                                      Department:
+                                    </span>{" "}
+                                    {proposal.supervisor.department}
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className="font-medium">
+                                      Faculty:
+                                    </span>{" "}
+                                    {proposal.supervisor.faculty}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-sm text-slate-500 italic">
+                                  No supervisor information available
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </TableCell>
-                  <TableCell>{proposal.department}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span>{proposal.department}</span>
+                      {proposal.applicantType === "Student" &&
+                        proposal.cgpa && (
+                          <Badge
+                            variant="outline"
+                            className="bg-cyan-50 text-cyan-800 border-cyan-200 mt-1 self-start"
+                          >
+                            CGPA: {proposal.cgpa}
+                          </Badge>
+                        )}
+                    </div>
+                  </TableCell>
                   <TableCell>{proposal.fiscalYear}</TableCell>
                   <TableCell>{formatDate(proposal.submissionDate)}</TableCell>
                   <TableCell>{getStatusBadge(proposal.status)}</TableCell>
@@ -1168,82 +1487,342 @@ export default function ProposalsDashboard() {
                         </DialogContent>
                       </Dialog>
 
-                      {/* Assign Reviewers */}
-                      {proposal.reviewers && proposal.reviewers.length === 0 ? (
+                      {/* Assign Reviewers - Fixed version with complete form fields */}
+                      {proposal.reviewers && proposal.reviewers.length < 2 ? (
                         <Dialog>
-                          <DialogTrigger asChild>
+                          <DialogTrigger
+                            asChild
+                            onClick={() => {
+                              // Reset states for whichever reviewer needs to be assigned
+                              if (proposal.reviewers.length === 0) {
+                                // Reset both reviewers
+                                setReviewer1Sent(false);
+                                setReviewerName1("");
+                                setReviewerEmail1("");
+                              } else {
+                                // For the existing reviewer, populate the information from the existing assignment
+                                const reviewer = proposal.reviewers[0];
+
+                                // Find the full reviewer details from existing reviewers or assignments
+                                const existingReviewerData =
+                                  existingReviewers.find(
+                                    (r) =>
+                                      r._id &&
+                                      reviewer.id &&
+                                      (r._id.toString() ===
+                                        reviewer.id.toString() ||
+                                        r.email.toLowerCase() ===
+                                          reviewer.email?.toLowerCase())
+                                  );
+
+                                // Find matching assignment to display status
+                                const assignment = reviewAssignments.find(
+                                  (a) =>
+                                    a.proposal_id &&
+                                    proposal.id &&
+                                    a.proposal_id.toString() ===
+                                      proposal.id.toString() &&
+                                    a.reviewer_id &&
+                                    reviewer.id &&
+                                    a.reviewer_id._id.toString() ===
+                                      reviewer.id.toString()
+                                );
+
+                                setReviewer1Sent(true);
+                                // Use the best available name and email
+                                setReviewerName1(
+                                  existingReviewerData?.name ||
+                                    reviewer.name ||
+                                    "Unknown"
+                                );
+                                setReviewerEmail1(
+                                  existingReviewerData?.email ||
+                                    reviewer.email ||
+                                    ""
+                                );
+                              }
+
+                              setReviewer2Sent(false);
+                              setReviewerName2("");
+                              setReviewerEmail2("");
+
+                              // Fetch the latest reviewer assignments
+                              fetchReviewerAssignments();
+                            }}
+                          >
                             <Button
                               variant="outline"
                               size="icon"
-                              title="Assign Reviewers"
+                              title={
+                                proposal.reviewers.length === 0
+                                  ? "Assign Reviewers"
+                                  : "Assign Second Reviewer"
+                              }
                             >
                               <Mail className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Assign Reviewers</DialogTitle>
+                              <DialogTitle>
+                                {proposal.reviewers.length === 0
+                                  ? "Assign Reviewers"
+                                  : "Assign Second Reviewer"}
+                              </DialogTitle>
                               <DialogDescription>
-                                Send this proposal to two reviewers for
-                                evaluation.
+                                {proposal.reviewers.length === 0
+                                  ? "Send this proposal to two reviewers for evaluation."
+                                  : "Assign a second reviewer to this proposal."}
                               </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
-                              <div>
-                                <h3 className="text-sm font-medium mb-2 flex items-center">
-                                  <User className="h-4 w-4 mr-2 text-emerald-600" />
-                                  Reviewer 1
-                                </h3>
-                                <div className="grid gap-2 mt-2">
-                                  <Label htmlFor="reviewer1Email">Email</Label>
-                                  <Input
-                                    id="reviewer1Email"
-                                    placeholder="reviewer1@example.com"
-                                    value={reviewerEmail1}
-                                    onChange={(e) => {
-                                      setReviewerEmail1(e.target.value);
-                                      // Look for matching reviewer in existing reviewers
-                                      const matchingReviewer =
-                                        existingReviewers?.find(
-                                          (r) =>
-                                            r.email.toLowerCase() ===
-                                            e.target.value.toLowerCase()
+                              {proposal.reviewers.length === 0 ? (
+                                <>
+                                  {/* First reviewer form - fully implemented */}
+                                  <div>
+                                    <h3 className="text-sm font-medium mb-2 flex items-center">
+                                      <User className="h-4 w-4 mr-2 text-emerald-600" />
+                                      Reviewer 1
+                                    </h3>
+                                    <div className="grid gap-2 mt-2">
+                                      <Label htmlFor="reviewer1Email">
+                                        Email
+                                      </Label>
+                                      <Input
+                                        id="reviewer1Email"
+                                        placeholder="reviewer1@example.com"
+                                        value={reviewerEmail1}
+                                        onChange={(e) => {
+                                          setReviewerEmail1(e.target.value);
+                                          // Look for matching reviewer in existing reviewers
+                                          const matchingReviewer =
+                                            existingReviewers?.find(
+                                              (r) =>
+                                                r.email.toLowerCase() ===
+                                                e.target.value.toLowerCase()
+                                            );
+                                          if (matchingReviewer) {
+                                            setReviewerName1(
+                                              matchingReviewer.name
+                                            );
+                                          } else {
+                                            setReviewerName1("");
+                                          }
+                                        }}
+                                        disabled={reviewer1Sent}
+                                      />
+                                    </div>
+                                    <div className="grid gap-2 mt-2">
+                                      <Label htmlFor="reviewer1Name">
+                                        Name
+                                      </Label>
+                                      <Input
+                                        id="reviewer1Name"
+                                        placeholder="Reviewer's full name"
+                                        value={reviewerName1}
+                                        onChange={(e) =>
+                                          setReviewerName1(e.target.value)
+                                        }
+                                        disabled={
+                                          reviewer1Sent ||
+                                          reviewerEmail1 === "" ||
+                                          existingReviewers?.some(
+                                            (r) =>
+                                              r.email.toLowerCase() ===
+                                              reviewerEmail1.toLowerCase()
+                                          )
+                                        }
+                                      />
+                                    </div>
+
+                                    <div className="mt-2 flex justify-end">
+                                      {reviewer1Sent ? (
+                                        <div className="flex items-center text-green-600">
+                                          <CheckCircle className="h-4 w-4 mr-1" />
+                                          <span className="text-sm">
+                                            Invitation sent
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <Button
+                                          onClick={() =>
+                                            assignReviewer1(proposal)
+                                          }
+                                          className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                                          disabled={
+                                            !reviewerName1 ||
+                                            !reviewerEmail1 ||
+                                            sending1Email
+                                          }
+                                          size="sm"
+                                        >
+                                          {sending1Email ? (
+                                            <>
+                                              <Loader2 className="h-3 w-3 animate-spin" />
+                                              Sending...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Mail className="h-3 w-3" />
+                                              Send Invitation
+                                            </>
+                                          )}
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <Separator className="my-2" />
+                                </>
+                              ) : (
+                                <div className="bg-blue-50 p-3 rounded-md border border-blue-200 mb-2">
+                                  <h3 className="text-sm font-medium mb-1 flex items-center">
+                                    <User className="h-4 w-4 mr-2 text-blue-600" />
+                                    Reviewer 1 (Already Assigned)
+                                  </h3>
+
+                                  {/* Access reviewer data from the proposal or state depending on what's available */}
+                                  <p className="text-sm text-blue-700">
+                                    {reviewerName1 ||
+                                      proposal.reviewers[0]?.name ||
+                                      "Unknown"}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {reviewerEmail1 ||
+                                      proposal.reviewers[0]?.email ||
+                                      "Email not available"}
+                                  </p>
+
+                                  {/* Add status indicator for first reviewer */}
+                                  {(() => {
+                                    const reviewerIdStr =
+                                      typeof proposal.reviewers[0].id ===
+                                      "object"
+                                        ? proposal.reviewers[0].id._id?.toString() ||
+                                          proposal.reviewers[0].id.toString()
+                                        : proposal.reviewers[0].id.toString();
+
+                                    // Find the matching assignment checking both reviewer ID and proposal ID
+                                    const assignment = reviewAssignments.find(
+                                      (a) => {
+                                        const assignmentReviewerIdStr =
+                                          typeof a.reviewer_id === "object"
+                                            ? a.reviewer_id._id?.toString() ||
+                                              a.reviewer_id.toString()
+                                            : a.reviewer_id.toString();
+
+                                        const assignmentProposalIdStr =
+                                          typeof a.proposal_id === "object"
+                                            ? a.proposal_id._id?.toString() ||
+                                              a.proposal_id.toString()
+                                            : a.proposal_id.toString();
+
+                                        return (
+                                          reviewerIdStr ===
+                                            assignmentReviewerIdStr &&
+                                          proposal.id.toString() ===
+                                            assignmentProposalIdStr
                                         );
-                                      if (matchingReviewer) {
-                                        setReviewerName1(matchingReviewer.name);
-                                      } else {
-                                        setReviewerName1("");
                                       }
-                                    }}
-                                  />
-                                </div>
-                                <div className="grid gap-2">
-                                  <Label htmlFor="reviewer1Name">Name</Label>
-                                  <Input
-                                    id="reviewer1Name"
-                                    placeholder="Reviewer 1 name"
-                                    value={reviewerName1}
-                                    onChange={(e) =>
-                                      setReviewerName1(e.target.value)
-                                    }
-                                    disabled={
-                                      reviewerEmail1 === "" ||
-                                      existingReviewers?.some(
-                                        (r) =>
-                                          r.email.toLowerCase() ===
-                                          reviewerEmail1.toLowerCase()
-                                      )
-                                    }
-                                  />
-                                </div>
-                              </div>
+                                    );
 
-                              <Separator className="my-2" />
+                                    if (assignment && assignment.status === 1) {
+                                      return (
+                                        <>
+                                          <div className="mt-1 flex items-center text-green-600 text-xs">
+                                            <CheckCircle className="h-3 w-3 mr-1" />
+                                            <span>Review submitted</span>
+                                          </div>
+                                          {assignment.total_mark && (
+                                            <div className="mt-1 flex items-center text-blue-600 text-xs">
+                                              <Star className="h-3 w-3 mr-1" />
+                                              <span>
+                                                Marks: {assignment.total_mark}
+                                                /100
+                                              </span>
+                                            </div>
+                                          )}
+                                          {/* Marksheet button */}
+                                          {assignment.mark_sheet_url &&
+                                            assignment.mark_sheet_url !==
+                                              "/" && (
+                                              <div className="mt-1">
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="text-xs p-0 h-auto text-blue-600 hover:text-blue-800"
+                                                  onClick={() => {
+                                                    const baseUrl =
+                                                      import.meta.env
+                                                        .VITE_API_URL || "";
+                                                    const serverRoot =
+                                                      baseUrl.replace(
+                                                        /\/v1$/,
+                                                        ""
+                                                      );
+                                                    const fileUrl = `${serverRoot}/${assignment.mark_sheet_url}`;
+                                                    window.open(
+                                                      fileUrl,
+                                                      "_blank"
+                                                    );
+                                                  }}
+                                                >
+                                                  <Download className="h-3 w-3 mr-1" />
+                                                  <span>View marksheet</span>
+                                                </Button>
+                                              </div>
+                                            )}
+                                          {/* Add evaluation sheet button */}
+                                          {assignment.evaluation_sheet_url &&
+                                            assignment.evaluation_sheet_url !==
+                                              "/" && (
+                                              <div className="mt-1">
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="text-xs p-0 h-auto text-green-600 hover:text-green-800"
+                                                  onClick={() => {
+                                                    const baseUrl =
+                                                      import.meta.env
+                                                        .VITE_API_URL || "";
+                                                    const serverRoot =
+                                                      baseUrl.replace(
+                                                        /\/v1$/,
+                                                        ""
+                                                      );
+                                                    const fileUrl = `${serverRoot}/${assignment.evaluation_sheet_url}`;
+                                                    window.open(
+                                                      fileUrl,
+                                                      "_blank"
+                                                    );
+                                                  }}
+                                                >
+                                                  <Download className="h-3 w-3 mr-1" />
+                                                  <span>
+                                                    View evaluation sheet
+                                                  </span>
+                                                </Button>
+                                              </div>
+                                            )}
+                                        </>
+                                      );
+                                    }
+                                    return (
+                                      <div className="mt-1 flex items-center text-amber-600 text-xs">
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        <span>Pending review</span>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              )}
 
+                              {/* Second reviewer form - fully implemented */}
                               <div>
                                 <h3 className="text-sm font-medium mb-2 flex items-center">
                                   <User className="h-4 w-4 mr-2 text-emerald-600" />
-                                  Reviewer 2
+                                  {proposal.reviewers.length === 0
+                                    ? "Reviewer 2"
+                                    : "Reviewer 2 (Required)"}
                                 </h3>
                                 <div className="grid gap-2 mt-2">
                                   <Label htmlFor="reviewer2Email">Email</Label>
@@ -1266,18 +1845,20 @@ export default function ProposalsDashboard() {
                                         setReviewerName2("");
                                       }
                                     }}
+                                    disabled={reviewer2Sent}
                                   />
                                 </div>
-                                <div className="grid gap-2">
+                                <div className="grid gap-2 mt-2">
                                   <Label htmlFor="reviewer2Name">Name</Label>
                                   <Input
                                     id="reviewer2Name"
-                                    placeholder="Reviewer 2 name"
+                                    placeholder="Reviewer's full name"
                                     value={reviewerName2}
                                     onChange={(e) =>
                                       setReviewerName2(e.target.value)
                                     }
                                     disabled={
+                                      reviewer2Sent ||
                                       reviewerEmail2 === "" ||
                                       existingReviewers?.some(
                                         (r) =>
@@ -1287,36 +1868,78 @@ export default function ProposalsDashboard() {
                                     }
                                   />
                                 </div>
+
+                                {/* Warning if trying to assign same reviewer twice */}
+                                {proposal.reviewers?.length > 0 &&
+                                  reviewerEmail2 &&
+                                  proposal.reviewers[0]?.email?.toLowerCase() ===
+                                    reviewerEmail2?.toLowerCase() && (
+                                    <div className="mt-2 text-red-500 text-sm flex items-center">
+                                      <AlertCircle className="h-4 w-4 mr-1" />
+                                      Cannot assign the same reviewer twice
+                                    </div>
+                                  )}
+
+                                <div className="mt-2 flex justify-end">
+                                  {reviewer2Sent ? (
+                                    <div className="flex items-center text-green-600">
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      <span className="text-sm">
+                                        Invitation sent
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <Button
+                                      onClick={() => assignReviewer2(proposal)}
+                                      className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                                      disabled={
+                                        !reviewerName2 ||
+                                        !reviewerEmail2 ||
+                                        sending2Email ||
+                                        (proposal.reviewers?.length > 0 &&
+                                          proposal.reviewers[0]?.email?.toLowerCase() ===
+                                            reviewerEmail2?.toLowerCase())
+                                      }
+                                      size="sm"
+                                    >
+                                      {sending2Email ? (
+                                        <>
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                          Sending...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Mail className="h-3 w-3" />
+                                          Send Invitation
+                                        </>
+                                      )}
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                            <DialogFooter>
+                            {/* <DialogFooter>
                               <Button
+                                variant="outline"
                                 onClick={() => {
-                                  assignReviewers(proposal);
+                                  // Simply close dialog without fetching data
+                                  setReviewer1Sent(false);
+                                  setReviewer2Sent(false);
+
+                                  // Only reset form fields if needed
+                                  if (proposal.reviewers.length === 0) {
+                                    setReviewerName1("");
+                                    setReviewerEmail1("");
+                                  }
+                                  setReviewerName2("");
+                                  setReviewerEmail2("");
                                 }}
-                                className="bg-emerald-600 hover:bg-emerald-700"
-                                disabled={
-                                  !reviewerName1 ||
-                                  !reviewerEmail1 ||
-                                  !reviewerName2 ||
-                                  !reviewerEmail2 ||
-                                  reviewerEmail1 === reviewerEmail2 ||
-                                  sendingEmails
-                                }
                               >
-                                {sendingEmails ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                                    Sending...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Mail className="mr-2 h-4 w-4" /> Send
-                                    Invitations
-                                  </>
-                                )}
+                                {reviewer2Sent || reviewer1Sent
+                                  ? "Close"
+                                  : "Cancel"}
                               </Button>
-                            </DialogFooter>
+                            </DialogFooter> */}
                           </DialogContent>
                         </Dialog>
                       ) : proposal.status === 3 ? (
@@ -1340,6 +1963,7 @@ export default function ProposalsDashboard() {
                           <MailCheck className="h-4 w-4 text-blue-600" />
                         </Button>
                       )}
+
                       {/* Update Marks */}
                       {/* {proposal.reviewers.length > 0 && (
                         <Dialog>
@@ -1756,7 +2380,7 @@ export default function ProposalsDashboard() {
                       <CheckCircle className="h-3.5 w-3.5 mr-1 text-green-600" />
                       Marks Given: {reviewer.marks}/100
                     </div>
-                    {reviewer.markSheetUrl && (
+                    {reviewer.markSheetUrl && reviewer.markSheetUrl !== "/" && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -1771,11 +2395,28 @@ export default function ProposalsDashboard() {
                         <Download className="h-3 w-3 mr-1" /> View Marksheet
                       </Button>
                     )}
+                    {reviewer.evaluationSheetUrl &&
+                      reviewer.evaluationSheetUrl !== "/" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs mt-1 w-full border-blue-200"
+                          onClick={() => {
+                            const baseUrl = import.meta.env.VITE_API_URL || "";
+                            const serverRoot = baseUrl.replace(/\/v1$/, "");
+                            const fileUrl = `${serverRoot}/${reviewer.evaluationSheetUrl}`;
+                            window.open(fileUrl, "_blank");
+                          }}
+                        >
+                          <Download className="h-3 w-3 mr-1" /> View Evaluation
+                          Sheet
+                        </Button>
+                      )}
                   </div>
                 ) : (
                   <div className="text-sm flex items-center text-amber-700">
                     <Clock className="h-3.5 w-3.5 mr-1 text-amber-600" />
-                    Awaiting review
+                    Pending review
                   </div>
                 )}
               </div>
