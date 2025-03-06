@@ -867,7 +867,7 @@ export default function TeacherSubmission() {
                                   <div className="flex">
                                     <MapPin className="h-4 w-4 mr-2 text-gray-500 self-center" />
                                     <Input
-                                      placeholder="Location where research will be conducted"
+                                      placeholder="Place of conducting research project"
                                       {...field}
                                     />
                                   </div>
