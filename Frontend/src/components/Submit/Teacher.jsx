@@ -28,6 +28,7 @@ import {
   FileX,
   Loader2,
   User,
+  Users,
   Mail,
   Phone,
   Building,
@@ -59,6 +60,7 @@ const formSchema = z.object({
   // Project Details
   project_title: z.string().min(1, "Project title required"),
   research_location: z.string().min(1, "Research location is required"),
+  associate_investigator: z.string().optional(),
   approx_pages: z.string().refine((val) => !isNaN(parseInt(val)), {
     message: "Must be a valid number",
   }),
@@ -99,6 +101,7 @@ export default function TeacherSubmission() {
       faculty: "",
       project_title: "",
       research_location: "",
+      associate_investigator: "",
       approx_pages: "",
       approx_words: "",
       total_budget: "",
@@ -157,7 +160,6 @@ export default function TeacherSubmission() {
 
   // Function to handle file downloads
   const handleDownload = (url, fileName) => {
-
     if (!url) {
       toast({
         title: "Download Failed",
@@ -246,6 +248,7 @@ export default function TeacherSubmission() {
     formData.append("faculty", data.faculty);
     formData.append("project_title", data.project_title);
     formData.append("research_location", data.research_location);
+    formData.append("associate_investigator", data.associate_investigator);
     formData.append(
       "project_details",
       JSON.stringify({
@@ -476,7 +479,12 @@ export default function TeacherSubmission() {
                     <Button
                       variant="outline"
                       className="w-full flex items-center gap-2 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
-                      onClick={() => handleDownload(documentUrls.partA_en, "Teacher_PartA_English.pdf")}
+                      onClick={() =>
+                        handleDownload(
+                          documentUrls.partA_en,
+                          "Teacher_PartA_English.pdf"
+                        )
+                      }
                       disabled={!documentUrls.partA_en}
                     >
                       <Download className="h-4 w-4" />
@@ -485,7 +493,12 @@ export default function TeacherSubmission() {
                     <Button
                       variant="outline"
                       className="w-full flex items-center gap-2 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
-                      onClick={() => handleDownload(documentUrls.partA_bn, "Teacher_PartA_Bengali.pdf")}
+                      onClick={() =>
+                        handleDownload(
+                          documentUrls.partA_bn,
+                          "Teacher_PartA_Bengali.pdf"
+                        )
+                      }
                       disabled={!documentUrls.partA_bn}
                     >
                       <Download className="h-4 w-4" />
@@ -498,7 +511,12 @@ export default function TeacherSubmission() {
                     <Button
                       variant="outline"
                       className="w-full flex items-center gap-2 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
-                      onClick={() => handleDownload(documentUrls.partB_en, "Teacher_PartB_English.pdf")}
+                      onClick={() =>
+                        handleDownload(
+                          documentUrls.partB_en,
+                          "Teacher_PartB_English.pdf"
+                        )
+                      }
                       disabled={!documentUrls.partB_en}
                     >
                       <Download className="h-4 w-4" />
@@ -507,7 +525,12 @@ export default function TeacherSubmission() {
                     <Button
                       variant="outline"
                       className="w-full flex items-center gap-2 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
-                      onClick={() => handleDownload(documentUrls.partB_bn, "Teacher_PartB_Bengali.pdf")}
+                      onClick={() =>
+                        handleDownload(
+                          documentUrls.partB_bn,
+                          "Teacher_PartB_Bengali.pdf"
+                        )
+                      }
                       disabled={!documentUrls.partB_bn}
                     >
                       <Download className="h-4 w-4" />
@@ -788,6 +811,37 @@ export default function TeacherSubmission() {
                           )}
                         />
 
+                        <Separator className="my-4" />
+                        <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                          <Users className="h-5 w-5" />
+                          Associate Investigator (If any)
+                        </h3>
+
+                        <div className="grid grid-cols-1 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="associate_investigator"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  Details of Associate Investigator
+                                </FormLabel>
+                                <FormControl>
+                                  <textarea
+                                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="Enter details of associate investigator"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormDescription className="text-xs text-gray-500">
+                                  Include name, designation, department, and
+                                  contact information if applicable.
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                         <Separator className="my-4" />
 
                         <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
