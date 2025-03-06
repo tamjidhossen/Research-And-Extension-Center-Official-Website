@@ -131,7 +131,27 @@ const submitInvoice = async (req, res) => {
 
         const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
         const fileUrl = `uploads/invoice/${req.file.filename}`;
+        const invoice = await Invoice.findOne({ reviewer_id: reviewer._id, fiscal_year });
+        if (!invoice) {
+            if (req.file) {
+                const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
+                console.log("Attempting to delete:", filePath);
 
+                try {
+                    fs.unlink(filePath);
+                    console.log("File deleted successfully.");
+                } catch (unlinkError) {
+                    console.error("Error deleting file:", unlinkError);
+                }
+            }
+            return res.status(400).json({ success: false, message: "Not a valid invoice!" });
+        }
+        else {
+            if (fs.existsSync(invoice.invoice_url)) {
+                console.log("Deleted  :", invoice.invoice_url);
+                fs.unlinkSync(invoice.invoice_url);
+            }
+        }
         const updatedInvoice = await Invoice.findOneAndUpdate(
             { reviewer_id: reviewer._id, fiscal_year }, // Search criteria
             {
@@ -146,7 +166,7 @@ const submitInvoice = async (req, res) => {
                 console.log("Attempting to delete:", filePath);
 
                 try {
-                    await fs.unlink(filePath);
+                    fs.unlink(filePath);
                     console.log("File deleted successfully.");
                 } catch (unlinkError) {
                     console.error("Error deleting file:", unlinkError);
@@ -164,7 +184,7 @@ const submitInvoice = async (req, res) => {
             console.log("Attempting to delete:", filePath);
 
             try {
-                await fs.unlink(filePath);
+                fs.unlink(filePath);
                 console.log("File deleted successfully.");
             } catch (unlinkError) {
                 console.error("Error deleting file:", unlinkError);

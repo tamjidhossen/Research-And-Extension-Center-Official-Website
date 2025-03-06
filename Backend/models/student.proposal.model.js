@@ -18,7 +18,9 @@ const studentProposalSchema = new mongoose.Schema(
         cgpa_honours: { type: Number, required: true },
         supervisor: {
             name: { type: String, required: true },
-            designation: { type: String, required: true }
+            designation: { type: String, required: true },
+            department: { type: String, required: true },
+            faculty: { type: String, required: true }
         },
         project_title: { type: String, required: true },
         project_details: {

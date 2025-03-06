@@ -657,7 +657,7 @@ const sendInvoice = async (req, res) => {
         const invoice = new Invoice({
             reviewer_id: reviewer._id,
             fiscal_year,
-            invoice_url: "",
+            invoice_url: fileUrl,
             status: 1
         });
 

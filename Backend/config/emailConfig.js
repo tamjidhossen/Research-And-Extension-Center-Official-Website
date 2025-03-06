@@ -151,8 +151,6 @@ const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => 
     };
 
     await transporter.sendMail(mailOptions);
-    // console.log("Invoice email sent successfully.");
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   } catch (error) {
     console.error("Error sending invoice email:", error);
   }
