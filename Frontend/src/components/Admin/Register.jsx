@@ -102,7 +102,7 @@ export default function AdminRegister() {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+            // Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
           },
         }
       );

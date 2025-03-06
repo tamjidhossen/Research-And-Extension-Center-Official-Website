@@ -29,6 +29,7 @@ import NoticesDashboard from "./NoticesDashboard";
 import OverviewDashboard from "./OverviewDashboard";
 import InvoiceManagement from "./InvoiceManagement";
 import { cn } from "@/lib/utils";
+import Cookies from "js-cookie";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ export default function Dashboard() {
   }, [activeView]);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminToken");
+    Cookies.remove("adminToken");
     localStorage.removeItem("adminData");
     localStorage.removeItem("dashboardView");
     navigate("/admin/login");

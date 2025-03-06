@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import api from "@/lib/api";
+import Cookies from "js-cookie";
 
 export default function InvoiceSubmission() {
   const [searchParams] = useSearchParams();
@@ -40,12 +41,12 @@ export default function InvoiceSubmission() {
     const token = searchParams.get("token");
 
     if (token) {
-      // Store token in localStorage
-      localStorage.setItem("invoiceToken", token);
+      // Store token in cookie
+      Cookies.set("invoiceToken", token, { secure: true, sameSite: 'strict' });
       verifyToken(token);
     } else {
-      // Check if token exists in localStorage
-      const storedToken = localStorage.getItem("invoiceToken");
+      // Check if token exists in cookie
+      const storedToken = Cookies.get("invoiceToken");
       if (storedToken) {
         verifyToken(storedToken);
       } else {
@@ -165,7 +166,7 @@ export default function InvoiceSubmission() {
       const formData = new FormData();
       formData.append("invoice", selectedFile);
 
-      const token = localStorage.getItem("invoiceToken");
+      const token = Cookies.get("invoiceToken");
 
       const response = await api.post(
         "/api/reviewer/research-proposal/submit/invoice",

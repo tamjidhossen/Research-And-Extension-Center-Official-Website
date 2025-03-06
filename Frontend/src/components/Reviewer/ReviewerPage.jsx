@@ -26,6 +26,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import api from "@/lib/api";
+import Cookies from "js-cookie";
 
 export default function ReviewerPage() {
   const [searchParams] = useSearchParams();
@@ -46,11 +47,11 @@ export default function ReviewerPage() {
 
     if (token) {
       // Store token in localStorage
-      localStorage.setItem("reviewerToken", token);
+      Cookies.set("reviewerToken", token, { secure: true, sameSite: 'strict' });
       verifyToken(token);
     } else {
       // Check if token exists in localStorage
-      const storedToken = localStorage.getItem("reviewerToken");
+      const storedToken = Cookies.get("reviewerToken");
       if (storedToken) {
         verifyToken(storedToken);
       } else {
@@ -237,7 +238,7 @@ export default function ReviewerPage() {
       formData.append("evaluation_sheet", selectedEvaluationSheet);
       formData.append("total_mark", totalMark);
 
-      const token = localStorage.getItem("reviewerToken");
+      // const token = localStorage.getItem("reviewerToken");
 
       const response = await api.post(
         "/api/reviewer/research-proposal/submit/mark",
@@ -245,7 +246,6 @@ export default function ReviewerPage() {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
           },
         }
       );
