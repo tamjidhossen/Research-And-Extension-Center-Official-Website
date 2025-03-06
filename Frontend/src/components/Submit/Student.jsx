@@ -150,7 +150,7 @@ export default function StudentSubmission() {
           // Create URLs for document downloads
           const createFullUrl = (path) => {
             if (!path) return null;
-            const normalizedPath = path.startsWith("uploads/")
+            const normalizedPath = path.startsWith("uploads")
               ? path
               : `uploads/${path}`;
             return `${serverRoot}/${normalizedPath}`;

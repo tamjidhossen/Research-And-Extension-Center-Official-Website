@@ -72,7 +72,7 @@ export default function ReviewerPage() {
           if (marksheetPath) {
             const baseUrl = import.meta.env.VITE_API_URL || "";
             const serverRoot = baseUrl.replace(/\/v1$/, "");
-            const normalizedPath = marksheetPath.startsWith("uploads/")
+            const normalizedPath = marksheetPath.startsWith("uploads")
               ? marksheetPath
               : `uploads/${marksheetPath}`;
 

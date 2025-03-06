@@ -178,7 +178,7 @@ const OverviewDashboard = () => {
             // Convert relative path to full URL if a path exists
             if (docPath) {
               // Remove any 'uploads/' prefix as it's already configured in Express
-              const normalizedPath = docPath.startsWith("uploads/")
+              const normalizedPath = docPath.startsWith("uploads")
                 ? docPath
                 : `uploads/${docPath}`;
 
@@ -399,7 +399,7 @@ const OverviewDashboard = () => {
         // Convert relative path to full URL if a path exists
         if (docPath) {
           // Remove any 'uploads/' prefix as it's already configured in Express
-          const normalizedPath = docPath.startsWith("uploads/")
+          const normalizedPath = docPath.startsWith("uploads")
             ? docPath
             : `uploads/${docPath}`;
 
