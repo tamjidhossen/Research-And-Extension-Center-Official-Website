@@ -64,6 +64,8 @@ const formSchema = z.object({
 
   // Supervisor
   supervisor_name: z.string().min(1, "Supervisor name is required"),
+  supervisor_department: z.string().min(1, "Supervisor department is required"),
+  supervisor_faculty: z.string().min(1, "Supervisor faculty is required"),
   supervisor_designation: z
     .string()
     .min(1, "Supervisor designation is required"),
@@ -118,8 +120,8 @@ export default function StudentSubmission() {
       cgpa_honours: "",
       supervisor_name: "",
       supervisor_designation: "",
-      // project_title_bn: "",
-      // project_title_en: "",
+      supervisor_department: "",
+      supervisor_faculty: "",
       project_title: "",
       approx_pages: "",
       approx_words: "",
@@ -328,6 +330,8 @@ export default function StudentSubmission() {
       JSON.stringify({
         name: data.supervisor_name,
         designation: data.supervisor_designation,
+        department: data.supervisor_department,
+        faculty: data.supervisor_faculty,
       })
     );
     formData.append(
@@ -936,6 +940,40 @@ export default function StudentSubmission() {
                                   <FormControl>
                                     <Input
                                       placeholder="Supervisor's full name"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="supervisor_department"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Supervisor Department</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g. Professor"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="supervisor_faculty"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Supervisor Faculty</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g. Professor"
                                       {...field}
                                     />
                                   </FormControl>
