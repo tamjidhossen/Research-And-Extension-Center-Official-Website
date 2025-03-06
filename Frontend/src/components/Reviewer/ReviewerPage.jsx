@@ -99,7 +99,7 @@ export default function ReviewerPage() {
         }
       );
 
-      if (response.data && response.data.succes) {
+      if (response.data && response.data.success) {
         setAuthorized(true);
         setProposal(response.data.proposal);
 

@@ -19,6 +19,7 @@ import {
   PieChart,
   ChevronLeft,
   ChevronRight,
+  Receipt
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -148,7 +149,7 @@ export default function Dashboard() {
                         value="notices"
                       />
                       <NavItem
-                        icon={<FileText className="h-5 w-5" />}
+                        icon={<Receipt className="h-5 w-5" />}
                         label="Invoices"
                         value="invoices"
                       />
@@ -226,7 +227,7 @@ export default function Dashboard() {
                 value="notices"
               />
               <NavItem
-                icon={<FileText className="h-5 w-5" />}
+                icon={<Receipt className="h-5 w-5" />}
                 label="Invoices"
                 value="invoices"
               />

@@ -127,7 +127,7 @@ export default function PrevProposals() {
         setLoading(true);
 
         // need to change this route to not be admin only
-        const response = await api.get("/api/admin/research-proposal/");
+        const response = await api.get("/api/research-proposal/proposals");
         
         let realProjects = [];
 

@@ -56,9 +56,9 @@ import {
   ChevronDown,
   ArrowUpDown,
   Loader2,
+  Receipt,
 } from "lucide-react";
 import api from "@/lib/api";
-import { cn } from "@/lib/utils";
 
 export default function InvoiceManagement() {
   const [reviewers, setReviewers] = useState([]);
@@ -71,12 +71,17 @@ export default function InvoiceManagement() {
   const [reviewerAssignments, setReviewerAssignments] = useState([]);
   const [sendingInvoice, setSendingInvoice] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [filters, setFilters] = useState({
     status: "all",
     fiscalYear: "all",
   });
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [reviewerProposalsDialogOpen, setReviewerProposalsDialogOpen] =
+    useState(false);
+  const [selectedReviewerProposals, setSelectedReviewerProposals] = useState({
+    reviewer: null,
+    proposals: [],
+  });
 
   // Convert number to words function
   const numberToWords = (num) => {
@@ -209,6 +214,18 @@ export default function InvoiceManagement() {
     }
   };
 
+  const showReviewerProposals = (reviewer) => {
+    const reviewerAssignments = getReviewerAssignments(
+      reviewer._id,
+      selectedFiscalYear
+    );
+    setSelectedReviewerProposals({
+      reviewer,
+      proposals: reviewerAssignments,
+    });
+    setReviewerProposalsDialogOpen(true);
+  };
+
   const getReviewerAssignments = (reviewerId, fiscalYear) => {
     return assignments.filter(
       (assignment) =>
@@ -227,6 +244,7 @@ export default function InvoiceManagement() {
     setShowInvoiceDialog(true);
   };
 
+  // Generate PDF invoice
   // Generate PDF invoice
   const generateInvoice = async () => {
     try {
@@ -299,10 +317,17 @@ export default function InvoiceManagement() {
       const proposalTableData = [];
       let totalPayment = 0;
 
+      // Get honorarium amount from environment variable or use default
+      const honorariumAmount = Number(
+        import.meta.env.VITE_REVIEWER_HONORIUM || 600
+      );
+      // Revenue stamp is now applied only once, not per proposal
+      const stampDuty = 10;
+
       reviewerAssignments.forEach((assignment, index) => {
-        const amount = 2000; // Fixed honorarium amount per review
+        const amount = honorariumAmount;
         const tax = amount * 0.1; // 10% tax
-        const received = amount - tax;
+        const received = amount - tax; // No stamp duty deduction per proposal
 
         totalPayment += received;
 
@@ -312,20 +337,25 @@ export default function InvoiceManagement() {
           `${amount.toFixed(2)}`,
           `${tax.toFixed(2)}`,
           `${received.toFixed(2)}`,
-          "", // Revenue column (to be filled manually)
         ]);
       });
 
-      // Add total row
+      // Add total row - now with stamp duty applied only once
       if (proposalTableData.length > 0) {
+        const totalAmount = honorariumAmount * reviewerAssignments.length;
+        const totalTax = totalAmount * 0.1;
+        const totalNet = totalPayment - stampDuty; // Apply stamp duty once to the final amount
+
         proposalTableData.push([
           "",
           "Total",
-          `${(2000 * reviewerAssignments.length).toFixed(2)}`,
-          `${(200 * reviewerAssignments.length).toFixed(2)}`,
-          `${totalPayment.toFixed(2)}`,
-          "",
+          `${totalAmount.toFixed(2)}`,
+          `${totalTax.toFixed(2)}`,
+          `${totalNet.toFixed(2)}`,
         ]);
+
+        // Update the totalPayment to reflect the single stamp duty deduction
+        totalPayment = totalNet;
       }
 
       autoTable(doc, {
@@ -337,7 +367,6 @@ export default function InvoiceManagement() {
             "Total Amount (BDT)",
             "Tax (10%)",
             "Received Amount",
-            "Revenue",
           ],
         ],
         body: proposalTableData,
@@ -350,10 +379,17 @@ export default function InvoiceManagement() {
         styles: { fontSize: 9 },
         columnStyles: {
           0: { cellWidth: 15 },
-          5: { cellWidth: 30 },
         },
         margin: { left: 20 },
       });
+
+      // Add stamp duty note
+      doc.setFontSize(9);
+      doc.text(
+        `* Revenue stamp of Tk. 10/- deducted from total amount`,
+        20,
+        doc.lastAutoTable.finalY + 5
+      );
 
       // Amount in words
       doc.setFontSize(10);
@@ -363,17 +399,47 @@ export default function InvoiceManagement() {
         doc.lastAutoTable.finalY + 15
       );
 
-      // Signature lines
+      // Signature lines - updated positions
       doc.setFontSize(10);
-      doc.text("Reviewer's Signature", 40, doc.lastAutoTable.finalY + 40, {
+
+      // Reviewer's signature on the right side
+      doc.text(
+        "Reviewer's Signature with Seal",
+        pageWidth - 40,
+        doc.lastAutoTable.finalY + 40,
+        {
+          align: "center",
+        }
+      );
+
+      // Recommended by on the left side, below reviewer's signature
+      doc.text("Recommended by", 40, doc.lastAutoTable.finalY + 60, {
+        align: "center",
+      });
+
+      // Director info below "Recommended by"
+      doc.text("Director", 40, doc.lastAutoTable.finalY + 65, {
         align: "center",
       });
       doc.text(
-        "Recommended by",
-        pageWidth - 40,
-        doc.lastAutoTable.finalY + 40,
-        { align: "center" }
+        "Research and Extension Center",
+        40,
+        doc.lastAutoTable.finalY + 70,
+        {
+          align: "center",
+        }
       );
+      doc.text(
+        "Jatiya Kabi Kazi Nazrul Islam University",
+        40,
+        doc.lastAutoTable.finalY + 75,
+        {
+          align: "center",
+        }
+      );
+      doc.text("Trishal, Mymensingh", 40, doc.lastAutoTable.finalY + 80, {
+        align: "center",
+      });
 
       // Create a blob from the PDF and convert to file
       const pdfBlob = doc.output("blob");
@@ -430,20 +496,20 @@ export default function InvoiceManagement() {
     }
   };
 
-  const deleteInvoice = async (invoiceId) => {
-    try {
-      const response = await api.delete(
-        `/api/admin/invoice/delete/${invoiceId}`
-      );
-      if (response.data && response.data.success) {
-        toast.success("Invoice deleted successfully");
-        fetchInvoices(); // Refresh invoice list
-      }
-    } catch (error) {
-      console.error("Failed to delete invoice:", error);
-      toast.error(error.response?.data?.message || "Failed to delete invoice");
-    }
-  };
+  // const deleteInvoice = async (invoiceId) => {
+  //   try {
+  //     const response = await api.delete(
+  //       `/api/admin/invoice/delete/${invoiceId}`
+  //     );
+  //     if (response.data && response.data.success) {
+  //       toast.success("Invoice deleted successfully");
+  //       fetchInvoices(); // Refresh invoice list
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to delete invoice:", error);
+  //     toast.error(error.response?.data?.message || "Failed to delete invoice");
+  //   }
+  // };
 
   // Filter reviewers based on search query
   const filteredReviewers = reviewers.filter((reviewer) => {
@@ -458,16 +524,16 @@ export default function InvoiceManagement() {
   });
 
   // Filter invoices based on filters
-  const filteredInvoices = invoices.filter((invoice) => {
-    const fiscalYearMatch =
-      filters.fiscalYear === "all" ||
-      invoice.fiscal_year === filters.fiscalYear;
+  // const filteredInvoices = invoices.filter((invoice) => {
+  //   const fiscalYearMatch =
+  //     filters.fiscalYear === "all" ||
+  //     invoice.fiscal_year === filters.fiscalYear;
 
-    return fiscalYearMatch;
-  });
+  //   return fiscalYearMatch && invoice.status === 2;
+  // });
 
-  const hasInvoiceForReviewer = (reviewerId, fiscalYear) => {
-    return invoices.some(
+  const getReviewerInvoice = (reviewerId, fiscalYear) => {
+    return invoices.find(
       (invoice) =>
         invoice.reviewer_id._id === reviewerId &&
         invoice.fiscal_year === fiscalYear
@@ -525,22 +591,20 @@ export default function InvoiceManagement() {
         </div>
 
         <div className="border rounded-md">
-          <Table>
+          <Table className="w-full">
             <TableHeader>
               <TableRow className="bg-emerald-50/50 dark:bg-emerald-900/20">
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Reviewed Proposals</TableHead>
-                <TableHead>Invoice Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="w-[25%]">Name</TableHead>
+                <TableHead className="w-[30%]">Email</TableHead>
+                <TableHead className="w-[20%]">Reviewed Proposals</TableHead>
+                <TableHead className="w-[25%]">Invoice Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={4}
                     className="text-center py-8 text-muted-foreground"
                   >
                     <div className="flex justify-center items-center">
@@ -552,7 +616,7 @@ export default function InvoiceManagement() {
               ) : filteredReviewers.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={4}
                     className="text-center py-8 text-muted-foreground"
                   >
                     No reviewers found
@@ -564,7 +628,7 @@ export default function InvoiceManagement() {
                     reviewer._id,
                     selectedFiscalYear
                   );
-                  const hasInvoice = hasInvoiceForReviewer(
+                  const invoice = getReviewerInvoice(
                     reviewer._id,
                     selectedFiscalYear
                   );
@@ -574,63 +638,114 @@ export default function InvoiceManagement() {
                       key={reviewer._id}
                       className="hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20"
                     >
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium w-1/4">
                         {reviewer.name}
                       </TableCell>
-                      <TableCell>{reviewer.email}</TableCell>
-                      <TableCell>{reviewer.department || "—"}</TableCell>
-                      <TableCell>
+                      <TableCell className="w-1/4">{reviewer.email}</TableCell>
+                      <TableCell className="w-1/4">
                         {reviewerAssignments.length > 0 ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-blue-50 text-blue-700 border-blue-200"
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => showReviewerProposals(reviewer)}
+                            className="p-0 hover:bg-transparent"
                           >
-                            {reviewerAssignments.length} Proposal
-                            {reviewerAssignments.length > 1 ? "s" : ""}
-                          </Badge>
+                            <Badge
+                              variant="outline"
+                              className="bg-blue-50 text-blue-700 border-blue-200 cursor-pointer"
+                            >
+                              {reviewerAssignments.length} Proposal
+                              {reviewerAssignments.length > 1 ? "s" : ""}
+                            </Badge>
+                          </Button>
                         ) : (
                           "—"
                         )}
                       </TableCell>
-                      <TableCell>
-                        {hasInvoice ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-green-50 text-green-700 border-green-200"
-                          >
-                            Sent
-                          </Badge>
-                        ) : reviewerAssignments.length > 0 ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-yellow-50 text-yellow-700 border-yellow-200"
-                          >
-                            Pending
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="bg-gray-50 text-gray-700 border-gray-200"
-                          >
-                            N/A
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                            disabled={
-                              reviewerAssignments.length === 0 || hasInvoice
-                            }
-                            onClick={() => openInvoiceDialog(reviewer)}
-                          >
-                            <FileText className="h-3.5 w-3.5 mr-1" /> Generate
-                            Invoice
-                          </Button>
-                        </div>
+                      <TableCell className="w-1/4">
+                        {(() => {
+                          if (!invoice) {
+                            // No invoice - show generate button
+                            return (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 w-36" // Added w-36 for fixed width
+                                disabled={reviewerAssignments.length === 0}
+                                onClick={() => openInvoiceDialog(reviewer)}
+                              >
+                                <Receipt className="h-3.5 w-3.5 mr-1" />{" "}
+                                Generate Invoice
+                              </Button>
+                            );
+                          } else if (invoice.status === 1) {
+                            // Pending signature
+                            return (
+                              <div className="flex flex-col gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className="bg-amber-50 text-amber-700 border-amber-200 w-fit"
+                                >
+                                  Pending Signature
+                                </Badge>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 w-36" // Added w-36 for fixed width
+                                  onClick={() => {
+                                    const baseUrl =
+                                      import.meta.env.VITE_API_URL || "";
+                                    const serverRoot = baseUrl.replace(
+                                      /\/v1$/,
+                                      ""
+                                    );
+                                    const fileUrl = `${serverRoot}/${invoice.invoice_url}`;
+                                    window.open(fileUrl, "_blank");
+                                  }}
+                                >
+                                  <Download className="h-3.5 w-3.5 mr-1" /> View
+                                  Invoice
+                                </Button>
+                              </div>
+                            );
+                          } else if (invoice.status === 2) {
+                            // Signed
+                            return (
+                              <div className="flex flex-col gap-2">
+                                <div className="flex flex-row gap-2">
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-green-50 text-green-700 border-green-200 w-fit"
+                                  >
+                                    Signed
+                                  </Badge>
+                                  <div className="text-xs text-muted-foreground">
+                                    {formatDate(invoice.createdAt)}
+                                  </div>
+                                </div>
+
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 w-36" // Added w-36 for fixed width
+                                  onClick={() => {
+                                    const baseUrl =
+                                      import.meta.env.VITE_API_URL || "";
+                                    const serverRoot = baseUrl.replace(
+                                      /\/v1$/,
+                                      ""
+                                    );
+                                    const fileUrl = `${serverRoot}/${invoice.invoice_url}`;
+                                    window.open(fileUrl, "_blank");
+                                  }}
+                                >
+                                  <Download className="h-3.5 w-3.5 mr-1" /> View
+                                  Invoice
+                                </Button>
+                              </div>
+                            );
+                          }
+                        })()}
                       </TableCell>
                     </TableRow>
                   );
@@ -643,118 +758,111 @@ export default function InvoiceManagement() {
 
       <Separator />
 
-      {/* Submitted Invoices Section */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium">Submitted Invoices</h3>
-          <div className="flex gap-2">
-            <Select
-              value={filters.fiscalYear}
-              onValueChange={(value) =>
-                setFilters({ ...filters, fiscalYear: value })
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by Fiscal Year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Fiscal Years</SelectItem>
-                {fiscalYears.map((year) => (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+      {/* Reviewer Proposals Dialog */}
+      <Dialog
+        open={reviewerProposalsDialogOpen}
+        onOpenChange={setReviewerProposalsDialogOpen}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Reviewed Proposals</DialogTitle>
+            <DialogDescription>
+              Proposals reviewed by {selectedReviewerProposals.reviewer?.name}{" "}
+              in {selectedFiscalYear}
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-emerald-50/50 dark:bg-emerald-900/20">
-                <TableHead>Reviewer</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Fiscal Year</TableHead>
-                <TableHead>Date Sent</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    <div className="flex justify-center items-center">
-                      <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                      Loading...
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : filteredInvoices.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No invoices found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredInvoices.map((invoice) => (
-                  <TableRow
-                    key={invoice._id}
-                    className="hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20"
-                  >
-                    <TableCell className="font-medium">
-                      {invoice.reviewer_id.name}
-                    </TableCell>
-                    <TableCell>{invoice.reviewer_id.email}</TableCell>
-                    <TableCell>{invoice.fiscal_year}</TableCell>
-                    <TableCell>{formatDate(invoice.createdAt)}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className="bg-green-50 text-green-700 border-green-200"
-                      >
-                        Submitted
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                          onClick={() => {
-                            const baseUrl = import.meta.env.VITE_API_URL || "";
-                            const serverRoot = baseUrl.replace(/\/v1$/, "");
-                            const fileUrl = `${serverRoot}/${invoice.invoice_url}`;
-                            window.open(fileUrl, "_blank");
-                          }}
-                        >
-                          <Download className="h-3.5 w-3.5 mr-1" /> View Invoice
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-                          onClick={() => deleteInvoice(invoice._id)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
-                        </Button>
-                      </div>
-                    </TableCell>
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 p-4 rounded-md border border-blue-200">
+              <div className="flex gap-4 items-center">
+                <User className="h-10 w-10 text-blue-500" />
+                <div>
+                  <h3 className="font-medium text-lg">
+                    {selectedReviewerProposals.reviewer?.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedReviewerProposals.reviewer?.email}
+                  </p>
+                  {selectedReviewerProposals.reviewer?.department && (
+                    <p className="text-sm text-muted-foreground">
+                      Department:{" "}
+                      {selectedReviewerProposals.reviewer.department}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="border rounded-md">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Proposal Number</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Score</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+                </TableHeader>
+                <TableBody>
+                  {selectedReviewerProposals.proposals.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-4 text-muted-foreground"
+                      >
+                        No proposals reviewed in this fiscal year
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    selectedReviewerProposals.proposals.map(
+                      (assignment, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            {assignment.proposal?.proposal_number || "N/A"}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {assignment.proposal?.project_title ||
+                              "Unknown Title"}
+                          </TableCell>
+                          <TableCell>
+                            {assignment.status === 1 ? (
+                              <Badge
+                                variant="outline"
+                                className="bg-green-50 text-green-700 border-green-200"
+                              >
+                                Reviewed
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="bg-yellow-50 text-yellow-700 border-yellow-200"
+                              >
+                                Pending
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {assignment.status === 1
+                              ? assignment.total_mark
+                              : "—"}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setReviewerProposalsDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Generate Invoice Dialog */}
       <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
         <DialogContent className="max-w-3xl">
