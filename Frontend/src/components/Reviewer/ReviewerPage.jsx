@@ -373,7 +373,7 @@ export default function ReviewerPage() {
                   </CardHeader>
                   <CardContent className="pb-4 pt-0">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      Download the research proposal (Part B) to review.
+                      Download the research proposal to review.
                     </p>
                     <Button
                       variant="outline"
