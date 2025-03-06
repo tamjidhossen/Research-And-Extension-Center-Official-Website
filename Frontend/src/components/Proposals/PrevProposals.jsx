@@ -132,11 +132,11 @@ export default function PrevProposals() {
         let realProjects = [];
 
         if (response.data) {
-          if (response.data.studentProposals) {
+          if (response.data.StudentProposal) {
             // Process student proposals - only include status = 3 (funded proposals)
             realProjects = [
               ...realProjects,
-              ...response.data.studentProposals
+              ...response.data.StudentProposal
                 .filter(p => p.status === 3) // Only include funded proposals
                 .map((p) => ({
                   id: p._id,
@@ -153,11 +153,11 @@ export default function PrevProposals() {
             ];
           }
   
-          if (response.data.teacherProposals) {
+          if (response.data.TeacherProposal) {
             // Process teacher proposals - only include status = 3 (funded proposals)
             realProjects = [
               ...realProjects,
-              ...response.data.teacherProposals
+              ...response.data.TeacherProposal
                 .filter(p => p.status === 3) // Only include funded proposals
                 .map((p) => ({
                   id: p._id,
@@ -176,6 +176,7 @@ export default function PrevProposals() {
         }
 
         setProjects(realProjects);
+        console.log("Loaded projects:", realProjects); 
 
         // Extract unique filter options
         const faculties = [...new Set(realProjects.map((p) => p.faculty))];
@@ -265,10 +266,8 @@ export default function PrevProposals() {
     return (
       (filters.search === "" ||
         project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        project.applicantName
-          .toLowerCase()
-          .includes(filters.search.toLowerCase()) ||
-        project.id.toLowerCase().includes(filters.search.toLowerCase())) &&
+        project.applicantName?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        String(project.id).toLowerCase().includes(filters.search.toLowerCase())) &&
       (filters.faculty === "all" || project.faculty === filters.faculty) &&
       (filters.department === "all" ||
         project.department === filters.department) &&
