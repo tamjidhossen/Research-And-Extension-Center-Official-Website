@@ -39,14 +39,26 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Upload Middleware (Handling multiple files)
-const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-}).fields([
-    { name: "marksheet", maxCount: 1 },
-    { name: "evaluation_sheet", maxCount: 1 }
-]);
+// Upload Middleware (Handling multiple files, evaluation_sheet is optional)
+const upload = (req, res, next) => {
+    const uploadMiddleware = multer({
+        storage: storage,
+        fileFilter: fileFilter,
+        limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    }).fields([
+        { name: "marksheet", maxCount: 1 },
+        { name: "evaluation_sheet", maxCount: 1 } // Optional field
+    ]);
+
+    uploadMiddleware(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        if (!req.files?.marksheet) {
+            return res.status(400).json({ error: "Marksheet is required" });
+        }
+        next();
+    });
+};
 
 module.exports = upload;
