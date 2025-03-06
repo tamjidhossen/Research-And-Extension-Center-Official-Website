@@ -14,6 +14,7 @@ const teacherProposalSchema = new mongoose.Schema(
         designation: { type: String, required: true },
         department: { type: String, required: true },
         faculty: { type: String, required: true },
+        associate_investigator: { type: String, required: false, default: "" },
         project_title: { type: String, required: true },
         research_location: { type: String, required: true },
         project_details: {

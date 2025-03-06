@@ -15,7 +15,7 @@ const reviewerAssignmentSchema = new mongoose.Schema(
             max: [100, "Total mark cannot exceed 100"]
         },
         mark_sheet_url: { type: String, required: true, default: "" }, // Marks uploaded file path
-        evaluation_sheet_url: { type: String, required: true, default: "" }, // Evaluation sheet file path
+        evaluation_sheet_url: { type: String, required: false }, // Evaluation sheet file path
         status: { type: Number, enum: [0, 1], default: 0 } // 0 = Pending, 1 = Reviewed
     },
     { timestamps: true }

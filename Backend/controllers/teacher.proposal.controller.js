@@ -16,12 +16,13 @@ const submitProposal = async (req, res, next) => {
             }
             return res.status(201).json({ success: false, message: "Application process not started" });
         }
-        const { project_director, designation, department, faculty, project_title, research_location, project_details, total_budget } = req.body;
+        const { project_director, designation, department, faculty, project_title, research_location, associate_investigator, project_details, total_budget } = req.body;
         const proposal = new TeacherProposal({
             proposal_number: 0,
             proposal_type: "teacher",
             fiscal_year: firstDocument.fiscal_year,
             project_director: JSON.parse(project_director),
+            associate_investigator,
             designation,
             department,
             faculty,
