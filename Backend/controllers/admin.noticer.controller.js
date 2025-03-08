@@ -7,7 +7,7 @@ const registerAdminNoticer = async (req, res) => {
         if (!name || !email || !password) {
             return res.status(400).json({ success: false, message: "All fields are required" });
         }
-        console.log(AdminNoticer)
+
         const existingAdmin = await AdminNoticer.findOne({ email });
         if (existingAdmin) {
             return res.status(400).json({ success: false, message: "Admin with this email already exists" });
@@ -62,7 +62,35 @@ const loginAdminNoticer = async (req, res) => {
     }
 };
 
+const getAllAdminNoticer = async (req, res) => {
+    try {
+        const admins = await AdminNoticer.find({}, "_id name email");
+        res.status(200).json({ success: true, admins });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "An error occurred while fetching admins" });
+    }
+};
+
+const deleteAdminNoticer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedAdmin = await AdminNoticer.findByIdAndDelete(id);
+
+        if (!deletedAdmin) {
+            return res.status(404).json({ success: false, message: "Admin not found" });
+        }
+
+        res.status(200).json({ success: true, message: "Admin deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "An error occurred while deleting the admin" });
+    }
+};
+
 module.exports = {
     registerAdminNoticer,
     loginAdminNoticer,
+    getAllAdminNoticer,
+    deleteAdminNoticer,
 };

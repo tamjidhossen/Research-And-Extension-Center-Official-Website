@@ -8,6 +8,8 @@ const { StudentProposal } = require('../models/student.proposal.model.js');
 const { ReviewerAssignment } = require("../models/reviewer.assignment.model.js");
 const { Reviewer } = require("../models/reviewer.model.js");
 const { Invoice } = require("../models/invoice.model.js");
+const AdminNoticer = require("../models/admin.noticer.model.js");
+
 const Admin = require('../models/admin.model.js');
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
@@ -289,6 +291,44 @@ const updatedDocument = async (req, res, next) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
+
+const getAdmin = async (req, res) => {
+    try {
+        const admin = await Admin.findById(req.params.id).select('-password');
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+        res.status(200).json(admin);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+
+// Delete Admin by ID
+const deleteAdmin = async (req, res) => {
+    try {
+        const admin = await Admin.findByIdAndDelete(req.params.id);
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+        res.status(200).json({ success: true, message: 'Admin deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error', error });
+    }
+};
+
+const getAllAdmins = async (req, res) => {
+    try {
+        const admins = await Admin.find().select('-password');
+        res.status(200).json({ success: true, admins });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error', error });
+    }
+};
+
+
+
 const updateRequestStatus = async (req, res) => {
     try {
         const { request_id } = req.params;
@@ -787,5 +827,6 @@ const deleteInvoice = async (req, res) => {
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
     sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers, getProposalOverviews,
-    updateProposalStatus, updateRegistrationOpen, updateApprovalBudget, getAllReviewerAssignments, sendInvoice, getAllInvoices, deleteInvoice
+    updateProposalStatus, updateRegistrationOpen, updateApprovalBudget, getAllReviewerAssignments, sendInvoice, getAllInvoices, deleteInvoice,
+    getAdmin, deleteAdmin, getAllAdmins
 };
