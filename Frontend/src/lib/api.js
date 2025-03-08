@@ -57,4 +57,17 @@ api.interceptors.response.use(
 //   (error) => Promise.reject(error)
 // );
 
+export function setupNoticeManagerInterceptor(api) {
+  api.interceptors.request.use(
+    (config) => {
+      const token = Cookies.get("noticeManagerToken");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+}
+
 export default api;

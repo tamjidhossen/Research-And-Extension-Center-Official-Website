@@ -19,7 +19,8 @@ import {
   PieChart,
   ChevronLeft,
   ChevronRight,
-  Receipt
+  Receipt,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -28,6 +29,7 @@ import ProposalsDashboard from "./ProposalDashboard";
 import NoticesDashboard from "./NoticesDashboard";
 import OverviewDashboard from "./OverviewDashboard";
 import InvoiceManagement from "./InvoiceManagement";
+import AccountsDashboard from "./AccountsDashboard";
 import { cn } from "@/lib/utils";
 import Cookies from "js-cookie";
 
@@ -80,8 +82,10 @@ export default function Dashboard() {
         return <ProposalsDashboard />;
       case "notices":
         return <NoticesDashboard />;
-      case "invoices": // Add this new case
+      case "invoices":
         return <InvoiceManagement />;
+      case "accounts":
+        return <AccountsDashboard />;
       default:
         return <OverviewDashboard />;
     }
@@ -153,6 +157,11 @@ export default function Dashboard() {
                         icon={<Receipt className="h-5 w-5" />}
                         label="Invoices"
                         value="invoices"
+                      />
+                      <NavItem
+                        icon={<Users className="h-5 w-5" />}
+                        label="Accounts"
+                        value="accounts"
                       />
                     </nav>
                   </div>
@@ -231,6 +240,11 @@ export default function Dashboard() {
                 icon={<Receipt className="h-5 w-5" />}
                 label="Invoices"
                 value="invoices"
+              />
+              <NavItem
+                icon={<Users className="h-5 w-5" />}
+                label="Accounts"
+                value="accounts"
               />
             </nav>
           </div>

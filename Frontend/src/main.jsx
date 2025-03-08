@@ -13,6 +13,9 @@ import ProtectedRoute from './components/Admin/ProtectedRoute'
 import AdminRegister from './components/Admin/Register'
 import ReviewerPage from './components/Reviewer/ReviewerPage';
 import InvoiceSubmissionPage from './components/Reviewer/InvoiceSubmission';
+import NoticeManagerLogin from './components/NoticeManager/Login';
+import NoticeManagerDashboard from './components/NoticeManager/Dashboard';
+import NoticeManagerProtectedRoute from './components/NoticeManager/ProtectedRoute';
 
 import {
   Route,
@@ -42,6 +45,17 @@ const router = createBrowserRouter(
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
+          } 
+        />
+      </Route>
+      <Route path="/notice-manager">
+        <Route path="login" element={<NoticeManagerLogin />} />
+        <Route 
+          path="dashboard" 
+          element={
+            <NoticeManagerProtectedRoute>
+              <NoticeManagerDashboard />
+            </NoticeManagerProtectedRoute>
           } 
         />
       </Route>
