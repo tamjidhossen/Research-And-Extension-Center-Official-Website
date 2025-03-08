@@ -19,12 +19,18 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  // Check for notice manager token
+  const noticeManagerToken = Cookies.get("noticeManagerToken");
+  if (noticeManagerToken) {
+    config.headers.Authorization = `Bearer ${noticeManagerToken}`;
+    return config;
+  }
+
   // For reviewer token
-  const reviewerToken = Cookies.get('reviewerToken');
+  const reviewerToken = Cookies.get("reviewerToken");
   if (reviewerToken && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${reviewerToken}`;
   }
-
 
   return config;
 });
@@ -33,13 +39,17 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid
-      // Token expired or invalid
-      Cookies.remove("adminToken");
-      Cookies.remove("reviewerToken");
-      localStorage.removeItem("adminData"); // We can keep non-sensitive data in localStorage
-      localStorage.removeItem("dashboardView");
-      window.location.href = "/admin/login";
+      if (Cookies.get("noticeManagerToken")) {
+        Cookies.remove("noticeManagerToken");
+        localStorage.removeItem("noticeManagerData");
+        window.location.href = "/notice-manager/login";
+      } else {
+        Cookies.remove("adminToken");
+        Cookies.remove("reviewerToken");
+        localStorage.removeItem("adminData"); // We can keep non-sensitive data in localStorage
+        localStorage.removeItem("dashboardView");
+        window.location.href = "/admin/login";
+      }
     }
     return Promise.reject(error);
   }
