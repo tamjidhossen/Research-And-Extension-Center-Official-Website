@@ -734,6 +734,13 @@ export default function ProposalsDashboard() {
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(reviewerEmail1)) {
+      toast.error("Please enter a valid email address for reviewer 1");
+      return;
+    }
+
     try {
       setSending1Email(true);
 
@@ -809,6 +816,13 @@ export default function ProposalsDashboard() {
   const assignReviewer2 = async (proposal) => {
     if (!reviewerName2 || !reviewerEmail2) {
       toast.error("Please enter reviewer 2 details");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(reviewerEmail2)) {
+      toast.error("Please enter a valid email address for reviewer 2");
       return;
     }
 
