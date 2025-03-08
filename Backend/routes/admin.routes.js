@@ -9,7 +9,7 @@ router.post('/register', adminMiddileware.authAdmin, adminController.registerAdm
 router.post('/login', adminController.loginAdmin);
 
 router.get('/all', adminMiddileware.authAdmin, adminController.getAllAdmins);
-router.get('/:id', adminMiddileware.authAdmin, adminController.getAdmin);
+router.get('get-admin/:id', adminMiddileware.authAdmin, adminController.getAdmin);
 router.delete('/delete/:id', adminMiddileware.authAdmin, adminController.deleteAdmin);
 
 router.post('/research-proposal/upload', adminMiddileware.authAdmin, upload.fields([

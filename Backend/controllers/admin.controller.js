@@ -8,8 +8,6 @@ const { StudentProposal } = require('../models/student.proposal.model.js');
 const { ReviewerAssignment } = require("../models/reviewer.assignment.model.js");
 const { Reviewer } = require("../models/reviewer.model.js");
 const { Invoice } = require("../models/invoice.model.js");
-const AdminNoticer = require("../models/admin.noticer.model.js");
-
 const Admin = require('../models/admin.model.js');
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
@@ -365,7 +363,6 @@ const getProposal = async (req, res) => {
     try {
         const studentProposals = await StudentProposal.find();
         const teacherProposals = await TeacherProposal.find();
-
         res.status(200).json({ studentProposals, teacherProposals });
     } catch (error) {
         console.error("Error fetching proposals:", error);
@@ -823,6 +820,8 @@ const deleteInvoice = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
+
 
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
