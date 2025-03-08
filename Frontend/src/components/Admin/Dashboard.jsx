@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import ProposalsDashboard from "./ProposalDashboard";
-import NoticesDashboard from "./NoticesDashboard";
+// import NoticesDashboard from "./NoticesDashboard";
 import OverviewDashboard from "./OverviewDashboard";
 import InvoiceManagement from "./InvoiceManagement";
 import AccountsDashboard from "./AccountsDashboard";
@@ -80,8 +80,8 @@ export default function Dashboard() {
         return <OverviewDashboard />;
       case "proposals":
         return <ProposalsDashboard />;
-      case "notices":
-        return <NoticesDashboard />;
+      // case "notices":
+        // return <NoticesDashboard />;
       case "invoices":
         return <InvoiceManagement />;
       case "accounts":
@@ -148,11 +148,11 @@ export default function Dashboard() {
                         label="Proposals"
                         value="proposals"
                       />
-                      <NavItem
+                      {/* <NavItem
                         icon={<BellRing className="h-5 w-5" />}
                         label="Notices"
                         value="notices"
-                      />
+                      /> */}
                       <NavItem
                         icon={<Receipt className="h-5 w-5" />}
                         label="Invoices"
@@ -231,11 +231,11 @@ export default function Dashboard() {
                 label="Proposals"
                 value="proposals"
               />
-              <NavItem
+              {/* <NavItem
                 icon={<BellRing className="h-5 w-5" />}
                 label="Notices"
                 value="notices"
-              />
+              /> */}
               <NavItem
                 icon={<Receipt className="h-5 w-5" />}
                 label="Invoices"

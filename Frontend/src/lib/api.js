@@ -14,21 +14,23 @@ const api = axios.create({
 
 // Add auth token to requests if available
 api.interceptors.request.use((config) => {
+  // Check for admin token
   const token = Cookies.get("adminToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    return config;
   }
-
+  
   // Check for notice manager token
   const noticeManagerToken = Cookies.get("noticeManagerToken");
   if (noticeManagerToken) {
     config.headers.Authorization = `Bearer ${noticeManagerToken}`;
     return config;
   }
-
-  // For reviewer token
-  const reviewerToken = Cookies.get("reviewerToken");
-  if (reviewerToken && !config.headers.Authorization) {
+  
+  // Check for reviewer token
+  const reviewerToken = Cookies.get('reviewerToken');
+  if (reviewerToken) {
     config.headers.Authorization = `Bearer ${reviewerToken}`;
   }
 
