@@ -880,7 +880,7 @@ export default function TeacherSubmission() {
                           <Separator className="my-4" />
                           <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
                             <Users className="h-5 w-5" />
-                            Associate Investigator (If any)
+                            Associate Director (If any)
                           </h3>
 
                           <div className="grid grid-cols-1 gap-4">
@@ -890,12 +890,12 @@ export default function TeacherSubmission() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>
-                                    Details of Associate Investigator
+                                    Details of Associate Director
                                   </FormLabel>
                                   <FormControl>
                                     <textarea
                                       className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                      placeholder="Enter details of associate investigator"
+                                      placeholder="Enter details of associate director"
                                       {...field}
                                     />
                                   </FormControl>

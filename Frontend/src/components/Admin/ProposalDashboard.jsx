@@ -1217,7 +1217,7 @@ export default function ProposalsDashboard() {
             className="border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
-            Score
+            Avg. Score
             {sortConfig.key === "totalMarks" &&
               (sortConfig.direction === "asc" ? (
                 <ChevronUp className="h-3 w-3 ml-1" />
@@ -1272,7 +1272,7 @@ export default function ProposalsDashboard() {
               <TableHead>Fiscal Year</TableHead>
               <TableHead>Submission Date</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Score</TableHead>
+              <TableHead>Avg. Score</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -1317,7 +1317,7 @@ export default function ProposalsDashboard() {
                             <>
                               <h4 className="font-medium text-sm mb-2 flex items-center">
                                 <UserCheck className="h-4 w-4 mr-2 text-purple-600" />
-                                Associate Investigator
+                                Associate Director
                               </h4>
                               {proposal.associateInvestigator ? (
                                 <div className="text-sm text-slate-700 dark:text-slate-300">
@@ -1325,7 +1325,7 @@ export default function ProposalsDashboard() {
                                 </div>
                               ) : (
                                 <div className="text-sm text-slate-500 italic">
-                                  No associate investigator specified
+                                  No associate director specified
                                 </div>
                               )}
                             </>
