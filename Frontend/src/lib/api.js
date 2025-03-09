@@ -14,24 +14,32 @@ const api = axios.create({
 
 // Add auth token to requests if available
 api.interceptors.request.use((config) => {
-  // Check for admin token
-  const token = Cookies.get("adminToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-    return config;
+  // Use specific tokens based on the endpoint being called
+  const url = config.url;
+
+  // For reviewer endpoints, prioritize reviewer token
+  if (url && url.includes("/api/reviewer/")) {
+    const reviewerToken = Cookies.get("reviewerToken");
+    if (reviewerToken) {
+      config.headers.Authorization = `Bearer ${reviewerToken}`;
+      return config;
+    }
   }
-  
-  // Check for notice manager token
-  const noticeManagerToken = Cookies.get("noticeManagerToken");
-  if (noticeManagerToken) {
-    config.headers.Authorization = `Bearer ${noticeManagerToken}`;
-    return config;
+
+  // For notice manager endpoints, prioritize notice manager token
+  if (url && url.includes("/api/admin/noticer")) {
+    const noticeManagerToken = Cookies.get("noticeManagerToken");
+    if (noticeManagerToken) {
+      config.headers.Authorization = `Bearer ${noticeManagerToken}`;
+      return config;
+    }
   }
-  
-  // Check for reviewer token
-  const reviewerToken = Cookies.get('reviewerToken');
-  if (reviewerToken) {
-    config.headers.Authorization = `Bearer ${reviewerToken}`;
+
+  // For admin endpoints or any other endpoint, use admin token
+  const adminToken = Cookies.get("adminToken");
+  if (adminToken) {
+    config.headers.Authorization = `Bearer ${adminToken}`;
+    return config;
   }
 
   return config;
@@ -41,14 +49,24 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      if (Cookies.get("noticeManagerToken")) {
+      // Check which API was called
+      const requestUrl = error.config.url;
+      // console.log("URL___>: " + requestUrl)
+
+      if (requestUrl.includes("/api/reviewer/")) {
+        // Only clear reviewer token if reviewer endpoints fail
+        Cookies.remove("reviewerToken");
+        // Don't redirect if other valid sessions exist
+        if (!Cookies.get("adminToken") && !Cookies.get("noticeManagerToken")) {
+          window.location.href = "/admin/login";
+        }
+      } else if (requestUrl.includes("/api/admin/noticer")) {
         Cookies.remove("noticeManagerToken");
         localStorage.removeItem("noticeManagerData");
         window.location.href = "/notice-manager/login";
-      } else {
+      } else if (requestUrl.includes("/api/admin/")) {
         Cookies.remove("adminToken");
-        Cookies.remove("reviewerToken");
-        localStorage.removeItem("adminData"); // We can keep non-sensitive data in localStorage
+        localStorage.removeItem("adminData");
         localStorage.removeItem("dashboardView");
         window.location.href = "/admin/login";
       }
