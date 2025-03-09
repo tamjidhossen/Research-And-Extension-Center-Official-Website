@@ -245,7 +245,6 @@ export default function InvoiceManagement() {
   };
 
   // Generate PDF invoice
-  // Generate PDF invoice
   const generateInvoice = async () => {
     try {
       // Create a new PDF document

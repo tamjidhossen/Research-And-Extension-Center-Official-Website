@@ -17,6 +17,14 @@ api.interceptors.request.use((config) => {
   // Use specific tokens based on the endpoint being called
   const url = config.url;
 
+  if (url && url.includes('/api/reviewer/research-proposal/submit/invoice')) {
+    const reviewerToken = Cookies.get("invoiceToken");
+    if (reviewerToken) {
+      config.headers.Authorization = `Bearer ${reviewerToken}`;
+      return config;
+    }
+  }
+
   // For reviewer endpoints, prioritize reviewer token
   if (url && url.includes("/api/reviewer/")) {
     const reviewerToken = Cookies.get("reviewerToken");
@@ -53,7 +61,10 @@ api.interceptors.response.use(
       const requestUrl = error.config.url;
       // console.log("URL___>: " + requestUrl)
 
-      if (requestUrl.includes("/api/reviewer/")) {
+      if (requestUrl.includes('/api/reviewer/research-proposal/submit/invoice')) {
+        Cookies.remove("invoiceToken");
+        return Promise.reject(error);
+      } else if (requestUrl.includes("/api/reviewer/")) {
         // Only clear reviewer token if reviewer endpoints fail
         Cookies.remove("reviewerToken");
         // Don't redirect if other valid sessions exist
