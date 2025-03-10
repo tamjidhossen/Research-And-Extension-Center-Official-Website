@@ -17,6 +17,8 @@ const storage = multer.diskStorage({
             uploadPath = "uploads/marksheet/";
         } else if (file.fieldname === "evaluation_sheet") {
             uploadPath = "uploads/evaluation_sheet/";
+        } else if (file.fieldname === "invoice") {
+            uploadPath = "uploads/invoice/";
         } else {
             return cb(new Error("Invalid field name"), null);
         }
@@ -39,7 +41,7 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Upload Middleware (Handling multiple files, evaluation_sheet is optional)
+// Upload Middleware (Handling multiple files, evaluation_sheet and invoice are optional)
 const upload = (req, res, next) => {
     const uploadMiddleware = multer({
         storage: storage,
@@ -47,7 +49,8 @@ const upload = (req, res, next) => {
         limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     }).fields([
         { name: "marksheet", maxCount: 1 },
-        { name: "evaluation_sheet", maxCount: 1 } // Optional field
+        { name: "evaluation_sheet", maxCount: 1 }, // Optional field
+        { name: "invoice", maxCount: 1 }           // Optional field
     ]);
 
     uploadMiddleware(req, res, (err) => {

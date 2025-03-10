@@ -32,7 +32,7 @@ const verifyReviewer = async (req, res) => {
 
 const addMark = async (req, res) => {
     try {
-        const { total_mark } = req.body;
+        const { total_mark, fiscal_year } = req.body;
         const { proposal_type, proposal_id, reviewer_id } = req;
 
         // Ensure at least marksheet is provided
@@ -40,16 +40,22 @@ const addMark = async (req, res) => {
             return res.status(400).json({ success: false, message: "Marksheet is required" });
         }
 
-        // File Paths (Evaluation sheet is optional)
+        // File Paths (Evaluation sheet and invoice are optional)
         const marksheetPath = path.join(__dirname, "..", "uploads", "marksheet", req.files.marksheet[0].filename);
         const marksheetUrl = `uploads/marksheet/${req.files.marksheet[0].filename}`;
 
         let evaluationPath = null;
         let evaluationUrl = null;
-
         if (req.files.evaluation_sheet) {
             evaluationPath = path.join(__dirname, "..", "uploads", "evaluation_sheet", req.files.evaluation_sheet[0].filename);
             evaluationUrl = `uploads/evaluation_sheet/${req.files.evaluation_sheet[0].filename}`;
+        }
+
+        let invoicePath = null;
+        let invoiceUrl = null;
+        if (req.files.invoice) {
+            invoicePath = path.join(__dirname, "..", "uploads", "invoice", req.files.invoice[0].filename);
+            invoiceUrl = `uploads/invoice/${req.files.invoice[0].filename}`;
         }
 
         // Validate Proposal Type
@@ -68,7 +74,7 @@ const addMark = async (req, res) => {
             {
                 $set: {
                     mark_sheet_url: marksheetUrl,
-                    evaluation_sheet_url: evaluationUrl || null, // Set null if not provided
+                    evaluation_sheet_url: evaluationUrl || null,
                     total_mark: total_mark,
                     status: 1, // Mark as reviewed
                 }
@@ -80,7 +86,36 @@ const addMark = async (req, res) => {
             // Delete uploaded files if database update fails
             if (fs.existsSync(marksheetPath)) fs.unlinkSync(marksheetPath);
             if (evaluationPath && fs.existsSync(evaluationPath)) fs.unlinkSync(evaluationPath);
+            if (invoicePath && fs.existsSync(invoicePath)) fs.unlinkSync(invoicePath);
             return res.status(404).json({ success: false, message: "Reviewer assignment not found" });
+        }
+
+        // Check and Delete Previous Invoice (if exists)
+        if (invoiceUrl) {
+            const existingInvoice = await Invoice.findOne({ reviewer_id: reviewer_id, fiscal_year: fiscal_year || "N/A" });
+            if (existingInvoice) {
+                // Delete the previous invoice file from disk
+                const previousInvoicePath = path.join(__dirname, "..", existingInvoice.invoice_url);
+                if (fs.existsSync(previousInvoicePath)) {
+                    fs.unlinkSync(previousInvoicePath);
+                }
+                // Delete the previous invoice from the database
+                await Invoice.deleteOne({ _id: existingInvoice._id });
+            }
+
+            // Save New Invoice
+            try {
+                const newInvoice = new Invoice({
+                    reviewer_id: reviewer_id,
+                    fiscal_year: fiscal_year || "N/A",
+                    invoice_url: invoiceUrl,
+                    status: 1, // Active or Paid
+                });
+                await newInvoice.save();
+            } catch (invoiceError) {
+                console.error("Invoice Save Error:", invoiceError);
+                return res.status(500).json({ success: false, message: "Failed to save invoice" });
+            }
         }
 
         // Aggregate to calculate average marks
@@ -105,7 +140,9 @@ const addMark = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "Marksheet uploaded successfully" + (evaluationUrl ? " along with evaluation sheet" : ""),
+            message: "Marksheet uploaded successfully"
+                + (evaluationUrl ? " along with evaluation sheet" : "")
+                + (invoiceUrl ? " and invoice saved." : ""),
         });
 
     } catch (error) {
@@ -119,11 +156,15 @@ const addMark = async (req, res) => {
             if (req.files.evaluation_sheet && fs.existsSync(req.files.evaluation_sheet[0].path)) {
                 fs.unlinkSync(req.files.evaluation_sheet[0].path);
             }
+            if (req.files.invoice && fs.existsSync(req.files.invoice[0].path)) {
+                fs.unlinkSync(req.files.invoice[0].path);
+            }
         }
 
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
 
 const submitInvoice = async (req, res) => {
     try {
