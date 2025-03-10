@@ -24,7 +24,9 @@ const proposalDocumentSchema = new mongoose.Schema({
             bn: { type: String, required: true, default: "" }
         }
     },
-    proposal_mark_sheet: { type: String, required: true, default: "" }
+    proposal_mark_sheet: { type: String, required: true, default: "" },
+    review_form_url: { type: String, required: true, default: "" },
+    invoice_url: { type: String, required: true, default: "" },
 }, { timestamps: true });
 
 const ProposalDocument = mongoose.model('ProposalDocument', proposalDocumentSchema);
