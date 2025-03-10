@@ -15,10 +15,10 @@ const verifyReviewer = async (req, res) => {
         }
         let proposal;
         if (proposal_type === "student") {
-            proposal = await StudentProposal.findById(req.proposal_id).select("pdf_url_part_B");
+            proposal = await StudentProposal.findById(req.proposal_id).select("pdf_url_part_B fiscal_year");
         }
         else if (proposal_type === "teacher") {
-            proposal = await TeacherProposal.findById(req.proposal_id).select("pdf_url_part_B");
+            proposal = await TeacherProposal.findById(req.proposal_id).select("pdf_url_part_B fiscal_year");
         }
         else {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -109,7 +109,7 @@ const addMark = async (req, res) => {
                     reviewer_id: reviewer_id,
                     fiscal_year: fiscal_year || "N/A",
                     invoice_url: invoiceUrl,
-                    status: 1, // Active or Paid
+                    status: 2, // Active or Paid
                 });
                 await newInvoice.save();
             } catch (invoiceError) {
