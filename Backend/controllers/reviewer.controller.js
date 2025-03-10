@@ -6,28 +6,50 @@ const { ReviewerAssignment } = require("../models/reviewer.assignment.model.js")
 const { Reviewer } = require("../models/reviewer.model.js");
 const { Invoice } = require("../models/invoice.model.js");
 const mongoose = require("mongoose");
+
+
 const verifyReviewer = async (req, res) => {
     try {
         const { proposal_type, reviewer_id } = req;
+
+        // Check if reviewer exists
         const reviewer = await Reviewer.findById(reviewer_id);
         if (!reviewer) {
-            return res.status(401).json({ success: false, message: 'Unauthorized' });
+            return res.status(401).json({ success: false, message: "Unauthorized" });
         }
+
         let proposal;
+
+        // Find proposal based on the type
         if (proposal_type === "student") {
             proposal = await StudentProposal.findById(req.proposal_id).select("pdf_url_part_B fiscal_year");
-        }
-        else if (proposal_type === "teacher") {
+        } else if (proposal_type === "teacher") {
             proposal = await TeacherProposal.findById(req.proposal_id).select("pdf_url_part_B fiscal_year");
+        } else {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
         }
-        else {
-            return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+        // Get the proposal document (assuming there's only one document)
+        const proposalDocument = await ProposalDocument.findOne({});
+        if (!proposalDocument) {
+            return res.status(404).json({ success: false, message: "Proposal documents not found" });
         }
-        res.status(201).json({ success: true, message: "Verified Reviewer", proposal: proposal, reviewer: reviewer });
+
+        // Send the response
+        res.status(201).json({
+            success: true,
+            message: "Verified Reviewer",
+            proposal: proposal,
+            reviewer: reviewer,
+            review_form_url: proposalDocument.review_form_url,
+            invoice_url: proposalDocument.invoice_url,
+        });
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error" });
+        console.error("Error in verifyReviewer:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
 
 
 const addMark = async (req, res) => {
