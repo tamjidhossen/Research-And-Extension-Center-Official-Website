@@ -37,6 +37,7 @@ router.post('/research-proposal/sent-to-reviewer', adminMiddileware.authAdmin, a
 router.post('/research-proposal/fiscal-year/update', adminMiddileware.authAdmin, adminController.updateFiscalYear);
 router.put('/research-proposal/registration-status/update/:value', adminMiddileware.authAdmin, adminController.updateRegistrationOpen);
 router.post('/reviewer/add', adminMiddileware.authAdmin, adminController.addReviewer);
+router.post('/research-proposal/reviewer/remove', adminMiddileware.authAdmin, adminController.deleteReviewerAssignment);
 router.put("/reviewer/update/:id", adminMiddileware.authAdmin, adminController.updateReviewer);
 router.delete("/reviewer/delete/:id", adminMiddileware.authAdmin, adminController.deleteReviewer);
 router.get("/reviewer/:id", adminMiddileware.authAdmin, adminController.getReviewerById);

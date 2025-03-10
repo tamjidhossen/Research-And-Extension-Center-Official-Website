@@ -420,7 +420,7 @@ const sentToReviewer = async (req, res) => {
 
         // Generate token for the reviewer
         const token = proposal.generateReviewerToken(reviewerId);
-
+        const prev_status = proposal.status;
         // Assign reviewer and update status
         proposal.reviewer.push({ id: reviewerId });
         proposal.status = 1;
@@ -455,7 +455,7 @@ const sentToReviewer = async (req, res) => {
 
             // **Rollback: Remove reviewer from proposal and reset status**
             proposal.reviewer = proposal.reviewer.filter(r => !r.id.equals(reviewerId));
-            proposal.status = 0;  // Reset to original state
+            proposal.status = prev_status;  // Reset to original state
             await proposal.save();
 
             return res.status(500).json({ success: false, message: "Failed to send email. Assignment rolled back." });
@@ -825,11 +825,64 @@ const deleteInvoice = async (req, res) => {
     }
 };
 
+const deleteReviewerAssignment = async (req, res) => {
+    try {
+        const { reviewer_id, proposal_id, proposal_type } = req.body;
+
+        // Validate Object IDs
+        if (!mongoose.Types.ObjectId.isValid(proposal_id) || !mongoose.Types.ObjectId.isValid(reviewer_id)) {
+            return res.status(400).json({ success: false, message: "Invalid ID format!" });
+        }
+
+        const proposalId = new mongoose.Types.ObjectId(proposal_id);
+        const reviewerId = new mongoose.Types.ObjectId(reviewer_id);
+        // Check if the reviewer assignment exists
+        const assignment = await ReviewerAssignment.findOne({
+            reviewer_id: reviewerId,
+            proposal_id: proposalId,
+            proposal_type: proposal_type
+        });
+
+        if (!assignment) {
+            return res.status(404).json({ success: false, message: "Reviewer assignment not found!" });
+        }
+
+        // Fetch the correct proposal based on type
+        const proposal = proposal_type === "teacher"
+            ? await TeacherProposal.findById(proposalId)
+            : await StudentProposal.findById(proposalId);
+
+        if (!proposal) {
+            return res.status(404).json({ success: false, message: "Proposal not found!" });
+        }
+
+        // Remove the reviewer from the proposal's reviewer list
+        proposal.reviewer = proposal.reviewer.filter(r => !r.id.equals(reviewerId));
+
+        // If no reviewers are left, reset the proposal status to 0 (unassigned)
+        if (proposal.reviewer.length === 0) {
+            proposal.status = 0;
+        }
+
+        // Save the updated proposal
+        await proposal.save();
+
+        // Delete the reviewer assignment
+        await ReviewerAssignment.findByIdAndDelete(assignment._id);
+
+        return res.status(200).json({ success: true, message: "Reviewer assignment deleted successfully!" });
+
+    } catch (error) {
+        console.error("Error in deleteReviewerAssignment:", error);
+        return res.status(500).json({ success: false, message: "Internal server error!" });
+    }
+};
+
 
 
 module.exports = {
     updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
     sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers, getProposalOverviews,
     updateProposalStatus, updateRegistrationOpen, updateApprovalBudget, getAllReviewerAssignments, sendInvoice, getAllInvoices, deleteInvoice,
-    getAdmin, deleteAdmin, getAllAdmins
+    getAdmin, deleteAdmin, getAllAdmins, deleteReviewerAssignment
 };
