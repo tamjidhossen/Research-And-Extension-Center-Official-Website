@@ -5,6 +5,7 @@ const { TeacherProposal } = require('../models/teacher.proposal.model.js');
 const { ReviewerAssignment } = require("../models/reviewer.assignment.model.js");
 const { Reviewer } = require("../models/reviewer.model.js");
 const { Invoice } = require("../models/invoice.model.js");
+const ProposalDocument = require('../models/proposal.document.model.js');
 const mongoose = require("mongoose");
 
 
@@ -35,7 +36,6 @@ const verifyReviewer = async (req, res) => {
             return res.status(404).json({ success: false, message: "Proposal documents not found" });
         }
 
-        // Send the response
         res.status(201).json({
             success: true,
             message: "Verified Reviewer",
@@ -43,6 +43,7 @@ const verifyReviewer = async (req, res) => {
             reviewer: reviewer,
             review_form_url: proposalDocument.review_form_url,
             invoice_url: proposalDocument.invoice_url,
+            proposal_mark_sheet: proposalDocument.proposal_mark_sheet
         });
     } catch (error) {
         console.error("Error in verifyReviewer:", error);
