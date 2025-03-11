@@ -36,10 +36,13 @@ export default function ReviewerPage() {
   const [reviewer, setReviewer] = useState(null);
   const [proposal, setProposal] = useState(null);
   const [selectedMarksheet, setSelectedMarksheet] = useState(null);
-  const [selectedEvaluationSheet, setSelectedEvaluationSheet] = useState(null);
   const [totalMark, setTotalMark] = useState("");
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [marksheetUrl, setMarksheetUrl] = useState(null);
+  const [reviewFormUrl, setReviewFormUrl] = useState(null);
+  const [invoiceTemplateUrl, setInvoiceTemplateUrl] = useState(null);
+  const [selectedReviewForm, setSelectedReviewForm] = useState(null);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   // Get token from URL params
   useEffect(() => {
@@ -47,7 +50,7 @@ export default function ReviewerPage() {
 
     if (token) {
       // Store token in localStorage
-      Cookies.set("reviewerToken", token, { secure: true, sameSite: 'strict' });
+      Cookies.set("reviewerToken", token, { secure: true, sameSite: "strict" });
       verifyToken(token);
     } else {
       // Check if token exists in localStorage
@@ -61,37 +64,16 @@ export default function ReviewerPage() {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    const fetchMarkingSheet = async () => {
-      try {
-        // Get the marking sheet template URL
-        const overviewResponse = await api.get(
-          "/api/admin/research-proposal/overviews"
-        );
-        if (overviewResponse.data && overviewResponse.data.proposalDoc) {
-          const marksheetPath =
-            overviewResponse.data.proposalDoc.proposal_mark_sheet;
-
-          if (marksheetPath) {
-            const baseUrl = import.meta.env.VITE_API_URL || "";
-            const serverRoot = baseUrl.replace(/\/v1$/, "");
-            const normalizedPath = marksheetPath.startsWith("uploads")
-              ? marksheetPath
-              : `uploads/${marksheetPath}`;
-
-            setMarksheetUrl(`${serverRoot}/${normalizedPath}`);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch marking sheet template:", error);
-      }
-    };
-
-    fetchMarkingSheet();
-  }, []);
-
   const verifyToken = async (token) => {
     try {
+      console.log("Attempting to verify reviewer token");
+
+      if (!token) {
+        console.error("No reviewer token available");
+        setAuthorized(false);
+        return;
+      }
+
       const response = await api.post(
         "/api/reviewer/research-proposal/review/verify",
         {},
@@ -105,6 +87,21 @@ export default function ReviewerPage() {
       if (response.data && response.data.success) {
         setAuthorized(true);
         setProposal(response.data.proposal);
+        if (response.data.proposal_mark_sheet) {
+          const baseUrl = import.meta.env.VITE_API_URL || "";
+          const serverRoot = baseUrl.replace(/\/v1$/, "");
+          setMarksheetUrl(`${serverRoot}/${response.data.proposal_mark_sheet}`);
+        }
+        if (response.data.review_form_url) {
+          const baseUrl = import.meta.env.VITE_API_URL || "";
+          const serverRoot = baseUrl.replace(/\/v1$/, "");
+          setReviewFormUrl(`${serverRoot}/${response.data.review_form_url}`);
+        }
+        if (response.data.invoice_url) {
+          const baseUrl = import.meta.env.VITE_API_URL || "";
+          const serverRoot = baseUrl.replace(/\/v1$/, "");
+          setInvoiceTemplateUrl(`${serverRoot}/${response.data.invoice_url}`);
+        }
 
         if (response.data.reviewer) {
           setReviewer(response.data.reviewer);
@@ -166,11 +163,17 @@ export default function ReviewerPage() {
         title: "File selected",
         description: "Marking sheet has been selected",
       });
-    } else if (fileType === "evaluation") {
-      setSelectedEvaluationSheet(file);
+    } else if (fileType === "review") {
+      setSelectedReviewForm(file);
       toast({
         title: "File selected",
-        description: "Evaluation sheet has been selected",
+        description: "Proposal review form has been selected",
+      });
+    } else if (fileType === "invoice") {
+      setSelectedInvoice(file);
+      toast({
+        title: "File selected",
+        description: "Invoice has been selected",
       });
     }
   };
@@ -208,6 +211,30 @@ export default function ReviewerPage() {
     window.open(marksheetUrl, "_blank");
   };
 
+  const handleDownloadReviewForm = () => {
+    if (!reviewFormUrl) {
+      toast({
+        title: "Download Failed",
+        description: "Review form template is not available",
+        variant: "destructive",
+      });
+      return;
+    }
+    window.open(reviewFormUrl, "_blank");
+  };
+
+  const handleDownloadInvoiceTemplate = () => {
+    if (!invoiceTemplateUrl) {
+      toast({
+        title: "Download Failed",
+        description: "Invoice template is not available",
+        variant: "destructive",
+      });
+      return;
+    }
+    window.open(invoiceTemplateUrl, "_blank");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -219,7 +246,7 @@ export default function ReviewerPage() {
       });
       return;
     }
-    
+
     if (!totalMark || isNaN(parseFloat(totalMark))) {
       toast({
         title: "Invalid mark",
@@ -235,8 +262,14 @@ export default function ReviewerPage() {
       // Create form data for submission
       const formData = new FormData();
       formData.append("marksheet", selectedMarksheet);
-      formData.append("evaluation_sheet", selectedEvaluationSheet);
+      if (selectedReviewForm) {
+        formData.append("evaluation_sheet", selectedReviewForm);
+      }
+      if (selectedInvoice) {
+        formData.append("invoice", selectedInvoice);
+      }
       formData.append("total_mark", totalMark);
+      formData.append("fiscal_year", proposal.fiscal_year)
 
       // const token = localStorage.getItem("reviewerToken");
 
@@ -407,6 +440,50 @@ export default function ReviewerPage() {
                     </Button>
                   </CardContent>
                 </Card>
+
+                <Card className="border-gray-200 dark:border-gray-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Proposal Review Form
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-4 pt-0">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      Download the review form to complete.
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="w-full flex items-center gap-2"
+                      onClick={() => handleDownloadReviewForm()}
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Review Form
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-gray-200 dark:border-gray-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Invoice Template
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-4 pt-0">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      Download the invoice template for billing.
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="w-full flex items-center gap-2"
+                      onClick={() => handleDownloadInvoiceTemplate()}
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Invoice Template
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
@@ -453,18 +530,18 @@ export default function ReviewerPage() {
                 </label>
               </div>
             </div>
-            
-            {/* Upload Section 2: Evaluation Sheet */}
+
+            {/* Upload Section 2: Proposal Review Sheet */}
             <div className="space-y-4">
               <h3 className="font-medium text-lg">
-                Step 3: Upload Evaluation Sheet
+                Step 3: Upload Proposal Review Sheet
               </h3>
 
               <div className="rounded-md border border-dashed border-gray-300 dark:border-gray-700 px-6 py-8 text-center">
                 <label className="flex flex-col items-center cursor-pointer text-sm">
                   <ClipboardList className="h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" />
                   <span className="font-medium text-blue-800 dark:text-blue-300 mb-1">
-                    Upload Evaluation Sheet (PDF)
+                    Upload Proposal Review Sheet (PDF)
                   </span>
                   <span className="text-gray-500 dark:text-gray-400 text-xs mb-4">
                     Max size: 5MB
@@ -472,24 +549,73 @@ export default function ReviewerPage() {
                   <input
                     type="file"
                     className="hidden"
-                    id="evaluation-file"
+                    id="review-form-file"
                     accept=".pdf"
-                    onChange={(e) => handleFileChange("evaluation", e)}
+                    onChange={(e) => handleFileChange("review", e)}
                   />
                   <Button
                     variant="outline"
                     size="sm"
                     className="border-blue-200 dark:border-blue-800"
                     onClick={() =>
-                      document.getElementById("evaluation-file").click()
+                      document.getElementById("review-form-file").click()
                     }
                   >
                     Select File
                   </Button>
-                  {selectedEvaluationSheet && (
+                  {selectedReviewForm && (
                     <div className="mt-3 flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
                       <CheckCircle className="h-4 w-4" />
-                      {selectedEvaluationSheet.name}
+                      {selectedReviewForm.name}
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            {/* Upload Section 3: Invoice */}
+            <div className="space-y-4">
+              <h3 className="font-medium text-lg">
+                Step 4: Upload Signed Invoice
+              </h3>
+
+              <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/50 mb-4">
+                <AlertDescription className="text-amber-800 dark:text-amber-300">
+                  If you get more than one proposal for review, you can upload
+                  just a signed blank bill form against all of them.
+                </AlertDescription>
+              </Alert>
+
+              <div className="rounded-md border border-dashed border-gray-300 dark:border-gray-700 px-6 py-8 text-center">
+                <label className="flex flex-col items-center cursor-pointer text-sm">
+                  <FileText className="h-8 w-8 text-amber-600 dark:text-amber-400 mb-2" />
+                  <span className="font-medium text-amber-800 dark:text-amber-300 mb-1">
+                    Upload Signed Invoice (PDF)
+                  </span>
+                  <span className="text-gray-500 dark:text-gray-400 text-xs mb-4">
+                    Max size: 5MB
+                  </span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    id="invoice-file"
+                    accept=".pdf"
+                    onChange={(e) => handleFileChange("invoice", e)}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-amber-200 dark:border-amber-800"
+                    onClick={() =>
+                      document.getElementById("invoice-file").click()
+                    }
+                  >
+                    Select File
+                  </Button>
+                  {selectedInvoice && (
+                    <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
+                      <CheckCircle className="h-4 w-4" />
+                      {selectedInvoice.name}
                     </div>
                   )}
                 </label>

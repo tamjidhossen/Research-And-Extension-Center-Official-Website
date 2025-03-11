@@ -67,10 +67,8 @@ api.interceptors.response.use(
       } else if (requestUrl.includes("/api/reviewer/")) {
         // Only clear reviewer token if reviewer endpoints fail
         Cookies.remove("reviewerToken");
-        // Don't redirect if other valid sessions exist
-        if (!Cookies.get("adminToken") && !Cookies.get("noticeManagerToken")) {
-          window.location.href = "/admin/login";
-        }
+        // console.error("Reviewer authentication failed");
+        return Promise.reject(error);
       } else if (requestUrl.includes("/api/admin/noticer")) {
         Cookies.remove("noticeManagerToken");
         localStorage.removeItem("noticeManagerData");

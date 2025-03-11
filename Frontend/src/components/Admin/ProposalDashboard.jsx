@@ -1812,7 +1812,7 @@ export default function ProposalsDashboard() {
                                                 >
                                                   <Download className="h-3 w-3 mr-1" />
                                                   <span>
-                                                    View evaluation sheet
+                                                    View Proposal Review Form
                                                   </span>
                                                 </Button>
                                               </div>
@@ -2422,8 +2422,7 @@ export default function ProposalsDashboard() {
                             window.open(fileUrl, "_blank");
                           }}
                         >
-                          <Download className="h-3 w-3 mr-1" /> View Evaluation
-                          Sheet
+                          <Download className="h-3 w-3 mr-1" /> View Proposal Review
                         </Button>
                       )}
                   </div>
