@@ -1,0 +1,69 @@
+name: reunion-prod
+
+services:
+  mongo:
+    image: mongo:8.0.4
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - reunion-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./Backend/.env
+    volumes:
+      - ../uploads/images:/app/uploads/images
+    networks:
+      - reunion-network
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://csealumni.jkkniu.edu.bd
+        - VITE_ADULT_FEE=1000
+        - VITE_CHILD_FEE=500
+        - VITE_STUDENT_FEE=500
+        - VITE_MAX_FILE_SIZE=2097152
+        - VITE_JWT_TOKEN_KEY=adminToken
+    restart: unless-stopped
+    env_file: ./Frontend/.env
+    volumes:
+      - frontend_build:/srv
+    networks:
+      - reunion-network
+    depends_on:
+      - backend
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - frontend_build:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+      - ../uploads/images:/app/uploads/images
+    networks:
+      - reunion-network
+
+volumes:
+  mongo_data:
+  uploaded_images:
+  frontend_build:
+  caddy_data:
+  caddy_config:
+
+networks:
+  reunion-network:
+    driver: bridge
