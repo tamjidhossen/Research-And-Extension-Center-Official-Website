@@ -1,0 +1,64 @@
+{
+    "project_director": {
+        "name_bn": "ড. মোহাম্মদ রফিকুল ইসলাম",
+        "name_en": "Dr. Mohammad Rafiqul Islam",
+        "mobile": "017XXXXXXXX",
+        "email": "rafiqulislam@example.com"
+    },
+    "designation": "Associate Professor",
+    "department": "Computer Science and Engineering",
+    "faculty": "Engineering",
+    "project_title": {
+        "title_bn": "কৃত্রিম বুদ্ধিমত্তার সাহায্যে ভাষা প্রক্রিয়াকরণ",
+        "title_en": "Natural Language Processing Using Artificial Intelligence"
+    },
+    "research_location": "Jatiya Kabi Kazi Nazrul Islam University",
+    "project_details": {
+        "approx_pages": 120,
+        "approx_words": 30000
+    },
+    "total_budget": "75000",
+    "signatures": {
+        "project_director": {
+            "signature": "base64_encoded_signature_string",
+            "date": "2025-02-28"
+        },
+        "department_head": {
+            "signature": "base64_encoded_signature_string",
+            "date": "2025-02-28",
+            "recommendation": "Approved"
+        },
+        "dean": {
+            "signature": "base64_encoded_signature_string",
+            "date": "2025-02-28",
+            "recommendation": "Approved"
+        }
+    },
+    "pdf_url_part_A": "https://example.com/uploads/partA.pdf",
+    "pdf_url_part_B": "https://example.com/uploads/partB.pdf",
+    "credential": {
+        "password": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    },
+    "reviewer": [
+        {
+            "name": "Dr. Alice Smith",
+            "email": "alice.smith@example.com",
+            "password": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "mark": {
+                "part1": 8,
+                "part2": 9,
+                "part3": 7
+            }
+        },
+        {
+            "name": "Prof. Bob Brown",
+            "email": "bob.brown@example.com",
+            "password": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "mark": {
+                "part1": 9,
+                "part2": 8,
+                "part3": 9
+            }
+        }
+    ]
+}

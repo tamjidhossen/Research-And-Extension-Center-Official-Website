@@ -1,0 +1,69 @@
+{
+    "project_director": {
+        "name_bn": "জন ডো",
+        "name_en": "John Doe",
+        "mobile": "017XXXXXXXX",
+        "email": "johndoe@example.com"
+    },
+    "department": "Computer Science and Engineering",
+    "faculty": "Engineering",
+    "session": "2021-22",
+    "roll_no": "CSE-202101",
+    "cgpa_honours": 3.85,
+    "supervisor": {
+        "name": "Dr. Alice Smith",
+        "designation": "Professor"
+    },
+    "project_title": {
+        "title_bn": "বুদ্ধিমান স্বাস্থ্যসেবা সিস্টেম",
+        "title_en": "Intelligent Healthcare System"
+    },
+    "project_details": {
+        "approx_pages": 100,
+        "approx_words": 25000
+    },
+    "total_budget": 50000,
+    "signatures": {
+        "project_director": {
+            "signature": "base64_encoded_signature_string",
+            "date": "2025-02-28"
+        },
+        "department_head": {
+            "signature": "base64_encoded_signature_string",
+            "date": "2025-02-28",
+            "recommendation": "Approved"
+        },
+        "dean": {
+            "signature": "base64_encoded_signature_string",
+            "date": "2025-02-28",
+            "recommendation": "Approved"
+        }
+    },
+    "pdf_url_part_A": "https://example.com/uploads/partA.pdf",
+    "pdf_url_part_B": "https://example.com/uploads/partB.pdf",
+    "credential": {
+        "password": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    },
+    "reviewer": [
+        {
+            "name": "Dr. Bob Brown",
+            "email": "bobbrown@example.com",
+            "password": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "mark": {
+                "part1": 8,
+                "part2": 9,
+                "part3": 7
+            }
+        },
+        {
+            "name": "Prof. Charlie Green",
+            "email": "charliegreen@example.com",
+            "password": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "mark": {
+                "part1": 9,
+                "part2": 9,
+                "part3": 8
+            }
+        }
+    ]
+}
