@@ -109,6 +109,22 @@ const OverviewDashboard = () => {
       url: null,
       selectedFileName: null,
     },
+    {
+      id: "review_form",
+      name: "Proposal Review Form Template",
+      category: "reviewer",
+      uploaded: false,
+      url: null,
+      selectedFileName: null,
+    },
+    {
+      id: "invoice",
+      name: "Invoice Template",
+      category: "reviewer",
+      uploaded: false,
+      url: null,
+      selectedFileName: null,
+    },
   ]);
 
   const noFilesUploaded = documents.every((doc) => !doc.uploaded);
@@ -173,6 +189,10 @@ const OverviewDashboard = () => {
 
             if (doc.id === "proposal_mark_sheet") {
               docPath = response.data.proposalDoc?.proposal_mark_sheet;
+            } else if (doc.id === "review_form") {
+              docPath = response.data.proposalDoc?.review_form_url;
+            } else if (doc.id === "invoice") {
+              docPath = response.data.proposalDoc?.invoice_url;
             }
 
             // Convert relative path to full URL if a path exists
@@ -394,6 +414,10 @@ const OverviewDashboard = () => {
             docPath = teacher?.partB_url?.bn;
         } else if (doc.id === "proposal_mark_sheet") {
           docPath = documentData?.proposal_mark_sheet;
+        } else if (doc.id === "review_form") {
+          docPath = documentData?.review_form_url;
+        } else if (doc.id === "invoice") {
+          docPath = documentData?.invoice_url;
         }
 
         // Convert relative path to full URL if a path exists
@@ -840,7 +864,7 @@ const OverviewDashboard = () => {
           </div>
 
           <Separator className="my-6" />
-          
+
           <h3 className="text-lg font-medium mb-4">Reviewer Documents</h3>
           <div className="grid gap-4">
             {documents
@@ -864,7 +888,7 @@ const OverviewDashboard = () => {
                       </Badge>
                     )}
                   </div>
-          
+
                   {doc.uploaded ? (
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button
@@ -897,14 +921,31 @@ const OverviewDashboard = () => {
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Update Marking Sheet Template</DialogTitle>
+                            <DialogTitle>
+                              {doc.id === "proposal_mark_sheet" &&
+                                "Update Marking Sheet Template"}
+                              {doc.id === "review_form" &&
+                                "Update Review Form Template"}
+                              {doc.id === "invoice" &&
+                                "Update Invoice Template"}
+                            </DialogTitle>
                             <DialogDescription>
-                              Select a new file to replace the current marking sheet template.
+                              {doc.id === "proposal_mark_sheet" &&
+                                "Select a new file to replace the current marking sheet template."}
+                              {doc.id === "review_form" &&
+                                "Select a new file to replace the current review form template."}
+                              {doc.id === "invoice" &&
+                                "Select a new file to replace the current invoice template."}
                             </DialogDescription>
                           </DialogHeader>
                           <div className="py-4">
                             <Label htmlFor={`update-file-${doc.id}`}>
-                              New marking sheet file (PDF, DOC, or DOCX)
+                              {doc.id === "proposal_mark_sheet" &&
+                                "New marking sheet file (PDF, DOC, or DOCX)"}
+                              {doc.id === "review_form" &&
+                                "New review form file (PDF, DOC, or DOCX)"}
+                              {doc.id === "invoice" &&
+                                "New invoice template file (PDF, DOC, or DOCX)"}
                             </Label>
                             <Input
                               id={`update-file-${doc.id}`}
@@ -917,7 +958,7 @@ const OverviewDashboard = () => {
                                     ...prev,
                                     [doc.id]: e.target.files[0],
                                   }));
-          
+
                                   setDocuments((docs) =>
                                     docs.map((d) =>
                                       d.id === doc.id
@@ -961,7 +1002,12 @@ const OverviewDashboard = () => {
                         htmlFor={`file-${doc.id}`}
                         className="block mb-2 text-sm"
                       >
-                        Upload marking sheet template (PDF or DOCX)
+                        {doc.id === "proposal_mark_sheet" &&
+                          "Upload marking sheet template (PDF or DOCX)"}
+                        {doc.id === "review_form" &&
+                          "Upload review form template (PDF or DOCX)"}
+                        {doc.id === "invoice" &&
+                          "Upload invoice template (PDF or DOCX)"}
                       </Label>
                       <div className="flex gap-2 items-center">
                         <Input
@@ -975,7 +1021,7 @@ const OverviewDashboard = () => {
                                 ...prev,
                                 [doc.id]: e.target.files[0],
                               }));
-          
+
                               setDocuments((docs) =>
                                 docs.map((d) =>
                                   d.id === doc.id
