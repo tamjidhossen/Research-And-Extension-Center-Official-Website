@@ -101,7 +101,7 @@ const Navbar = () => {
                   "hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 dark:text-gray-300 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                 )}>
                   <Send size={18} />
-                  <span>Submit</span>
+                  <span>Submit Proposal</span>
                   <ChevronDown size={16} className="ml-1" />
                 </div>
               </DropdownMenuTrigger>

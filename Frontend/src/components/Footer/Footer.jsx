@@ -8,9 +8,9 @@ const Footer = () => {
       <div className="container mx-auto flex flex-col md:flex-row justify-between gap-10 px-6">
         <div className="footer-section md:max-w-xs">
           <h3 className="text-xl font-semibold mb-4 text-emerald-800 dark:text-emerald-400">
-            About JKKNIU REC
+            About Us
           </h3>
-          <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+          <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed text-justify">
             The Research and Extension Center at JKKNIU promotes academic excellence 
             through collaborative research initiatives and knowledge exchange between 
             faculty, students, and external stakeholders.
@@ -64,7 +64,7 @@ const Footer = () => {
             </p>
             <p className="flex items-center gap-2 text-sm md:text-base text-gray-600 dark:text-gray-300">
               <FaPhone className="text-emerald-600 dark:text-emerald-400" />
-              <span>012345678910</span>
+              <span>+8801738-113686</span>
             </p>
             <p className="flex items-center gap-2 text-sm md:text-base text-gray-600 dark:text-gray-300">
               <FaMapMarkerAlt className="text-emerald-600 dark:text-emerald-400" />

@@ -471,7 +471,7 @@ export default function TeacherSubmission() {
                   Application Form (আবেদন ফর্ম)
                 </CardTitle>
                 <CardDescription>
-                  Download the Research Project Proposal formats, complete both
+                  Download the Research Project Proposal forms, complete both
                   parts, and upload as PDFs.
                   <br />
                   গবেষণা-প্রকল্প প্রস্তাবনা দাখিল করার ফর্ম ডাউনলোড করুন, উভয়
@@ -512,7 +512,7 @@ export default function TeacherSubmission() {
                         প্রয়োজনে অতিরিক্ত পৃষ্ঠা যোগ করা যাবে।
                       </li>
                       <li>
-                        ক অংশ: আবেদনপত্র পূরণ করুন, প্রিন্ট করুন, প্রয়োজনীয়
+                        ক অংশ: আবেদন ফর্ম পূরণ করুন, প্রিন্ট করুন, প্রয়োজনীয়
                         স্বাক্ষর সংগ্রহ করুন, তারপর স্ক্যান করে PDF আকারে আপলোড
                         করুন।
                       </li>
@@ -900,8 +900,9 @@ export default function TeacherSubmission() {
                                     />
                                   </FormControl>
                                   <FormDescription className="text-xs text-gray-500">
-                                    Include name, designation, department, and
-                                    contact information if applicable.
+                                    Include name, designation, department,
+                                    faculty and contact information if
+                                    applicable.
                                   </FormDescription>
                                   <FormMessage />
                                 </FormItem>
@@ -971,9 +972,9 @@ export default function TeacherSubmission() {
                             </AlertTitle>
                             <AlertDescription className="text-blue-700 dark:text-blue-400">
                               <p>
-                                Please ensure part A is signed by the Applicant,
-                                Head of the Department, and Faculty Dean before
-                                submission.
+                                Before submission, please ensure part A is
+                                signed by the Applicant(s), Head of the
+                                Department, and Faculty Dean .
                               </p>
                               <p className="mt-1">
                                 জমা দেওয়ার পুর্বে আবেদন ফর্ম এর 'ক' অংশে

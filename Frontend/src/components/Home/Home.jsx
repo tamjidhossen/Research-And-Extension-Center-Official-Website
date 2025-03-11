@@ -65,23 +65,23 @@ export default function Home() {
               ),
               title: "Research Proposals",
               description:
-                "Submit your research proposals online for review by our expert panel.",
+                "Selection of quality proposals through the double-blinded peer review process",
             },
             {
               icon: (
                 <FileText className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
               ),
-              title: "Publication Support",
+              title: "Conference & Publication Support",
               description:
-                "Get assistance for publishing your research in reputed journals.",
+                "Provide financial support for attending conferences and journal publications",
             },
             {
               icon: (
                 <Users className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
               ),
-              title: "Collaboration",
+              title: "Research Collaboration",
               description:
-                "Connect with researchers and experts from various disciplines.",
+                "Provide opportunities for research collaboration with national and foreign university teachers/researchers",
             },
           ].map((service, index) => (
             <Card
@@ -91,6 +91,7 @@ export default function Home() {
               <CardHeader>
                 <div className="mb-4">{service.icon}</div>
                 <CardTitle>{service.title}</CardTitle>
+                <div id="about-section"></div>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base">
@@ -103,16 +104,16 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about-section" className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-8">
+      <section className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-8">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="md:w-1/2 space-y-4">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">About REC</h2>
-            <p className="text-gray-700 dark:text-gray-300">
-              The Research and Extension Center (REC) at Jatiya Kabi Kazi Nazrul
-              Islam University (JKKNIU) was established with the aim to foster a
-              culture of research excellence and innovation.
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">About Us</h2>
+            <p className="text-gray-700 dark:text-gray-300 text-justify">
+              The Research and Extension Center at Jatiya Kabi Kazi Nazrul Islam
+              University was established with the aim of fostering a culture of
+              research excellence and innovation.
             </p>
-            <p className="text-gray-700 dark:text-gray-300">
+            <p className="text-gray-700 dark:text-gray-300 text-justify">
               Our mission is to provide high-quality research and extension
               services to improve the quality of academic output and contribute
               to society through innovative research solutions.
@@ -128,8 +129,10 @@ export default function Home() {
                 <li>Information Technology</li>
                 <li>Environmental Science</li>
                 <li>Social Sciences</li>
+                <li>Business and Law</li>
                 <li>Arts and Humanities</li>
-                <li>Basic Sciences</li>
+                <li>Fine Arts</li>
+                <li>Basic Sciences, etc.</li>
               </ul>
             </div>
           </div>
