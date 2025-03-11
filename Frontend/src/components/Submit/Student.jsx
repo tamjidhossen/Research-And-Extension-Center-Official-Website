@@ -956,7 +956,7 @@ export default function StudentSubmission() {
                                   <FormLabel>Supervisor Department</FormLabel>
                                   <FormControl>
                                     <Input
-                                      placeholder="e.g. Professor"
+                                      placeholder="e.g. Philosophy"
                                       {...field}
                                     />
                                   </FormControl>
@@ -973,7 +973,7 @@ export default function StudentSubmission() {
                                   <FormLabel>Supervisor Faculty</FormLabel>
                                   <FormControl>
                                     <Input
-                                      placeholder="e.g. Professor"
+                                      placeholder="e.g. Arts"
                                       {...field}
                                     />
                                   </FormControl>
