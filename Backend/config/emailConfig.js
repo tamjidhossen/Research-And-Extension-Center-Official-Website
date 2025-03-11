@@ -116,7 +116,8 @@ const sendMailToReviewer = async (to, name, token) => {
       
       <div style="padding: 30px; background-color: #fafefd; color: #065f46; font-family: Arial, sans-serif;">
         <p style="font-size: 16px; line-height: 1.6;">Dear <strong>${name}</strong>,</p>
-        <p style="font-size: 16px; line-height: 1.6;">You have been selected as the reviewer for an important research proposal. Please click the button below to provide your evaluation:</p>
+        <p style="font-size: 16px; line-height: 1.6;">You have been selected as an esteemed reviewer for a research proposal submitted to
+the Research and Extension Center, JKKNIU.Please click the button below to evaluate it:</p>
 
         <div style="text-align: center; margin: 30px 0;">
           <a href="${reviewLink}" style="background-color: #056e51; color: white; padding: 15px 25px; text-decoration: none; font-size: 18px; border-radius: 5px; display: inline-block; font-weight: bold;">
@@ -124,18 +125,18 @@ const sendMailToReviewer = async (to, name, token) => {
           </a>
         </div>
 
-        <p style="font-size: 16px; line-height: 1.6;">Please note: The review link will expire in 24 hours.</p>
+        <p style="font-size: 16px; line-height: 1.6;">Please note: The review link will expire in 45 Days.</p>
 
-        <p style="font-size: 16px; line-height: 1.6;">Should you have any questions or require further assistance, please do not hesitate to contact us.</p>
+        <p style="font-size: 16px; line-height: 1.6;">If you have any questions or require further assistance, please don’t hesitate to contact us.</p>
       </div>
 
       <div style="background-color: #065f46; padding: 25px; text-align: center; font-size: 14px; color: white;">
         <p style="margin: 0;">For any inquiries, please contact us at:</p>
         <p style="margin: 10px 0;">
-          <a href="mailto:alumnijkkniucse@gmail.com" style="color: #fafefd; text-decoration: none;">alumnijkkniucse@gmail.com</a>
+          <a href="mailto:habiburfbjkkniu@gmail.com" style="color: #fafefd; text-decoration: none;">habiburfbjkkniu@gmail.com</a>
         </p>
         <p style="margin: 0;">Best regards,<br/>
-        <strong>Research Extension Center</strong><br/>
+        <strong>Research And Extension Center</strong><br/>
         <span style="font-size: 14px;">Jatiya Kabi Kazi Nazrul Islam University</span></p>
       </div>
     `;
@@ -143,10 +144,11 @@ const sendMailToReviewer = async (to, name, token) => {
     const htmlContent = createResponsiveEmailTemplate(emailContent);
 
     const mailOptions = {
-      from: `"Research Extension Center" <${process.env.EMAIL_USERNAME}>`,
+      from: `"Research And Extension Center" <${process.env.EMAIL_USERNAME}>`,
       to,
       subject: "Research Proposal Review Request",
-      text: `Dear ${name},\n\nYou have been assigned to review a research proposal. Please use the following link: ${reviewLink} \n\nThis link will expire in 7 Days.`,
+      text: `Dear ${name},\n\nYou have been selected as an esteemed reviewer for a research proposal submitted to
+the Research and Extension Center, JKKNIU.\n Please click the button below to evaluate it. ${reviewLink} \n\nThis link will expire in 45 Days.`,
       html: htmlContent,
     };
 

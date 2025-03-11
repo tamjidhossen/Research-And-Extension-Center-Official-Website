@@ -99,7 +99,7 @@ teacherProposalSchema.methods.generateReviewerToken = function (reviewer_id) {
     return jwt.sign(
         { proposal_id: this._id, reviewer_id: reviewer_id, proposal_type: "teacher" },
         process.env.SECRET_KEY_REVIEWER,
-        { expiresIn: "7d" }
+        { expiresIn: "45d" }
     );
 };
 

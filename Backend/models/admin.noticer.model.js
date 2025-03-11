@@ -26,7 +26,7 @@ const adminNoticerSchema = new mongoose.Schema({
 });
 
 adminNoticerSchema.methods.generateAuthToken = function () {
-    const token = jwt.sign({ _id: this._id }, process.env.SECRET_KEY_ADMIN, { expiresIn: '1h' });
+    const token = jwt.sign({ _id: this._id }, process.env.SECRET_KEY_ADMIN, { expiresIn: '12h' });
     return token;
 };
 
