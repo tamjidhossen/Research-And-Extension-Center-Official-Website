@@ -1,69 +1,58 @@
-name: reunion-prod
+name: rec-prod
 
 services:
-  mongo:
+  rec_mongo:
     image: mongo:8.0.4
     volumes:
-      - mongo_data:/data/db
+      - rec_mongo_data:/data/db
     networks:
-      - reunion-network
+      - rec-network
     restart: unless-stopped
 
-  backend:
+  rec_backend:
     build:
       context: ./Backend
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file: ./Backend/.env
     volumes:
-      - ../uploads/images:/app/uploads/images
+      - ../uploads/proposal:/app/uploads/proposal
+      - ../uploads/document:/app/uploads/document
+      - ../uploads/marksheet:/app/uploads/marksheet
+      - ../uploads/evaluation_sheet:/app/uploads/evaluation_sheet
+      - ../uploads/invoice:/app/uploads/invoice
+      - ../uploads/notices:/app/uploads/notices
+    ports:
+      - "127.0.0.1:5000:4000"
     networks:
-      - reunion-network
+      - rec-network
     depends_on:
-      - mongo
+      - rec_mongo
 
   frontend:
     build:
       context: ./Frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=https://csealumni.jkkniu.edu.bd
-        - VITE_ADULT_FEE=1000
-        - VITE_CHILD_FEE=500
-        - VITE_STUDENT_FEE=500
-        - VITE_MAX_FILE_SIZE=2097152
+        - VITE_API_URL=https://researchcenter.jkkniu.edu.bd/v1
+        - VITE_REVIEWER_HONORIUM=600
+        - VITE_MAX_FILE_SIZE=5242880
         - VITE_JWT_TOKEN_KEY=adminToken
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:80"
     env_file: ./Frontend/.env
     volumes:
-      - frontend_build:/srv
+      - rec_frontend_build:/srv
     networks:
-      - reunion-network
+      - rec-network
     depends_on:
-      - backend
-
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - frontend_build:/srv
-      - caddy_data:/data
-      - caddy_config:/config
-      - ../uploads/images:/app/uploads/images
-    networks:
-      - reunion-network
+      - rec_backend
 
 volumes:
-  mongo_data:
-  uploaded_images:
-  frontend_build:
-  caddy_data:
-  caddy_config:
+  rec_mongo_data:
+  rec_frontend_build:
 
 networks:
-  reunion-network:
+  rec-network:
     driver: bridge
