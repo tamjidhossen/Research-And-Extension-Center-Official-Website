@@ -16,6 +16,7 @@ import InvoiceSubmissionPage from './components/Reviewer/InvoiceSubmission';
 import NoticeManagerLogin from './components/NoticeManager/Login';
 import NoticeManagerDashboard from './components/NoticeManager/Dashboard';
 import NoticeManagerProtectedRoute from './components/NoticeManager/ProtectedRoute';
+import NotFound from './components/NotFound';
 
 import {
   Route,
@@ -27,7 +28,7 @@ import {
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
-      <Route path="/" element={<Layout />}>
+      <Route path="/" element={<Layout />} errorElement={<NotFound />}>
         <Route path="" element={<Home />} />
         <Route path="submit/student" element={<StudentSubmission />} />
         <Route path="submit/teacher" element={<TeacherSubmission />} />
@@ -35,8 +36,10 @@ const router = createBrowserRouter(
         <Route path="archive" element={<PrevProposals />} />
         <Route path="review" element={<ReviewerPage />} />
         <Route path="invoice/upload" element={<InvoiceSubmissionPage />} />
+        {/* Catch-all route for the Layout */}
+        <Route path="*" element={<NotFound />} />
       </Route>
-      <Route path="/admin">
+      <Route path="/admin" errorElement={<NotFound />}>
         <Route path="register" element={<AdminRegister />} />
         <Route path="login" element={<AdminLogin />} />
         <Route 
@@ -47,8 +50,10 @@ const router = createBrowserRouter(
             </ProtectedRoute>
           } 
         />
+        {/* Catch-all route for the Layout */}
+        <Route path="*" element={<NotFound />} />
       </Route>
-      <Route path="/notice-manager">
+      <Route path="/notice-manager" errorElement={<NotFound />}>
         <Route path="login" element={<NoticeManagerLogin />} />
         <Route 
           path="dashboard" 
@@ -58,7 +63,9 @@ const router = createBrowserRouter(
             </NoticeManagerProtectedRoute>
           } 
         />
+        <Route path="*" element={<NotFound />} />
       </Route>
+      <Route path="*" element={<NotFound />} />
     </>
   )
 );
