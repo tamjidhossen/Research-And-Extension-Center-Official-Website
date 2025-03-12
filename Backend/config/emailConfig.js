@@ -3,7 +3,22 @@ require("dotenv").config();
 const fs = require('fs')
 const path = require("path");
 
-// Configure transporter for Gmail
+// // Configure transporter for Gmail
+// const transporter = nodemailer.createTransport({
+//   host: 'mail.jkkniu.edu.bd',  // SMTP host from your output
+//   port: 465,                   // SSL port (use 587 for TLS if needed)
+//   secure: true,
+//   auth: {
+//     user: process.env.EMAIL_USERNAME, // Your Gmail address
+//     pass: process.env.EMAIL_PASSWORD, // Your Gmail app password
+//   },
+//   tls: {
+//     rejectUnauthorized: false,  // Accept self-signed certificates
+//   },
+//   logger: true,   // Enable detailed logging
+//   debug: true,
+// });
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -103,10 +118,13 @@ const sendPasswordResetMail = async (to, resetLink) => {
   }
 };
 
-const sendMailToReviewer = async (to, name, token) => {
+const sendMailToReviewer = async (to, name, token, expiresIn = 45) => {
   try {
     // Construct the review link
     const reviewLink = `${process.env.FRONTEND_URL}/review?token=${token}`;
+
+    // Convert expiresIn to a more readable format if it's a number
+    const expirationText = typeof expiresIn === "number" ? `${expiresIn} Days` : expiresIn;
 
     const emailContent = `
       <div style="background-color: #065f46; color: white; padding: 40px 30px; text-align: center;">
@@ -117,7 +135,7 @@ const sendMailToReviewer = async (to, name, token) => {
       <div style="padding: 30px; background-color: #fafefd; color: #065f46; font-family: Arial, sans-serif;">
         <p style="font-size: 16px; line-height: 1.6;">Dear <strong>${name}</strong>,</p>
         <p style="font-size: 16px; line-height: 1.6;">You have been selected as an esteemed reviewer for a research proposal submitted to
-the Research and Extension Center, JKKNIU.Please click the button below to evaluate it:</p>
+        the Research and Extension Center, JKKNIU. Please click the button below to evaluate it:</p>
 
         <div style="text-align: center; margin: 30px 0;">
           <a href="${reviewLink}" style="background-color: #056e51; color: white; padding: 15px 25px; text-decoration: none; font-size: 18px; border-radius: 5px; display: inline-block; font-weight: bold;">
@@ -125,7 +143,7 @@ the Research and Extension Center, JKKNIU.Please click the button below to evalu
           </a>
         </div>
 
-        <p style="font-size: 16px; line-height: 1.6;">Please note: The review link will expire in 45 Days.</p>
+        <p style="font-size: 16px; line-height: 1.6;">Please note: The review link will expire in ${expirationText}.</p>
 
         <p style="font-size: 16px; line-height: 1.6;">If you have any questions or require further assistance, please don’t hesitate to contact us.</p>
       </div>
@@ -148,7 +166,7 @@ the Research and Extension Center, JKKNIU.Please click the button below to evalu
       to,
       subject: "Research Proposal Review Request",
       text: `Dear ${name},\n\nYou have been selected as an esteemed reviewer for a research proposal submitted to
-the Research and Extension Center, JKKNIU.\n Please click the button below to evaluate it. ${reviewLink} \n\nThis link will expire in 45 Days.`,
+the Research and Extension Center, JKKNIU.\nPlease click the link below to evaluate it:\n${reviewLink}\n\nThis link will expire in ${expirationText}.`,
       html: htmlContent,
     };
 
@@ -159,6 +177,7 @@ the Research and Extension Center, JKKNIU.\n Please click the button below to ev
     throw error;
   }
 };
+
 
 
 const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => {

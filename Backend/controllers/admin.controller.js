@@ -378,7 +378,7 @@ const getProposal = async (req, res) => {
 
 const sentToReviewer = async (req, res) => {
     try {
-        const { reviewer_id, proposal_id, proposal_type } = req.body;
+        const { reviewer_id, proposal_id, proposal_type, expiresIn } = req.body;
 
         // Validate Object IDs
         if (!mongoose.Types.ObjectId.isValid(proposal_id) || !mongoose.Types.ObjectId.isValid(reviewer_id)) {
@@ -417,9 +417,8 @@ const sentToReviewer = async (req, res) => {
         if (existingAssignment) {
             return res.status(400).json({ success: false, message: "Reviewer already assigned to this proposal!" });
         }
-
         // Generate token for the reviewer
-        const token = proposal.generateReviewerToken(reviewerId);
+        const token = proposal.generateReviewerToken(reviewerId, (expiresIn ? expiresIn : 45));
         const prev_status = proposal.status;
         // Assign reviewer and update status
         proposal.reviewer.push({ id: reviewerId });
@@ -442,7 +441,7 @@ const sentToReviewer = async (req, res) => {
 
         try {
             // Try sending the email
-            await sendMailToReviewer(reviewer.email, reviewer.name, token);
+            await sendMailToReviewer(reviewer.email, reviewer.name, token, (expiresIn ? expiresIn : 45));
             console.log("Email sent successfully");
 
             return res.status(200).json({ success: true, message: "Reviewer assigned! Email sent successfully." });

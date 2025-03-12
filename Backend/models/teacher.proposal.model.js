@@ -95,13 +95,20 @@ teacherProposalSchema.methods.generateUpdateToken = function () {
 };
 
 // Generate token for reviewer access
-teacherProposalSchema.methods.generateReviewerToken = function (reviewer_id) {
+// Generate token for reviewer access
+teacherProposalSchema.methods.generateReviewerToken = function (reviewer_id, expiresIn = 45) {
+    // If expiresIn is a number, convert it to a string with "d" suffix
+    if (typeof expiresIn === "number") {
+        expiresIn = `${expiresIn}d`;
+    }
+
     return jwt.sign(
         { proposal_id: this._id, reviewer_id: reviewer_id, proposal_type: "teacher" },
         process.env.SECRET_KEY_REVIEWER,
-        { expiresIn: "45d" }
+        { expiresIn: expiresIn }
     );
 };
+
 
 // Register the model safely
 const TeacherProposal = mongoose.models.TeacherProposal || mongoose.model("TeacherProposal", teacherProposalSchema);
