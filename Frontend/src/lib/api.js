@@ -35,7 +35,7 @@ api.interceptors.request.use((config) => {
   }
 
   // For notice manager endpoints, prioritize notice manager token
-  if (url && url.includes("/api/admin/noticer")) {
+  if (url && (url.includes("/api/admin/noticer") || url.includes("/api/notice/"))) {
     const noticeManagerToken = Cookies.get("noticeManagerToken");
     if (noticeManagerToken) {
       config.headers.Authorization = `Bearer ${noticeManagerToken}`;
