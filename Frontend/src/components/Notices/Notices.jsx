@@ -115,7 +115,7 @@ const Notices = () => {
 
         // return () => clearTimeout(timer);
       } catch (err) {
-        console.error("Failed to fetch notices:", err);
+        // console.error("Failed to fetch notices:", err);
         setError(err.response?.data?.message || "Failed to load notices");
         setLoading(false);
       }
@@ -244,11 +244,24 @@ const Notices = () => {
                     notice.files.length > 0 &&
                     notice.files.map((file, index) => {
                       // Convert regular number to Bengali numeral
-                      const bengaliNumerals = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-                      const bengaliIndex = (index + 1).toString().split('')
-                        .map(digit => bengaliNumerals[parseInt(digit)])
-                        .join('');
-                        
+                      const bengaliNumerals = [
+                        "০",
+                        "১",
+                        "২",
+                        "৩",
+                        "৪",
+                        "৫",
+                        "৬",
+                        "৭",
+                        "৮",
+                        "৯",
+                      ];
+                      const bengaliIndex = (index + 1)
+                        .toString()
+                        .split("")
+                        .map((digit) => bengaliNumerals[parseInt(digit)])
+                        .join("");
+
                       return (
                         <Button
                           key={index}

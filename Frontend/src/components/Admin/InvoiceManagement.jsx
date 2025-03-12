@@ -170,7 +170,7 @@ export default function InvoiceManagement() {
         setReviewers(response.data.reviewers);
       }
     } catch (error) {
-      console.error("Failed to fetch reviewers:", error);
+      // console.error("Failed to fetch reviewers:", error);
       toast.error("Failed to load reviewers");
     }
   };
@@ -197,7 +197,7 @@ export default function InvoiceManagement() {
         }
       }
     } catch (error) {
-      console.error("Failed to fetch assignments:", error);
+      // console.error("Failed to fetch assignments:", error);
     }
   };
 
@@ -209,7 +209,7 @@ export default function InvoiceManagement() {
       }
       setLoading(false);
     } catch (error) {
-      console.error("Failed to fetch invoices:", error);
+      // console.error("Failed to fetch invoices:", error);
       setLoading(false);
     }
   };
@@ -453,7 +453,7 @@ export default function InvoiceManagement() {
 
       return pdfFile;
     } catch (error) {
-      console.error("Failed to generate invoice:", error);
+      // console.error("Failed to generate invoice:", error);
       throw error;
     }
   };
@@ -488,7 +488,7 @@ export default function InvoiceManagement() {
         fetchInvoices(); // Refresh invoice list
       }
     } catch (error) {
-      console.error("Failed to send invoice:", error);
+      // console.error("Failed to send invoice:", error);
       toast.error(error.response?.data?.message || "Failed to send invoice");
     } finally {
       setSendingInvoice(false);
@@ -505,7 +505,7 @@ export default function InvoiceManagement() {
   //       fetchInvoices(); // Refresh invoice list
   //     }
   //   } catch (error) {
-  //     console.error("Failed to delete invoice:", error);
+  //   // console.error("Failed to delete invoice:", error);
   //     toast.error(error.response?.data?.message || "Failed to delete invoice");
   //   }
   // };

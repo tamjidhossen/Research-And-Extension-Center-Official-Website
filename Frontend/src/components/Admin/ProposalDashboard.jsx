@@ -152,7 +152,7 @@ export default function ProposalsDashboard() {
         setExistingReviewers(response.data.reviewers);
       }
     } catch (error) {
-      console.error("Failed to fetch reviewers:", error);
+      // console.error("Failed to fetch reviewers:", error);
     }
   };
 
@@ -248,7 +248,7 @@ export default function ProposalsDashboard() {
         setReviewAssignments(response.data);
       }
     } catch (error) {
-      console.error("Failed to fetch reviewer assignments:", error);
+      // console.error("Failed to fetch reviewer assignments:", error);
     }
   };
 
@@ -451,7 +451,7 @@ export default function ProposalsDashboard() {
         setStatistics(stats);
       }
     } catch (error) {
-      console.error("Failed to fetch proposals:", error);
+      // console.error("Failed to fetch proposals:", error);
       toast({
         title: "Error",
         description: "Failed to fetch proposals",
@@ -505,7 +505,7 @@ export default function ProposalsDashboard() {
         fetchProposals();
       }
     } catch (error) {
-      console.error("Failed to update proposal status:", error);
+      // console.error("Failed to update proposal status:", error);
       toast.error(error.response?.data?.message || "Failed to update status");
     }
   };
@@ -546,7 +546,7 @@ export default function ProposalsDashboard() {
           fetchProposals();
         });
     } catch (error) {
-      console.error("Failed to allocate budget:", error);
+      // console.error("Failed to allocate budget:", error);
       toast.error(error.response?.data?.message || "Failed to allocate budget");
     }
   };
@@ -693,7 +693,7 @@ export default function ProposalsDashboard() {
       // Update statistics
       fetchProposals();
     } catch (error) {
-      console.error("Failed to assign reviewers:", error);
+      // console.error("Failed to assign reviewers:", error);
       toast.error(
         error.response?.data?.message || "Failed to assign reviewers"
       );
@@ -723,7 +723,7 @@ export default function ProposalsDashboard() {
         fetchProposals();
       }
     } catch (error) {
-      console.error("Failed to delete proposal:", error);
+      // console.error("Failed to delete proposal:", error);
       toast.error(error.response?.data?.message || "Failed to delete proposal");
     }
   };
@@ -804,7 +804,7 @@ export default function ProposalsDashboard() {
       // Fetch reviewer assignments to update status info
       fetchReviewerAssignments();
     } catch (error) {
-      console.error("Failed to assign reviewer 1:", error);
+      // console.error("Failed to assign reviewer 1:", error);
       toast.error(
         error.response?.data?.message || "Failed to assign reviewer 1"
       );
@@ -899,7 +899,7 @@ export default function ProposalsDashboard() {
       // Fetch assignments to update UI
       fetchReviewerAssignments();
     } catch (error) {
-      console.error("Failed to assign reviewer 2:", error);
+      // console.error("Failed to assign reviewer 2:", error);
       toast.error(
         error.response?.data?.message || "Failed to assign reviewer 2"
       );
@@ -2422,7 +2422,8 @@ export default function ProposalsDashboard() {
                             window.open(fileUrl, "_blank");
                           }}
                         >
-                          <Download className="h-3 w-3 mr-1" /> View Proposal Review
+                          <Download className="h-3 w-3 mr-1" /> View Proposal
+                          Review
                         </Button>
                       )}
                   </div>

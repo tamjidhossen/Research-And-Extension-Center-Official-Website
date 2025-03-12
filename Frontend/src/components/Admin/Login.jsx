@@ -19,10 +19,10 @@ export default function AdminLogin() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const response = await api.post("/api/admin/login", credentials);
-      
+
       if (response.data.success) {
         setAuthToken(response.data.token);
         // Store admin data in localStorage
@@ -34,13 +34,13 @@ export default function AdminLogin() {
         navigate("/admin/dashboard");
       }
     } catch (error) {
-      console.error("Login error:", error);
+      // console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Login Failed",
         description: error.response?.data?.message || "Invalid credentials",
       });
-      
+
       // Uncomment for testing without backend
       /*
       // DUMMY LOGIN FOR TESTING

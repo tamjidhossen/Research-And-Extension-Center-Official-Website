@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 require("dotenv").config();
-const fs = require('fs')
+const fs = require("fs");
 const path = require("path");
 
 // Configure transporter for Gmail
@@ -98,7 +98,7 @@ const sendPasswordResetMail = async (to, resetLink) => {
     const info = await transporter.sendMail(mailOptions);
     return info;
   } catch (error) {
-    console.error("Error sending password reset email:", error);
+    // console.error("Error sending password reset email:", error);
     throw error;
   }
 };
@@ -155,20 +155,23 @@ the Research and Extension Center, JKKNIU.\n Please click the button below to ev
     const info = await transporter.sendMail(mailOptions);
     return info;
   } catch (error) {
-    console.error("Error sending reviewer email:", error);
+    // console.error("Error sending reviewer email:", error);
     throw error;
   }
 };
 
-
-const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => {
+const sendMailInvoiceToReviewer = async (
+  reviewerEmail,
+  filePath,
+  uploadUrl
+) => {
   try {
     // Convert relative path to absolute path
     const absoluteFilePath = path.resolve(__dirname, filePath);
 
     // Check if file exists before attaching
     if (!fs.existsSync(absoluteFilePath)) {
-      console.error("Invoice file not found:", absoluteFilePath);
+      // console.error("Invoice file not found:", absoluteFilePath);
       return;
     }
 
@@ -217,23 +220,20 @@ const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => 
         {
           filename: "invoice.pdf",
           path: absoluteFilePath, // ✅ Absolute path used here
-          contentType: "application/pdf"
-        }
-      ]
+          contentType: "application/pdf",
+        },
+      ],
     };
 
     await transporter.sendMail(mailOptions);
-    console.log("Invoice email sent successfully to:", reviewerEmail);
+    // console.log("Invoice email sent successfully to:", reviewerEmail);
   } catch (error) {
-    console.error("Error sending invoice email:", error);
+    // console.error("Error sending invoice email:", error);
   }
 };
-
-
-
 
 module.exports = {
   sendPasswordResetMail,
   sendMailToReviewer,
-  sendMailInvoiceToReviewer
+  sendMailInvoiceToReviewer,
 };

@@ -215,7 +215,7 @@ const OverviewDashboard = () => {
         );
       }
     } catch (error) {
-      console.error("Failed to fetch documents:", error);
+      // console.error("Failed to fetch documents:", error);
       toast.error("Failed to fetch documents");
     }
   };
@@ -242,7 +242,7 @@ const OverviewDashboard = () => {
       setRegistrationOpen(value);
       toast.success(value ? "Submissions opened" : "Submissions closed");
     } catch (error) {
-      console.error("Failed to toggle registration:", error);
+      // console.error("Failed to toggle registration:", error);
       toast.error("Failed to update submission status");
     } finally {
       setYearLoading(false);
@@ -271,7 +271,7 @@ const OverviewDashboard = () => {
 
       toast.success("Fiscal year updated successfully");
     } catch (error) {
-      console.error("Failed to update fiscal year:", error);
+      // console.error("Failed to update fiscal year:", error);
       toast.error("Failed to update fiscal year");
     } finally {
       setYearLoading(false);
@@ -317,7 +317,7 @@ const OverviewDashboard = () => {
         toast.success("Documents updated successfully");
       }
     } catch (error) {
-      console.error("Failed to upload documents:", error);
+      // console.error("Failed to upload documents:", error);
       toast.error("Failed to upload documents");
     } finally {
       setDocsLoading(false);
@@ -364,7 +364,7 @@ const OverviewDashboard = () => {
         toast.success("Document updated successfully");
       }
     } catch (error) {
-      console.error("Failed to update document:", error);
+      // console.error("Failed to update document:", error);
       toast.error("Failed to update document");
     } finally {
       setDocsLoading(false);

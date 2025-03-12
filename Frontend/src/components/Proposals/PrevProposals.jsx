@@ -128,7 +128,7 @@ export default function PrevProposals() {
 
         // need to change this route to not be admin only
         const response = await api.get("/api/research-proposal/proposals");
-        
+
         let realProjects = [];
 
         if (response.data) {
@@ -136,8 +136,7 @@ export default function PrevProposals() {
             // Process student proposals - only include status = 3 (funded proposals)
             realProjects = [
               ...realProjects,
-              ...response.data.StudentProposal
-                .filter(p => p.status === 3) // Only include funded proposals
+              ...response.data.StudentProposal.filter((p) => p.status === 3) // Only include funded proposals
                 .map((p) => ({
                   id: p._id,
                   title: p.project_title,
@@ -152,13 +151,12 @@ export default function PrevProposals() {
                 })),
             ];
           }
-  
+
           if (response.data.TeacherProposal) {
             // Process teacher proposals - only include status = 3 (funded proposals)
             realProjects = [
               ...realProjects,
-              ...response.data.TeacherProposal
-                .filter(p => p.status === 3) // Only include funded proposals
+              ...response.data.TeacherProposal.filter((p) => p.status === 3) // Only include funded proposals
                 .map((p) => ({
                   id: p._id,
                   title: p.project_title,
@@ -176,7 +174,7 @@ export default function PrevProposals() {
         }
 
         setProjects(realProjects);
-        console.log("Loaded projects:", realProjects); 
+        // console.log("Loaded projects:", realProjects);
 
         // Extract unique filter options
         const faculties = [...new Set(realProjects.map((p) => p.faculty))];
@@ -227,7 +225,7 @@ export default function PrevProposals() {
         //   setLoading(false);
         // }, 1000);
       } catch (err) {
-        console.error("API fetch error:", err);
+        // console.error("API fetch error:", err);
         setError(err.response?.data?.message || "Failed to load proposals");
         setLoading(false);
       }
@@ -266,8 +264,12 @@ export default function PrevProposals() {
     return (
       (filters.search === "" ||
         project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        project.applicantName?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        String(project.id).toLowerCase().includes(filters.search.toLowerCase())) &&
+        project.applicantName
+          ?.toLowerCase()
+          .includes(filters.search.toLowerCase()) ||
+        String(project.id)
+          .toLowerCase()
+          .includes(filters.search.toLowerCase())) &&
       (filters.faculty === "all" || project.faculty === filters.faculty) &&
       (filters.department === "all" ||
         project.department === filters.department) &&

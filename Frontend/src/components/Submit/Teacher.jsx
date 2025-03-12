@@ -205,7 +205,7 @@ export default function TeacherSubmission() {
           });
         }
       } catch (error) {
-        console.error("Failed to fetch registration status:", error);
+        // console.error("Failed to fetch registration status:", error);
         toast({
           title: "Error",
           description: "Failed to fetch registration status",
@@ -384,7 +384,7 @@ export default function TeacherSubmission() {
         }
       );
 
-      console.log("API response:", response.data);
+      // console.log("API response:", response.data);
 
       // DUMMY RESPONSE - Comment out when using actual API
       // console.log("Form data:", proposalData);

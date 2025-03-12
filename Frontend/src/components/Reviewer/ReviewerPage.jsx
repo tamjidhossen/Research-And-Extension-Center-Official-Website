@@ -66,10 +66,10 @@ export default function ReviewerPage() {
 
   const verifyToken = async (token) => {
     try {
-      console.log("Attempting to verify reviewer token");
+      // console.log("Attempting to verify reviewer token");
 
       if (!token) {
-        console.error("No reviewer token available");
+        // console.error("No reviewer token available");
         setAuthorized(false);
         return;
       }
@@ -121,7 +121,7 @@ export default function ReviewerPage() {
         });
       }
     } catch (error) {
-      console.error("Token verification error:", error);
+      // console.error("Token verification error:", error);
       setAuthorized(false);
       toast({
         title: "Authentication Failed",
@@ -269,7 +269,7 @@ export default function ReviewerPage() {
         formData.append("invoice", selectedInvoice);
       }
       formData.append("total_mark", totalMark);
-      formData.append("fiscal_year", proposal.fiscal_year)
+      formData.append("fiscal_year", proposal.fiscal_year);
 
       // const token = localStorage.getItem("reviewerToken");
 
@@ -293,7 +293,7 @@ export default function ReviewerPage() {
         throw new Error("Submission failed");
       }
     } catch (error) {
-      console.error("Submission error:", error);
+      // console.error("Submission error:", error);
       toast({
         title: "Submission Failed",
         description:
