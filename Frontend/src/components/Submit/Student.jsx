@@ -42,7 +42,7 @@ import {
   BookOpen,
   ClipboardList,
   BriefcaseBusiness,
-  CheckCircle
+  CheckCircle,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
@@ -947,38 +947,6 @@ export default function StudentSubmission() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                               control={form.control}
-                              name="department"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Department</FormLabel>
-                                  <FormControl>
-                                    <Select
-                                      value={field.value}
-                                      onValueChange={field.onChange}
-                                      disabled={!form.getValues("faculty")}
-                                    >
-                                      <SelectTrigger className="w-full">
-                                        <div className="flex">
-                                          <Building className="h-4 w-4 mr-2 text-gray-500 self-center" />
-                                          <SelectValue placeholder="Select your department" />
-                                        </div>
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {availableDepartments.map((dept) => (
-                                          <SelectItem key={dept} value={dept}>
-                                            {dept}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
                               name="faculty"
                               render={({ field }) => (
                                 <FormItem>
@@ -1000,6 +968,38 @@ export default function StudentSubmission() {
                                             value={faculty}
                                           >
                                             {faculty}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="department"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Department</FormLabel>
+                                  <FormControl>
+                                    <Select
+                                      value={field.value}
+                                      onValueChange={field.onChange}
+                                      disabled={!form.getValues("faculty")}
+                                    >
+                                      <SelectTrigger className="w-full">
+                                        <div className="flex">
+                                          <Building className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                                          <SelectValue placeholder="Select your department" />
+                                        </div>
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {availableDepartments.map((dept) => (
+                                          <SelectItem key={dept} value={dept}>
+                                            {dept}
                                           </SelectItem>
                                         ))}
                                       </SelectContent>
