@@ -42,6 +42,7 @@ import {
   BookOpen,
   ClipboardList,
   BriefcaseBusiness,
+  CheckCircle
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
@@ -101,6 +102,7 @@ export default function StudentSubmission() {
   const [activeTab, setActiveTab] = useState("personal");
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [documentUrls, setDocumentUrls] = useState({
     partA_en: null,
     partA_bn: null,
@@ -430,6 +432,8 @@ export default function StudentSubmission() {
 
       form.reset();
       setFiles({ partA: null, partB: null });
+
+      setSubmissionSuccess(true);
     } catch (error) {
       toast({
         title: "Submission failed",
@@ -441,6 +445,10 @@ export default function StudentSubmission() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleStartNewSubmission = () => {
+    setSubmissionSuccess(false);
   };
 
   const handleFormError = (errors) => {
@@ -555,6 +563,40 @@ export default function StudentSubmission() {
                   >
                     <Download className="h-4 w-4" />
                     Part B (বাংলা)
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : submissionSuccess ? (
+          // Success state - add this new section
+          <Card className="border-green-100 dark:border-green-800/50 shadow-sm">
+            <CardHeader className="bg-green-50/50 dark:bg-green-900/20">
+              <CardTitle className="text-green-800 dark:text-green-400 flex items-center gap-2">
+                <CheckCircle className="h-6 w-6" />
+                Submission Successful!
+              </CardTitle>
+              <CardDescription className="text-green-700 dark:text-green-300">
+                Your research proposal has been submitted successfully
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 pb-6 text-center">
+              <div className="py-8">
+                <CheckCircle className="h-24 w-24 text-green-500 mx-auto mb-6" />
+                <h3 className="text-2xl font-medium mb-4">Thank You!</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
+                  Your research proposal has been successfully submitted. You
+                  will be notified about the status of your application.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button
+                    onClick={handleStartNewSubmission}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    Submit Another Proposal
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <a href="/">Return to Homepage</a>
                   </Button>
                 </div>
               </div>
@@ -793,25 +835,25 @@ export default function StudentSubmission() {
                   className="mb-8"
                 >
                   <TabsList className="grid grid-cols-3 w-full h-auto">
-  <TabsTrigger 
-    value="personal" 
-    className="px-2 py-1.5 h-auto min-h-[2.5rem] flex items-center justify-center text-xs sm:text-sm"
-  >
-    Applicant Details
-  </TabsTrigger>
-  <TabsTrigger 
-    value="academic" 
-    className="px-2 py-1.5 h-auto min-h-[2.5rem] flex items-center justify-center text-xs sm:text-sm"
-  >
-    Academic Info
-  </TabsTrigger>
-  <TabsTrigger 
-    value="project" 
-    className="px-2 py-1.5 h-auto min-h-[2.5rem] flex items-center justify-center text-xs sm:text-sm"
-  >
-    Project Details
-  </TabsTrigger>
-</TabsList>
+                    <TabsTrigger
+                      value="personal"
+                      className="px-2 py-1.5 h-auto min-h-[2.5rem] flex items-center justify-center text-xs sm:text-sm"
+                    >
+                      Applicant Details
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="academic"
+                      className="px-2 py-1.5 h-auto min-h-[2.5rem] flex items-center justify-center text-xs sm:text-sm"
+                    >
+                      Academic Info
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="project"
+                      className="px-2 py-1.5 h-auto min-h-[2.5rem] flex items-center justify-center text-xs sm:text-sm"
+                    >
+                      Project Details
+                    </TabsTrigger>
+                  </TabsList>
 
                   {/* Personal Tab */}
                   <TabsContent value="personal">
