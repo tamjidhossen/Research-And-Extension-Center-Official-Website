@@ -792,13 +792,26 @@ export default function StudentSubmission() {
                   onValueChange={setActiveTab}
                   className="mb-8"
                 >
-                  <TabsList className="grid grid-cols-3 w-full">
-                    <TabsTrigger value="personal">
-                      Applicant Details
-                    </TabsTrigger>
-                    <TabsTrigger value="academic">Academic Info</TabsTrigger>
-                    <TabsTrigger value="project">Project Details</TabsTrigger>
-                  </TabsList>
+                  <TabsList className="grid grid-cols-3 w-full h-auto">
+  <TabsTrigger 
+    value="personal" 
+    className="px-2 py-1.5 h-auto min-h-[2.5rem] flex items-center justify-center text-xs sm:text-sm"
+  >
+    Applicant Details
+  </TabsTrigger>
+  <TabsTrigger 
+    value="academic" 
+    className="px-2 py-1.5 h-auto min-h-[2.5rem] flex items-center justify-center text-xs sm:text-sm"
+  >
+    Academic Info
+  </TabsTrigger>
+  <TabsTrigger 
+    value="project" 
+    className="px-2 py-1.5 h-auto min-h-[2.5rem] flex items-center justify-center text-xs sm:text-sm"
+  >
+    Project Details
+  </TabsTrigger>
+</TabsList>
 
                   {/* Personal Tab */}
                   <TabsContent value="personal">
