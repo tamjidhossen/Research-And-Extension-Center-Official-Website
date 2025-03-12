@@ -23,7 +23,7 @@ services:
       - ../uploads/invoice:/app/uploads/invoice
       - ../uploads/notices:/app/uploads/notices
     ports:
-      - "127.0.0.1:5000:4000"
+      - "5000:4000"
     networks:
       - rec-network
     depends_on:
@@ -40,7 +40,7 @@ services:
         - VITE_JWT_TOKEN_KEY=adminToken
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5001:80"
+      - "5001:80"
     env_file: ./Frontend/.env
     volumes:
       - rec_frontend_build:/srv

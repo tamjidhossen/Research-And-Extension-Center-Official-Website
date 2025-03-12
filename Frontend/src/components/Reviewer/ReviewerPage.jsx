@@ -173,7 +173,7 @@ export default function ReviewerPage() {
       setSelectedInvoice(file);
       toast({
         title: "File selected",
-        description: "Invoice has been selected",
+        description: "Honorarium Form has been selected",
       });
     }
   };
@@ -227,7 +227,7 @@ export default function ReviewerPage() {
     if (!invoiceTemplateUrl) {
       toast({
         title: "Download Failed",
-        description: "Invoice template is not available",
+        description: "Honorarium form template is not available",
         variant: "destructive",
       });
       return;
@@ -467,12 +467,12 @@ export default function ReviewerPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      Invoice Template
+                      Honorarium Form Template
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pb-4 pt-0">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      Download the invoice template for billing.
+                      Download the honorarium form template for billing.
                     </p>
                     <Button
                       variant="outline"
@@ -480,7 +480,7 @@ export default function ReviewerPage() {
                       onClick={() => handleDownloadInvoiceTemplate()}
                     >
                       <Download className="h-4 w-4" />
-                      Download Invoice Template
+                      Download Honorarium Form Template
                     </Button>
                   </CardContent>
                 </Card>
@@ -576,7 +576,7 @@ export default function ReviewerPage() {
             {/* Upload Section 3: Invoice */}
             <div className="space-y-4">
               <h3 className="font-medium text-lg">
-                Step 4: Upload Signed Invoice
+                Step 4: Upload Signed Honorarium Form
               </h3>
 
               <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/50 mb-4">
@@ -590,7 +590,7 @@ export default function ReviewerPage() {
                 <label className="flex flex-col items-center cursor-pointer text-sm">
                   <FileText className="h-8 w-8 text-amber-600 dark:text-amber-400 mb-2" />
                   <span className="font-medium text-amber-800 dark:text-amber-300 mb-1">
-                    Upload Signed Invoice (PDF)
+                    Upload Signed Honorarium Form (PDF)
                   </span>
                   <span className="text-gray-500 dark:text-gray-400 text-xs mb-4">
                     Max size: 5MB

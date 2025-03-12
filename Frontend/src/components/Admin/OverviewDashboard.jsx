@@ -119,7 +119,7 @@ const OverviewDashboard = () => {
     },
     {
       id: "invoice",
-      name: "Invoice Template",
+      name: "Reviewer's Honorarium Form Template",
       category: "reviewer",
       uploaded: false,
       url: null,
@@ -927,7 +927,7 @@ const OverviewDashboard = () => {
                               {doc.id === "review_form" &&
                                 "Update Review Form Template"}
                               {doc.id === "invoice" &&
-                                "Update Invoice Template"}
+                                "Update Honorarium Template"}
                             </DialogTitle>
                             <DialogDescription>
                               {doc.id === "proposal_mark_sheet" &&
@@ -935,7 +935,7 @@ const OverviewDashboard = () => {
                               {doc.id === "review_form" &&
                                 "Select a new file to replace the current review form template."}
                               {doc.id === "invoice" &&
-                                "Select a new file to replace the current invoice template."}
+                                "Select a new file to replace the current honorarium template."}
                             </DialogDescription>
                           </DialogHeader>
                           <div className="py-4">
@@ -945,7 +945,7 @@ const OverviewDashboard = () => {
                               {doc.id === "review_form" &&
                                 "New review form file (PDF, DOC, or DOCX)"}
                               {doc.id === "invoice" &&
-                                "New invoice template file (PDF, DOC, or DOCX)"}
+                                "New honorarium template file (PDF, DOC, or DOCX)"}
                             </Label>
                             <Input
                               id={`update-file-${doc.id}`}
@@ -1007,7 +1007,7 @@ const OverviewDashboard = () => {
                         {doc.id === "review_form" &&
                           "Upload review form template (PDF or DOCX)"}
                         {doc.id === "invoice" &&
-                          "Upload invoice template (PDF or DOCX)"}
+                          "Upload honorarium template (PDF or DOCX)"}
                       </Label>
                       <div className="flex gap-2 items-center">
                         <Input

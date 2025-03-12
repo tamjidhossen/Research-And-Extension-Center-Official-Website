@@ -22,6 +22,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Download,
   Upload,
   FileText,
@@ -130,6 +137,53 @@ export default function StudentSubmission() {
     mode: "onSubmit",
   });
 
+  // Faculty and departments mapping
+  const facultyDepartmentMap = {
+    "Faculty of Arts": [
+      "Bangla Language and Literature",
+      "English Language and Literature",
+      "Music",
+      "Theatre and Performance Studies",
+      "Film and Media",
+      "Philosophy",
+      "History",
+    ],
+    "Faculty of Fine Arts": ["Fine Arts", "History"],
+    "Faculty of Science and Engineering": [
+      "Computer Science and Engineering",
+      "Electrical and Electronic Engineering",
+      "Environmental Science and Engineering",
+      "Statistics",
+    ],
+    "Faculty of Social Science": [
+      "Economics",
+      "Public Administration and Governance Studies",
+      "Folklore",
+      "Anthropology",
+      "Population Science",
+      "Local Government and Urban Development",
+      "Sociology",
+    ],
+    "Faculty of Law": ["Law and Justice"],
+    "Faculty of Business Administration": [
+      "Accounting and Information Systems",
+      "Finance and Banking",
+      "Human Resource Management",
+      "Management",
+      "Marketing",
+    ],
+  };
+
+  const faculties = Object.keys(facultyDepartmentMap);
+  const [availableDepartments, setAvailableDepartments] = useState([]);
+
+  // Update departments when faculty changes
+  const handleFacultyChange = (value) => {
+    form.setValue("faculty", value);
+    form.setValue("department", ""); // Reset department when faculty changes
+    setAvailableDepartments(facultyDepartmentMap[value] || []);
+  };
+
   // Fetch registration status and document URLs
   useEffect(() => {
     const fetchRegistrationStatus = async () => {
@@ -181,7 +235,7 @@ export default function StudentSubmission() {
   }, []);
 
   // Function to handle file downloads
-  const handleDownload = (url, fileName) => {
+  const handleDownload = (url, baseName) => {
     if (!url) {
       toast({
         title: "Download Failed",
@@ -190,6 +244,10 @@ export default function StudentSubmission() {
       });
       return;
     }
+
+    // Extract file extension from URL
+    const fileExtension = url.split(".").pop().toLowerCase();
+    const fileName = `${baseName}.${fileExtension}`;
 
     // Create a link and trigger download
     const link = document.createElement("a");
@@ -448,7 +506,7 @@ export default function StudentSubmission() {
                     onClick={() =>
                       handleDownload(
                         documentUrls.partA_en,
-                        "Student_PartA_English.pdf"
+                        "Student_PartA_English"
                       )
                     }
                     disabled={!documentUrls.partA_en}
@@ -462,7 +520,7 @@ export default function StudentSubmission() {
                     onClick={() =>
                       handleDownload(
                         documentUrls.partA_bn,
-                        "Student_PartA_Bengali.pdf"
+                        "Student_PartA_Bengali"
                       )
                     }
                     disabled={!documentUrls.partA_bn}
@@ -476,7 +534,7 @@ export default function StudentSubmission() {
                     onClick={() =>
                       handleDownload(
                         documentUrls.partB_en,
-                        "Student_PartB_English.pdf"
+                        "Student_PartB_English"
                       )
                     }
                     disabled={!documentUrls.partB_en}
@@ -490,7 +548,7 @@ export default function StudentSubmission() {
                     onClick={() =>
                       handleDownload(
                         documentUrls.partB_bn,
-                        "Student_PartB_Bengali.pdf"
+                        "Student_PartB_Bengali"
                       )
                     }
                     disabled={!documentUrls.partB_bn}
@@ -583,7 +641,7 @@ export default function StudentSubmission() {
                       onClick={() =>
                         handleDownload(
                           documentUrls.partA_en,
-                          "Student_PartA_English.pdf"
+                          "Student_PartA_English"
                         )
                       }
                       disabled={!documentUrls.partA_en}
@@ -597,7 +655,7 @@ export default function StudentSubmission() {
                       onClick={() =>
                         handleDownload(
                           documentUrls.partA_bn,
-                          "Student_PartA_Bengali.pdf"
+                          "Student_PartA_Bengali"
                         )
                       }
                       disabled={!documentUrls.partA_bn}
@@ -615,7 +673,7 @@ export default function StudentSubmission() {
                       onClick={() =>
                         handleDownload(
                           documentUrls.partB_en,
-                          "Student_PartB_English.pdf"
+                          "Student_PartB_English"
                         )
                       }
                       disabled={!documentUrls.partB_en}
@@ -629,7 +687,7 @@ export default function StudentSubmission() {
                       onClick={() =>
                         handleDownload(
                           documentUrls.partB_bn,
-                          "Student_PartB_Bengali.pdf"
+                          "Student_PartB_Bengali"
                         )
                       }
                       disabled={!documentUrls.partB_bn}
@@ -839,13 +897,25 @@ export default function StudentSubmission() {
                                 <FormItem>
                                   <FormLabel>Department</FormLabel>
                                   <FormControl>
-                                    <div className="flex">
-                                      <Building className="h-4 w-4 mr-2 text-gray-500 self-center" />
-                                      <Input
-                                        placeholder="Your department"
-                                        {...field}
-                                      />
-                                    </div>
+                                    <Select
+                                      value={field.value}
+                                      onValueChange={field.onChange}
+                                      disabled={!form.getValues("faculty")}
+                                    >
+                                      <SelectTrigger className="w-full">
+                                        <div className="flex">
+                                          <Building className="h-4 w-4 mr-2 text-gray-500 self-center" />
+                                          <SelectValue placeholder="Select your department" />
+                                        </div>
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {availableDepartments.map((dept) => (
+                                          <SelectItem key={dept} value={dept}>
+                                            {dept}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -859,10 +929,26 @@ export default function StudentSubmission() {
                                 <FormItem>
                                   <FormLabel>Faculty</FormLabel>
                                   <FormControl>
-                                    <Input
-                                      placeholder="Your faculty"
-                                      {...field}
-                                    />
+                                    <Select
+                                      value={field.value}
+                                      onValueChange={(value) =>
+                                        handleFacultyChange(value)
+                                      }
+                                    >
+                                      <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select your faculty" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {faculties.map((faculty) => (
+                                          <SelectItem
+                                            key={faculty}
+                                            value={faculty}
+                                          >
+                                            {faculty}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
