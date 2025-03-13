@@ -1207,12 +1207,50 @@ export default function StudentSubmission() {
                                   <FormLabel>Approximate Pages</FormLabel>
                                   <FormControl>
                                     <Input
-                                      type="number"
+                                      type="text"
                                       inputMode="numeric"
-                                      pattern="[0-9]*"
                                       placeholder="e.g. 50"
                                       {...field}
+                                      onKeyDown={(e) => {
+                                        // Allow: backspace, delete, tab, escape, enter, arrows
+                                        const allowedKeys = [
+                                          "Backspace",
+                                          "Delete",
+                                          "Tab",
+                                          "Escape",
+                                          "Enter",
+                                          "ArrowLeft",
+                                          "ArrowRight",
+                                          "ArrowUp",
+                                          "ArrowDown",
+                                          "Home",
+                                          "End",
+                                        ];
+
+                                        // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                                        if (
+                                          (e.ctrlKey === true ||
+                                            e.metaKey === true) &&
+                                          ["a", "c", "v", "x"].indexOf(
+                                            e.key.toLowerCase()
+                                          ) !== -1
+                                        ) {
+                                          return;
+                                        }
+
+                                        // Allow numbers 0-9
+                                        if (
+                                          /^\d$/.test(e.key) ||
+                                          allowedKeys.includes(e.key)
+                                        ) {
+                                          return;
+                                        }
+
+                                        // Prevent the default action for all other keys
+                                        e.preventDefault();
+                                      }}
                                       onChange={(e) => {
+                                        // Still clean any non-digits as a safety measure
                                         const value = e.target.value.replace(
                                           /[^\d]/g,
                                           ""
@@ -1237,13 +1275,49 @@ export default function StudentSubmission() {
                                   <FormLabel>Approximate Words</FormLabel>
                                   <FormControl>
                                     <Input
-                                      type="number"
+                                      type="text"
                                       inputMode="numeric"
-                                      pattern="[0-9]*"
                                       placeholder="e.g. 15000"
                                       {...field}
+                                      onKeyDown={(e) => {
+                                        // Allow: backspace, delete, tab, escape, enter, arrows
+                                        const allowedKeys = [
+                                          "Backspace",
+                                          "Delete",
+                                          "Tab",
+                                          "Escape",
+                                          "Enter",
+                                          "ArrowLeft",
+                                          "ArrowRight",
+                                          "ArrowUp",
+                                          "ArrowDown",
+                                          "Home",
+                                          "End",
+                                        ];
+
+                                        // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                                        if (
+                                          (e.ctrlKey === true ||
+                                            e.metaKey === true) &&
+                                          ["a", "c", "v", "x"].indexOf(
+                                            e.key.toLowerCase()
+                                          ) !== -1
+                                        ) {
+                                          return;
+                                        }
+
+                                        // Allow numbers 0-9
+                                        if (
+                                          /^\d$/.test(e.key) ||
+                                          allowedKeys.includes(e.key)
+                                        ) {
+                                          return;
+                                        }
+
+                                        // Prevent the default action for all other keys
+                                        e.preventDefault();
+                                      }}
                                       onChange={(e) => {
-                                        // Remove any non-digit characters
                                         const value = e.target.value.replace(
                                           /[^\d]/g,
                                           ""
@@ -1268,13 +1342,49 @@ export default function StudentSubmission() {
                                   <FormLabel>Total Budget (BDT)</FormLabel>
                                   <FormControl>
                                     <Input
-                                      type="number"
+                                      type="text"
                                       inputMode="numeric"
-                                      pattern="[0-9]*"
                                       placeholder="e.g. 150000"
                                       {...field}
+                                      onKeyDown={(e) => {
+                                        // Allow: backspace, delete, tab, escape, enter, arrows
+                                        const allowedKeys = [
+                                          "Backspace",
+                                          "Delete",
+                                          "Tab",
+                                          "Escape",
+                                          "Enter",
+                                          "ArrowLeft",
+                                          "ArrowRight",
+                                          "ArrowUp",
+                                          "ArrowDown",
+                                          "Home",
+                                          "End",
+                                        ];
+
+                                        // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                                        if (
+                                          (e.ctrlKey === true ||
+                                            e.metaKey === true) &&
+                                          ["a", "c", "v", "x"].indexOf(
+                                            e.key.toLowerCase()
+                                          ) !== -1
+                                        ) {
+                                          return;
+                                        }
+
+                                        // Allow numbers 0-9
+                                        if (
+                                          /^\d$/.test(e.key) ||
+                                          allowedKeys.includes(e.key)
+                                        ) {
+                                          return;
+                                        }
+
+                                        // Prevent the default action for all other keys
+                                        e.preventDefault();
+                                      }}
                                       onChange={(e) => {
-                                        // Remove any non-digit characters
                                         const value = e.target.value.replace(
                                           /[^\d]/g,
                                           ""

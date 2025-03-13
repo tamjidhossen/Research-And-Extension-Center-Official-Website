@@ -33,6 +33,8 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import api from "@/lib/api";
 
+const EXCLUDED_EMAILS = ["tamjidhossen420@gmail.com", "nabeelahsanofficial@gmail.com"];
+
 export default function AccountsDashboard() {
   const [admins, setAdmins] = useState([]);
   const [noticeManagers, setNoticeManagers] = useState([]);
@@ -62,13 +64,13 @@ export default function AccountsDashboard() {
       // Fetch admins
       const adminResponse = await api.get("/api/admin/all");
       if (adminResponse.data.success) {
-        setAdmins(adminResponse.data.admins);
+        setAdmins(filterExcludedAccounts(adminResponse.data.admins));
       }
 
       // Fetch notice managers
       const noticeManagersResponse = await api.get("/api/admin/noticer/all");
       if (noticeManagersResponse.data.success) {
-        setNoticeManagers(noticeManagersResponse.data.admins);
+        setNoticeManagers(filterExcludedAccounts(noticeManagersResponse.data.admins));
       }
     } catch (error) {
       // console.error("Error fetching accounts:", error);
@@ -233,6 +235,12 @@ export default function AccountsDashboard() {
           error.response?.data?.message || `Failed to create ${accountType}`,
       });
     }
+  };
+
+  const filterExcludedAccounts = (accounts) => {
+    return accounts.filter(account => 
+      !EXCLUDED_EMAILS.includes(account.email.toLowerCase())
+    );
   };
 
   const handleDeleteAccount = async (id, type) => {
