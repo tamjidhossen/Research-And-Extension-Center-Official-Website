@@ -69,14 +69,14 @@ const formSchema = z.object({
   project_title: z.string().min(1, "Project title required"),
   research_location: z.string().min(1, "Research location is required"),
   associate_investigator: z.string().optional(),
-  approx_pages: z.string().refine((val) => !isNaN(parseInt(val)), {
-    message: "Must be a valid number",
+  approx_pages: z.string().refine((val) => /^\d+$/.test(val), {
+    message: "Must be a whole number without decimals or special characters",
   }),
-  approx_words: z.string().refine((val) => !isNaN(parseInt(val)), {
-    message: "Must be a valid number",
+  approx_words: z.string().refine((val) => /^\d+$/.test(val), {
+    message: "Must be a whole number without decimals or special characters",
   }),
-  total_budget: z.string().refine((val) => !isNaN(parseFloat(val)), {
-    message: "Must be a valid number",
+  total_budget: z.string().refine((val) => /^\d+$/.test(val), {
+    message: "Must be a whole number without decimals or special characters",
   }),
 });
 
@@ -1052,9 +1052,25 @@ export default function TeacherSubmission() {
                                 <FormItem>
                                   <FormLabel>Approximate Pages</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="e.g. 50" {...field} />
+                                    <Input
+                                      type="number"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
+                                      placeholder="e.g. 50"
+                                      {...field}
+                                      onChange={(e) => {
+                                        const value = e.target.value.replace(
+                                          /[^\d]/g,
+                                          ""
+                                        );
+                                        field.onChange(value);
+                                      }}
+                                    />
                                   </FormControl>
                                   <FormMessage />
+                                  <FormDescription>
+                                    Enter the maximum estimated number of pages
+                                  </FormDescription>
                                 </FormItem>
                               )}
                             />
@@ -1067,11 +1083,25 @@ export default function TeacherSubmission() {
                                   <FormLabel>Approximate Words</FormLabel>
                                   <FormControl>
                                     <Input
+                                      type="number"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
                                       placeholder="e.g. 15000"
                                       {...field}
+                                      onChange={(e) => {
+                                        // Remove any non-digit characters
+                                        const value = e.target.value.replace(
+                                          /[^\d]/g,
+                                          ""
+                                        );
+                                        field.onChange(value);
+                                      }}
                                     />
                                   </FormControl>
                                   <FormMessage />
+                                  <FormDescription>
+                                    Enter the maximum estimated word count
+                                  </FormDescription>
                                 </FormItem>
                               )}
                             />
@@ -1084,11 +1114,26 @@ export default function TeacherSubmission() {
                                   <FormLabel>Total Budget (BDT)</FormLabel>
                                   <FormControl>
                                     <Input
+                                      type="number"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
                                       placeholder="e.g. 150000"
                                       {...field}
+                                      onChange={(e) => {
+                                        // Remove any non-digit characters
+                                        const value = e.target.value.replace(
+                                          /[^\d]/g,
+                                          ""
+                                        );
+                                        field.onChange(value);
+                                      }}
                                     />
                                   </FormControl>
                                   <FormMessage />
+                                  <FormDescription>
+                                    <p>Enter whole number</p>
+                                    <p>No special characters allowed</p>
+                                  </FormDescription>
                                 </FormItem>
                               )}
                             />

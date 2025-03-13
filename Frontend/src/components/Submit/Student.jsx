@@ -80,14 +80,14 @@ const formSchema = z.object({
 
   // Project Details
   project_title: z.string().min(1, "Project title required"),
-  approx_pages: z.string().refine((val) => !isNaN(parseInt(val)), {
-    message: "Must be a valid number",
+  approx_pages: z.string().refine((val) => /^\d+$/.test(val), {
+    message: "Must be a whole number without decimals or special characters",
   }),
-  approx_words: z.string().refine((val) => !isNaN(parseInt(val)), {
-    message: "Must be a valid number",
+  approx_words: z.string().refine((val) => /^\d+$/.test(val), {
+    message: "Must be a whole number without decimals or special characters",
   }),
-  total_budget: z.string().refine((val) => !isNaN(parseFloat(val)), {
-    message: "Must be a valid number",
+  total_budget: z.string().refine((val) => /^\d+$/.test(val), {
+    message: "Must be a whole number without decimals or special characters",
   }),
 });
 
@@ -1206,9 +1206,25 @@ export default function StudentSubmission() {
                                 <FormItem>
                                   <FormLabel>Approximate Pages</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="e.g. 50" {...field} />
+                                    <Input
+                                      type="number"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
+                                      placeholder="e.g. 50"
+                                      {...field}
+                                      onChange={(e) => {
+                                        const value = e.target.value.replace(
+                                          /[^\d]/g,
+                                          ""
+                                        );
+                                        field.onChange(value);
+                                      }}
+                                    />
                                   </FormControl>
                                   <FormMessage />
+                                  <FormDescription>
+                                    Enter the maximum estimated number of pages
+                                  </FormDescription>
                                 </FormItem>
                               )}
                             />
@@ -1221,11 +1237,25 @@ export default function StudentSubmission() {
                                   <FormLabel>Approximate Words</FormLabel>
                                   <FormControl>
                                     <Input
+                                      type="number"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
                                       placeholder="e.g. 15000"
                                       {...field}
+                                      onChange={(e) => {
+                                        // Remove any non-digit characters
+                                        const value = e.target.value.replace(
+                                          /[^\d]/g,
+                                          ""
+                                        );
+                                        field.onChange(value);
+                                      }}
                                     />
                                   </FormControl>
                                   <FormMessage />
+                                  <FormDescription>
+                                    Enter the maximum estimated word count
+                                  </FormDescription>
                                 </FormItem>
                               )}
                             />
@@ -1238,11 +1268,26 @@ export default function StudentSubmission() {
                                   <FormLabel>Total Budget (BDT)</FormLabel>
                                   <FormControl>
                                     <Input
+                                      type="number"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
                                       placeholder="e.g. 150000"
                                       {...field}
+                                      onChange={(e) => {
+                                        // Remove any non-digit characters
+                                        const value = e.target.value.replace(
+                                          /[^\d]/g,
+                                          ""
+                                        );
+                                        field.onChange(value);
+                                      }}
                                     />
                                   </FormControl>
                                   <FormMessage />
+                                  <FormDescription>
+                                    <p>Enter whole number</p>
+                                    <p>No special characters allowed</p>
+                                  </FormDescription>
                                 </FormItem>
                               )}
                             />
