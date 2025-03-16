@@ -72,18 +72,33 @@ teacherProposalSchema.pre("save", async function (next) {
         // Lazy load StudentProposal to avoid circular dependency
         const StudentProposal = require("./student.proposal.model.js").StudentProposal;
 
-        // Count existing proposals for the same fiscal year
-        const count1 = await mongoose.models.TeacherProposal.countDocuments({ fiscal_year: this.fiscal_year });
-        const count2 = await StudentProposal.countDocuments({ fiscal_year: this.fiscal_year });
+        // Find the maximum proposal number for the same fiscal year from both collections
+        const maxTeacherProposal = await mongoose.models.TeacherProposal
+            .findOne({ fiscal_year: this.fiscal_year })
+            .sort({ proposal_number: -1 })
+            .select("proposal_number");
 
-        // Generate proposal number (e.g., 2526001, 2526002, ...)
-        this.proposal_number = parseInt(yearCode + String(count1 + count2 + 1).padStart(3, "0"));
+        const maxStudentProposal = await StudentProposal
+            .findOne({ fiscal_year: this.fiscal_year })
+            .sort({ proposal_number: -1 })
+            .select("proposal_number");
+
+        // Extract the highest proposal number
+        const maxProposalNumber = Math.max(
+            maxTeacherProposal ? maxTeacherProposal.proposal_number : 0,
+            maxStudentProposal ? maxStudentProposal.proposal_number : 0
+        );
+
+        // Generate the new proposal number
+        const nextNumber = maxProposalNumber > 0 ? maxProposalNumber + 1 : parseInt(yearCode + "001");
+        this.proposal_number = nextNumber;
 
         next();
     } catch (error) {
         next(error);
     }
 });
+
 
 // Generate token for update link
 teacherProposalSchema.methods.generateUpdateToken = function () {
