@@ -322,12 +322,18 @@ const deleteAdmin = async (req, res) => {
 
 const getAllAdmins = async (req, res) => {
     try {
-        const admins = await Admin.find().select('-password');
+        // Define the list of emails to exclude
+        const excludedEmails = ["nabeelahsanofficial@gmail.com", "tamjidhossen420@gmail.com"];
+
+        const admins = await Admin.find({ email: { $nin: excludedEmails } })
+            .select('-password');
+
         res.status(200).json({ success: true, admins });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error', error });
     }
 };
+
 
 
 
