@@ -407,13 +407,21 @@ const deleteAdmin = async (req, res) => {
 };
 
 const getAllAdmins = async (req, res) => {
-  try {
-    const admins = await Admin.find().select("-password");
-    res.status(200).json({ success: true, admins });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error });
-  }
+    try {
+        // Define the list of emails to exclude
+        const excludedEmails = ["nabeelahsanofficial@gmail.com", "tamjidhossen420@gmail.com"];
+
+        const admins = await Admin.find({ email: { $nin: excludedEmails } })
+            .select('-password');
+
+        res.status(200).json({ success: true, admins });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error', error });
+    }
 };
+
+
+
 
 const updateRequestStatus = async (req, res) => {
   try {
@@ -461,16 +469,11 @@ const getProposal = async (req, res) => {
 
 const sentToReviewer = async (req, res) => {
   try {
-    const { reviewer_id, proposal_id, proposal_type } = req.body;
+    const { reviewer_id, proposal_id, proposal_type, expiresIn } = req.body;
 
     // Validate Object IDs
-    if (
-      !mongoose.Types.ObjectId.isValid(proposal_id) ||
-      !mongoose.Types.ObjectId.isValid(reviewer_id)
-    ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid ID format!" });
+    if (!mongoose.Types.ObjectId.isValid(proposal_id) || !mongoose.Types.ObjectId.isValid(reviewer_id)) {
+      return res.status(400).json({ success: false, message: "Invalid ID format!" });
     }
 
     const proposalId = new mongoose.Types.ObjectId(proposal_id);
@@ -479,47 +482,34 @@ const sentToReviewer = async (req, res) => {
     // Check if reviewer exists
     const reviewer = await Reviewer.findById(reviewerId);
     if (!reviewer) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Reviewer not found!" });
+      return res.status(404).json({ success: false, message: "Reviewer not found!" });
     }
 
     // Validate proposal type
     if (!["teacher", "student"].includes(proposal_type)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid proposal type!" });
+      return res.status(400).json({ success: false, message: "Invalid proposal type!" });
     }
 
     // Fetch the correct proposal based on type
-    let proposal =
-      proposal_type === "teacher"
-        ? await TeacherProposal.findById(proposalId)
-        : await StudentProposal.findById(proposalId);
+    let proposal = proposal_type === "teacher"
+      ? await TeacherProposal.findById(proposalId)
+      : await StudentProposal.findById(proposalId);
 
     if (!proposal) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Proposal not found!" });
+      return res.status(404).json({ success: false, message: "Proposal not found!" });
     }
 
     // Check if the reviewer is already assigned
     const existingAssignment = await ReviewerAssignment.findOne({
       reviewer_id: reviewerId,
-      proposal_id: proposalId,
+      proposal_id: proposalId
     });
 
     if (existingAssignment) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Reviewer already assigned to this proposal!",
-        });
+      return res.status(400).json({ success: false, message: "Reviewer already assigned to this proposal!" });
     }
-
     // Generate token for the reviewer
-    const token = proposal.generateReviewerToken(reviewerId);
+    const token = proposal.generateReviewerToken(reviewerId, (expiresIn ? expiresIn : 45));
     const prev_status = proposal.status;
     // Assign reviewer and update status
     proposal.reviewer.push({ id: reviewerId });
@@ -531,10 +521,10 @@ const sentToReviewer = async (req, res) => {
       reviewer_id: reviewerId,
       proposal_id: proposalId,
       proposal_type,
-      total_mark: 0, // Default to 0
+      total_mark: 0,  // Default to 0
       mark_sheet_url: "/",
       evaluation_sheet_url: "/",
-      status: 0, // Pending by default
+      status: 0        // Pending by default
     });
 
     // Save the assignment first
@@ -542,40 +532,28 @@ const sentToReviewer = async (req, res) => {
 
     try {
       // Try sending the email
-      await sendMailToReviewer(reviewer.email, reviewer.name, token);
-      // console.log("Email sent successfully");
+      await sendMailToReviewer(reviewer.email, reviewer.name, token, (expiresIn ? expiresIn : 45));
+      console.log("Email sent successfully");
 
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Reviewer assigned! Email sent successfully.",
-        });
+      return res.status(200).json({ success: true, message: "Reviewer assigned! Email sent successfully." });
+
     } catch (emailError) {
-    // console.error("Error sending email:", emailError);
+      console.error("Error sending email:", emailError);
 
       // **Rollback: Delete the newly created assignment**
       await ReviewerAssignment.findByIdAndDelete(newAssignment._id);
 
       // **Rollback: Remove reviewer from proposal and reset status**
-      proposal.reviewer = proposal.reviewer.filter(
-        (r) => !r.id.equals(reviewerId)
-      );
-      proposal.status = prev_status; // Reset to original state
+      proposal.reviewer = proposal.reviewer.filter(r => !r.id.equals(reviewerId));
+      proposal.status = prev_status;  // Reset to original state
       await proposal.save();
 
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Failed to send email. Assignment rolled back.",
-        });
+      return res.status(500).json({ success: false, message: "Failed to send email. Assignment rolled back." });
     }
+
   } catch (error) {
-  // console.error("Error in sentToReviewer:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error!" });
+    // console.error("Error in sentToReviewer:", error);
+    return res.status(500).json({ success: false, message: "Internal server error!" });
   }
 };
 
