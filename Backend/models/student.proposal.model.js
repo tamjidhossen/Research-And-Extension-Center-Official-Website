@@ -78,18 +78,33 @@ studentProposalSchema.pre("save", async function (next) {
         // Lazy load TeacherProposal to avoid circular dependency
         const TeacherProposal = require("./teacher.proposal.model.js").TeacherProposal;
 
-        // Count existing proposals for the same fiscal year
-        const count1 = await mongoose.models.StudentProposal.countDocuments({ fiscal_year: this.fiscal_year });
-        const count2 = await TeacherProposal.countDocuments({ fiscal_year: this.fiscal_year });
+        // Find the maximum proposal number for the same fiscal year from both collections
+        const maxStudentProposal = await mongoose.models.StudentProposal
+            .findOne({ fiscal_year: this.fiscal_year })
+            .sort({ proposal_number: -1 })
+            .select("proposal_number");
 
-        // Generate proposal number (e.g., 2526001, 2526002, ...)
-        this.proposal_number = parseInt(yearCode + String(count1 + count2 + 1).padStart(3, "0"));
+        const maxTeacherProposal = await TeacherProposal
+            .findOne({ fiscal_year: this.fiscal_year })
+            .sort({ proposal_number: -1 })
+            .select("proposal_number");
+
+        // Extract the highest proposal number
+        const maxProposalNumber = Math.max(
+            maxStudentProposal ? maxStudentProposal.proposal_number : 0,
+            maxTeacherProposal ? maxTeacherProposal.proposal_number : 0
+        );
+
+        // Generate the new proposal number
+        const nextNumber = maxProposalNumber > 0 ? maxProposalNumber + 1 : parseInt(yearCode + "001");
+        this.proposal_number = nextNumber;
 
         next();
     } catch (error) {
         next(error);
     }
 });
+
 
 // Generate token for update link
 studentProposalSchema.methods.generateUpdateToken = function () {
@@ -101,13 +116,19 @@ studentProposalSchema.methods.generateUpdateToken = function () {
 };
 
 // Generate token for reviewer access
-studentProposalSchema.methods.generateReviewerToken = function (reviewer_id) {
+studentProposalSchema.methods.generateReviewerToken = function (reviewer_id, expiresIn = 45) {
+    // If expiresIn is a number, convert it to a string with "d" suffix
+    if (typeof expiresIn === "number") {
+        expiresIn = `${expiresIn}d`;
+    }
+
     return jwt.sign(
         { proposal_id: this._id, reviewer_id: reviewer_id, proposal_type: "student" },
         process.env.SECRET_KEY_REVIEWER,
-        { expiresIn: "45d" }
+        { expiresIn: expiresIn }
     );
 };
+
 
 // Register model safely
 const StudentProposal = mongoose.models.StudentProposal || mongoose.model("StudentProposal", studentProposalSchema);
