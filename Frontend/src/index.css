@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 210 11% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 11% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 11% 15%;
+    --primary: 150 70% 40%; /* Emerald green */
+    --primary-foreground: 150 5% 95%;
+    --secondary: 160 40% 96%;
+    --secondary-foreground: 157 66% 20%;
+    --muted: 160 20% 96%;
+    --muted-foreground: 215 14% 45%;
+    --accent: 162 70% 95%;
+    --accent-foreground: 157 66% 20%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 150 20% 90%;
+    --input: 150 20% 90%;
+    --ring: 150 70% 40%;
+    --radius: 0.75rem;
+    --chart-1: 160 70% 40%;
+    --chart-2: 180 58% 40%;
+    --chart-3: 130 37% 45%;
+    --chart-4: 105 74% 40%;
+    --chart-5: 200 87% 40%;
+  }
+
+  .dark {
+    --background: 160 30% 6%;
+    --foreground: 160 5% 90%;
+    --card: 160 25% 9%;
+    --card-foreground: 160 5% 90%;
+    --popover: 160 45% 7%;
+    --popover-foreground: 160 5% 90%;
+    --primary: 150 60% 45%; /* Emerald green */
+    --primary-foreground: 160 5% 10%;
+    --secondary: 157 42% 15%;
+    --secondary-foreground: 160 5% 90%;
+    --muted: 157 30% 15%;
+    --muted-foreground: 215 10% 70%;
+    --accent: 157 30% 15%;
+    --accent-foreground: 160 5% 90%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 160 5% 90%;
+    --border: 157 30% 20%;
+    --input: 157 30% 20%;
+    --ring: 150 60% 45%;
+    --chart-1: 160 70% 50%;
+    --chart-2: 180 60% 45%;
+    --chart-3: 130 50% 45%;
+    --chart-4: 105 60% 40%;
+    --chart-5: 200 70% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Custom scroll bar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-emerald-300/50 dark:bg-emerald-800/50 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-emerald-400/70 dark:bg-emerald-700/70;
+  }
+}
+
+/* Additional reusable classes */
+@layer components {
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary;
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+}
