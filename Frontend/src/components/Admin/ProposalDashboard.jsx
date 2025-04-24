@@ -98,10 +98,16 @@ export default function ProposalsDashboard() {
   const [sending1Email, setSending1Email] = useState(false);
   const [sending2Email, setSending2Email] = useState(false);
   const [existingReviewers, setExistingReviewers] = useState([]);
+  const [reviewer1Expiration, setReviewer1Expiration] = useState(45); // Default 45 days
+  const [reviewer2Expiration, setReviewer2Expiration] = useState(45); // Default 45 days
+  const [removingReviewer, setRemovingReviewer] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [reviewerToDelete, setReviewerToDelete] = useState(null);
+  const [proposalForReviewerDelete, setProposalForReviewerDelete] =
+    useState(null);
+
   const [showAllocationConfirmDialog, setShowAllocationConfirmDialog] =
     useState(false);
-  const [selectedProposal, setSelectedProposal] = useState(null);
-  const [sendingEmails, setSendingEmails] = useState(false);
 
   const [showReviewerDetailsDialog, setShowReviewerDetailsDialog] =
     useState(false);
@@ -569,139 +575,6 @@ export default function ProposalsDashboard() {
     });
   };
 
-  const assignReviewers = async (proposal) => {
-    if (!proposal) return;
-
-    if (
-      !reviewerName1 ||
-      !reviewerEmail1 ||
-      !reviewerName2 ||
-      !reviewerEmail2
-    ) {
-      toast.error("Please enter all reviewer details");
-      return;
-    }
-
-    if (reviewerEmail1.toLowerCase() === reviewerEmail2.toLowerCase()) {
-      toast.error("Cannot assign the same reviewer twice");
-      return;
-    }
-
-    try {
-      setSendingEmails(true);
-      // Handle first reviewer
-      let reviewer1Id;
-      const existingReviewer1 = existingReviewers.find(
-        (r) => r.email.toLowerCase() === reviewerEmail1.toLowerCase()
-      );
-
-      if (existingReviewer1) {
-        reviewer1Id = existingReviewer1._id;
-      } else {
-        // Create new reviewer
-        const newReviewer1Res = await api.post("/api/admin/reviewer/add", {
-          name: reviewerName1,
-          email: reviewerEmail1,
-        });
-
-        if (newReviewer1Res.data && newReviewer1Res.data.reviewer) {
-          reviewer1Id = newReviewer1Res.data.reviewer._id;
-          // Add to existing reviewers
-          setExistingReviewers([
-            ...existingReviewers,
-            newReviewer1Res.data.reviewer,
-          ]);
-        } else {
-          throw new Error("Failed to create reviewer 1");
-        }
-      }
-
-      // Handle second reviewer
-      let reviewer2Id;
-      const existingReviewer2 = existingReviewers.find(
-        (r) => r.email.toLowerCase() === reviewerEmail2.toLowerCase()
-      );
-
-      if (existingReviewer2) {
-        reviewer2Id = existingReviewer2._id;
-      } else {
-        // Create new reviewer
-        const newReviewer2Res = await api.post("/api/admin/reviewer/add", {
-          name: reviewerName2,
-          email: reviewerEmail2,
-        });
-
-        if (newReviewer2Res.data && newReviewer2Res.data.reviewer) {
-          reviewer2Id = newReviewer2Res.data.reviewer._id;
-          // Add to existing reviewers
-          setExistingReviewers([
-            ...existingReviewers,
-            newReviewer2Res.data.reviewer,
-          ]);
-        } else {
-          throw new Error("Failed to create reviewer 2");
-        }
-      }
-
-      // USE THE PROPOSAL PASSED AS ARGUMENT INSTEAD OF selectedProposal
-      // Send first reviewer invitation
-      await api.post("/api/admin/research-proposal/sent-to-reviewer", {
-        proposal_id: proposal.id,
-        proposal_type: proposal.applicantType.toLowerCase(),
-        reviewer_id: reviewer1Id,
-      });
-
-      // Send second reviewer invitation
-      await api.post("/api/admin/research-proposal/sent-to-reviewer", {
-        proposal_id: proposal.id,
-        proposal_type: proposal.applicantType.toLowerCase(),
-        reviewer_id: reviewer2Id,
-      });
-
-      toast.success("Reviewer invitations sent successfully");
-
-      // Update the proposal in the local state using proposal.id
-      setProposals((prevProposals) =>
-        prevProposals.map((p) =>
-          p.id === proposal.id
-            ? {
-                ...p,
-                reviewers: [
-                  {
-                    id: reviewer1Id,
-                    name: reviewerName1,
-                    email: reviewerEmail1,
-                  },
-                  {
-                    id: reviewer2Id,
-                    name: reviewerName2,
-                    email: reviewerEmail2,
-                  },
-                ],
-                status: 1, // Set to "Under Review"
-              }
-            : p
-        )
-      );
-
-      // Reset reviewer inputs
-      setReviewerName1("");
-      setReviewerEmail1("");
-      setReviewerName2("");
-      setReviewerEmail2("");
-
-      // Update statistics
-      fetchProposals();
-    } catch (error) {
-      // console.error("Failed to assign reviewers:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to assign reviewers"
-      );
-    } finally {
-      setSendingEmails(false);
-    }
-  };
-
   const deleteProposal = async (proposalId) => {
     try {
       const proposal = proposals.find((p) => p.id === proposalId);
@@ -741,6 +614,12 @@ export default function ProposalsDashboard() {
       return;
     }
 
+    // Validate expiration days
+    if (!reviewer1Expiration || reviewer1Expiration < 1) {
+      toast.error("Please enter a valid expiration period (minimum 1 day)");
+      return;
+    }
+
     try {
       setSending1Email(true);
 
@@ -776,10 +655,12 @@ export default function ProposalsDashboard() {
         proposal_id: proposal.id,
         proposal_type: proposal.applicantType.toLowerCase(),
         reviewer_id: reviewer1Id,
+        expiresIn: reviewer1Expiration,
       });
 
       toast.success("Invitation sent to Reviewer 1");
       setReviewer1Sent(true);
+      setReviewer1Expiration(45);
 
       // Update the proposal in the local state - add reviewer1
       setProposals((prevProposals) =>
@@ -793,6 +674,7 @@ export default function ProposalsDashboard() {
                     id: reviewer1Id,
                     name: reviewerName1,
                     email: reviewerEmail1,
+                    expiresIn: reviewer1Expiration,
                   },
                 ],
                 status: 1, // Set to "Under Review"
@@ -803,6 +685,7 @@ export default function ProposalsDashboard() {
 
       // Fetch reviewer assignments to update status info
       fetchReviewerAssignments();
+      
     } catch (error) {
       // console.error("Failed to assign reviewer 1:", error);
       toast.error(
@@ -823,6 +706,12 @@ export default function ProposalsDashboard() {
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!emailRegex.test(reviewerEmail2)) {
       toast.error("Please enter a valid email address for reviewer 2");
+      return;
+    }
+
+    // Validate expiration days
+    if (!reviewer2Expiration || reviewer2Expiration < 1) {
+      toast.error("Please enter a valid expiration period (minimum 1 day)");
       return;
     }
 
@@ -871,10 +760,12 @@ export default function ProposalsDashboard() {
         proposal_id: proposal.id,
         proposal_type: proposal.applicantType.toLowerCase(),
         reviewer_id: reviewer2Id,
+        expiresIn: reviewer2Expiration,
       });
 
       toast.success("Invitation sent to Reviewer 2");
       setReviewer2Sent(true);
+      setReviewer2Expiration(45);
 
       // Update the proposal in the local state - add reviewer2
       setProposals((prevProposals) =>
@@ -888,6 +779,7 @@ export default function ProposalsDashboard() {
                     id: reviewer2Id,
                     name: reviewerName2,
                     email: reviewerEmail2,
+                    expiresIn: reviewer2Expiration,
                   },
                 ],
                 status: 1, // Keep status as "Under Review"
@@ -985,6 +877,103 @@ export default function ProposalsDashboard() {
     )
       .toString()
       .padStart(2, "0")}/${date.getFullYear()}`;
+  };
+
+  const removeReviewer = async (proposal, reviewer) => {
+    if (!reviewerToDelete || !proposalForReviewerDelete) return;
+    try {
+      setRemovingReviewer(true);
+
+      // Call the API to remove the reviewer assignment
+      await api.post("/api/admin/research-proposal/reviewer/remove", {
+        reviewer_id: reviewerToDelete.id,
+        proposal_id: proposalForReviewerDelete.id,
+        proposal_type: proposalForReviewerDelete.applicantType.toLowerCase(),
+      });
+
+      // Update local state by removing the reviewer from the proposal
+      setProposals((prevProposals) =>
+        prevProposals.map((p) => {
+          if (p.id === proposalForReviewerDelete.id) {
+            return {
+              ...p,
+              reviewers: p.reviewers.filter(
+                (r) => r.id !== reviewerToDelete.id
+              ),
+              // If no reviewers left, reset status to 0 (pending)
+              status: p.reviewers.length === 1 ? 0 : p.status,
+            };
+          }
+          return p;
+        })
+      );
+
+      // Update selected proposal reviewers if needed
+      if (
+        selectedProposalReviewers &&
+        selectedProposalReviewers.proposal.id === proposalForReviewerDelete.id
+      ) {
+        setSelectedProposalReviewers({
+          ...selectedProposalReviewers,
+          reviewers: selectedProposalReviewers.reviewers.filter(
+            (r) => r.id !== reviewerToDelete.id
+          ),
+        });
+      }
+
+      // Fetch the latest assignments to update UI
+      fetchReviewerAssignments();
+
+      toast.success("Reviewer removed successfully");
+
+      setShowDeleteConfirmDialog(false);
+
+      // If removing from the assign reviewers dialog, close it and reset fields if no reviewers left
+      if (!showReviewerDetailsDialog) {
+        // Find the updated proposal
+        const updatedProposal = proposals.find(
+          (p) => p.id === proposalForReviewerDelete.id
+        );
+        const reviewersLeft =
+          updatedProposal?.reviewers?.filter(
+            (r) => r.id !== reviewerToDelete.id
+          ).length || 0;
+
+        if (reviewersLeft === 0) {
+          // Reset reviewer fields
+          setReviewerName1("");
+          setReviewerEmail1("");
+          setReviewer1Sent(false);
+          setReviewer1Expiration(45);
+          setReviewerName2("");
+          setReviewerEmail2("");
+          setReviewer2Sent(false);
+          setReviewer2Expiration(45);
+          // Close the dialog
+          document.querySelector("dialog")?.close();
+        } else {
+          document.querySelector("dialog")?.close();
+        }
+      } else {
+        // Close the main dialog if removing from the reviewer details dialog
+        setShowReviewerDetailsDialog(false);
+      }
+
+      // Reset state
+      setReviewerToDelete(null);
+      setProposalForReviewerDelete(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to remove reviewer");
+    } finally {
+      setRemovingReviewer(false);
+    }
+  };
+
+  // Add a function to open the delete confirmation dialog
+  const confirmRemoveReviewer = (proposal, reviewer) => {
+    setReviewerToDelete(reviewer);
+    setProposalForReviewerDelete(proposal);
+    setShowDeleteConfirmDialog(true);
   };
 
   return (
@@ -1501,7 +1490,7 @@ export default function ProposalsDashboard() {
                         </DialogContent>
                       </Dialog>
 
-                      {/* Assign Reviewers - Fixed version with complete form fields */}
+                      {/* Assign Reviewers */}
                       {proposal.reviewers && proposal.reviewers.length < 2 ? (
                         <Dialog>
                           <DialogTrigger
@@ -1592,7 +1581,7 @@ export default function ProposalsDashboard() {
                             <div className="grid gap-4 py-4">
                               {proposal.reviewers.length === 0 ? (
                                 <>
-                                  {/* First reviewer form - fully implemented */}
+                                  {/* First reviewer form */}
                                   <div>
                                     <h3 className="text-sm font-medium mb-2 flex items-center">
                                       <User className="h-4 w-4 mr-2 text-emerald-600" />
@@ -1648,6 +1637,25 @@ export default function ProposalsDashboard() {
                                         }
                                       />
                                     </div>
+                                    <div className="grid gap-2 mt-2">
+                                      <Label htmlFor="reviewer1Expiration">
+                                        Expires In (Days)
+                                      </Label>
+                                      <Input
+                                        id="reviewer1Expiration"
+                                        type="number"
+                                        min="1"
+                                        max="90"
+                                        placeholder="Days until expiration"
+                                        value={reviewer1Expiration}
+                                        onChange={(e) =>
+                                          setReviewer1Expiration(
+                                            Number(e.target.value)
+                                          )
+                                        }
+                                        disabled={reviewer1Sent}
+                                      />
+                                    </div>
 
                                     <div className="mt-2 flex justify-end">
                                       {reviewer1Sent ? (
@@ -1695,142 +1703,203 @@ export default function ProposalsDashboard() {
                                   </h3>
 
                                   {/* Access reviewer data from the proposal or state depending on what's available */}
-                                  <p className="text-sm text-blue-700">
-                                    {reviewerName1 ||
-                                      proposal.reviewers[0]?.name ||
-                                      "Unknown"}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {reviewerEmail1 ||
-                                      proposal.reviewers[0]?.email ||
-                                      "Email not available"}
-                                  </p>
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <p className="text-sm text-blue-700">
+                                        {reviewerName1 ||
+                                          proposal.reviewers[0]?.name ||
+                                          "Unknown"}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {reviewerEmail1 ||
+                                          proposal.reviewers[0]?.email ||
+                                          "Email not available"}
+                                      </p>
 
-                                  {/* Add status indicator for first reviewer */}
-                                  {(() => {
-                                    const reviewerIdStr =
-                                      typeof proposal.reviewers[0].id ===
-                                      "object"
-                                        ? proposal.reviewers[0].id._id?.toString() ||
-                                          proposal.reviewers[0].id.toString()
-                                        : proposal.reviewers[0].id.toString();
+                                      {/* Add status indicator for first reviewer */}
+                                      {(() => {
+                                        const reviewerIdStr =
+                                          typeof proposal.reviewers[0].id ===
+                                          "object"
+                                            ? proposal.reviewers[0].id._id?.toString() ||
+                                              proposal.reviewers[0].id.toString()
+                                            : proposal.reviewers[0].id.toString();
 
-                                    // Find the matching assignment checking both reviewer ID and proposal ID
-                                    const assignment = reviewAssignments.find(
-                                      (a) => {
-                                        const assignmentReviewerIdStr =
-                                          typeof a.reviewer_id === "object"
-                                            ? a.reviewer_id._id?.toString() ||
-                                              a.reviewer_id.toString()
-                                            : a.reviewer_id.toString();
+                                        // Find the matching assignment checking both reviewer ID and proposal ID
+                                        const assignment =
+                                          reviewAssignments.find((a) => {
+                                            const assignmentReviewerIdStr =
+                                              typeof a.reviewer_id === "object"
+                                                ? a.reviewer_id._id?.toString() ||
+                                                  a.reviewer_id.toString()
+                                                : a.reviewer_id.toString();
 
-                                        const assignmentProposalIdStr =
-                                          typeof a.proposal_id === "object"
-                                            ? a.proposal_id._id?.toString() ||
-                                              a.proposal_id.toString()
-                                            : a.proposal_id.toString();
+                                            const assignmentProposalIdStr =
+                                              typeof a.proposal_id === "object"
+                                                ? a.proposal_id._id?.toString() ||
+                                                  a.proposal_id.toString()
+                                                : a.proposal_id.toString();
 
-                                        return (
-                                          reviewerIdStr ===
-                                            assignmentReviewerIdStr &&
-                                          proposal.id.toString() ===
-                                            assignmentProposalIdStr
-                                        );
-                                      }
-                                    );
+                                            return (
+                                              reviewerIdStr ===
+                                                assignmentReviewerIdStr &&
+                                              proposal.id.toString() ===
+                                                assignmentProposalIdStr
+                                            );
+                                          });
 
-                                    if (assignment && assignment.status === 1) {
-                                      return (
-                                        <>
-                                          <div className="mt-1 flex items-center text-green-600 text-xs">
-                                            <CheckCircle className="h-3 w-3 mr-1" />
-                                            <span>Review submitted</span>
-                                          </div>
-                                          {assignment.total_mark && (
-                                            <div className="mt-1 flex items-center text-blue-600 text-xs">
-                                              <Star className="h-3 w-3 mr-1" />
-                                              <span>
-                                                Marks: {assignment.total_mark}
-                                                /100
-                                              </span>
-                                            </div>
-                                          )}
-                                          {/* Marksheet button */}
-                                          {assignment.mark_sheet_url &&
-                                            assignment.mark_sheet_url !==
-                                              "/" && (
-                                              <div className="mt-1">
-                                                <Button
-                                                  variant="ghost"
-                                                  size="sm"
-                                                  className="text-xs p-0 h-auto text-blue-600 hover:text-blue-800"
-                                                  onClick={() => {
-                                                    const baseUrl =
-                                                      import.meta.env
-                                                        .VITE_API_URL || "";
-                                                    const serverRoot =
-                                                      baseUrl.replace(
-                                                        /\/v1$/,
-                                                        ""
-                                                      );
-                                                    const fileUrl = `${serverRoot}/${assignment.mark_sheet_url}`;
-                                                    window.open(
-                                                      fileUrl,
-                                                      "_blank"
-                                                    );
-                                                  }}
-                                                >
-                                                  <Download className="h-3 w-3 mr-1" />
-                                                  <span>View marksheet</span>
-                                                </Button>
+                                        if (
+                                          assignment &&
+                                          assignment.status === 1
+                                        ) {
+                                          return (
+                                            <>
+                                              <div className="mt-1 flex items-center text-green-600 text-xs">
+                                                <CheckCircle className="h-3 w-3 mr-1" />
+                                                <span>Review submitted</span>
                                               </div>
-                                            )}
-                                          {/* Add evaluation sheet button */}
-                                          {assignment.evaluation_sheet_url &&
-                                            assignment.evaluation_sheet_url !==
-                                              "/" && (
-                                              <div className="mt-1">
-                                                <Button
-                                                  variant="ghost"
-                                                  size="sm"
-                                                  className="text-xs p-0 h-auto text-green-600 hover:text-green-800"
-                                                  onClick={() => {
-                                                    const baseUrl =
-                                                      import.meta.env
-                                                        .VITE_API_URL || "";
-                                                    const serverRoot =
-                                                      baseUrl.replace(
-                                                        /\/v1$/,
-                                                        ""
-                                                      );
-                                                    const fileUrl = `${serverRoot}/${assignment.evaluation_sheet_url}`;
-                                                    window.open(
-                                                      fileUrl,
-                                                      "_blank"
-                                                    );
-                                                  }}
-                                                >
-                                                  <Download className="h-3 w-3 mr-1" />
+                                              {assignment.total_mark && (
+                                                <div className="mt-1 flex items-center text-blue-600 text-xs">
+                                                  <Star className="h-3 w-3 mr-1" />
                                                   <span>
-                                                    View Proposal Review Form
+                                                    Marks:{" "}
+                                                    {assignment.total_mark}
+                                                    /100
                                                   </span>
-                                                </Button>
-                                              </div>
-                                            )}
-                                        </>
-                                      );
-                                    }
-                                    return (
-                                      <div className="mt-1 flex items-center text-amber-600 text-xs">
-                                        <Clock className="h-3 w-3 mr-1" />
-                                        <span>Pending review</span>
-                                      </div>
-                                    );
-                                  })()}
+                                                </div>
+                                              )}
+                                              {/* Marksheet button */}
+                                              {assignment.mark_sheet_url &&
+                                                assignment.mark_sheet_url !==
+                                                  "/" && (
+                                                  <div className="mt-1">
+                                                    <Button
+                                                      variant="ghost"
+                                                      size="sm"
+                                                      className="text-xs p-0 h-auto text-blue-600 hover:text-blue-800"
+                                                      onClick={() => {
+                                                        const baseUrl =
+                                                          import.meta.env
+                                                            .VITE_API_URL || "";
+                                                        const serverRoot =
+                                                          baseUrl.replace(
+                                                            /\/v1$/,
+                                                            ""
+                                                          );
+                                                        const fileUrl = `${serverRoot}/${assignment.mark_sheet_url}`;
+                                                        window.open(
+                                                          fileUrl,
+                                                          "_blank"
+                                                        );
+                                                      }}
+                                                    >
+                                                      <Download className="h-3 w-3 mr-1" />
+                                                      <span>
+                                                        View marksheet
+                                                      </span>
+                                                    </Button>
+                                                  </div>
+                                                )}
+                                              {/* Add evaluation sheet button */}
+                                              {assignment.evaluation_sheet_url &&
+                                                assignment.evaluation_sheet_url !==
+                                                  "/" && (
+                                                  <div className="mt-1">
+                                                    <Button
+                                                      variant="ghost"
+                                                      size="sm"
+                                                      className="text-xs p-0 h-auto text-green-600 hover:text-green-800"
+                                                      onClick={() => {
+                                                        const baseUrl =
+                                                          import.meta.env
+                                                            .VITE_API_URL || "";
+                                                        const serverRoot =
+                                                          baseUrl.replace(
+                                                            /\/v1$/,
+                                                            ""
+                                                          );
+                                                        const fileUrl = `${serverRoot}/${assignment.evaluation_sheet_url}`;
+                                                        window.open(
+                                                          fileUrl,
+                                                          "_blank"
+                                                        );
+                                                      }}
+                                                    >
+                                                      <Download className="h-3 w-3 mr-1" />
+                                                      <span>
+                                                        View Proposal Review
+                                                        Form
+                                                      </span>
+                                                    </Button>
+                                                  </div>
+                                                )}
+                                            </>
+                                          );
+                                        }
+                                        return (
+                                          <div className="mt-1 flex items-center text-amber-600 text-xs">
+                                            <Clock className="h-3 w-3 mr-1" />
+                                            <span>Pending review</span>
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
+                                    {/* Add delete button */}
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 text-red-600 border-red-200 hover:bg-red-50"
+                                      title="Remove reviewer"
+                                      onClick={(e) => {
+                                        e.stopPropagation(); // Prevent dialog from closing
+                                        // Get the best available name/email for reviewer 1
+                                        const reviewer = proposal.reviewers[0];
+                                        const existingReviewerData =
+                                          existingReviewers.find(
+                                            (r) =>
+                                              r._id &&
+                                              reviewer.id &&
+                                              (r._id.toString() ===
+                                                reviewer.id.toString() ||
+                                                r.email.toLowerCase() ===
+                                                  reviewer.email?.toLowerCase())
+                                          );
+                                        confirmRemoveReviewer(proposal, {
+                                          ...reviewer,
+                                          name:
+                                            existingReviewerData?.name ||
+                                            reviewer.name ||
+                                            "Unknown",
+                                          email:
+                                            existingReviewerData?.email ||
+                                            reviewer.email ||
+                                            "",
+                                        });
+                                      }}
+                                      disabled={
+                                        removingReviewer ||
+                                        // Check if review is already submitted
+                                        reviewAssignments.some(
+                                          (a) =>
+                                            a.reviewer_id._id?.toString() ===
+                                              proposal.reviewers[0].id.toString() &&
+                                            a.proposal_id.toString() ===
+                                              proposal.id.toString() &&
+                                            a.status === 1
+                                        )
+                                      }
+                                    >
+                                      {removingReviewer ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </div>
                                 </div>
                               )}
 
-                              {/* Second reviewer form - fully implemented */}
+                              {/* Second reviewer form */}
                               <div>
                                 <h3 className="text-sm font-medium mb-2 flex items-center">
                                   <User className="h-4 w-4 mr-2 text-emerald-600" />
@@ -1880,6 +1949,25 @@ export default function ProposalsDashboard() {
                                           reviewerEmail2.toLowerCase()
                                       )
                                     }
+                                  />
+                                </div>
+                                <div className="grid gap-2 mt-2">
+                                  <Label htmlFor="reviewer2Expiration">
+                                    Expires In (Days)
+                                  </Label>
+                                  <Input
+                                    id="reviewer2Expiration"
+                                    type="number"
+                                    min="1"
+                                    max="90"
+                                    placeholder="Days until expiration"
+                                    value={reviewer2Expiration}
+                                    onChange={(e) =>
+                                      setReviewer2Expiration(
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    disabled={reviewer2Sent}
                                   />
                                 </div>
 
@@ -1932,28 +2020,6 @@ export default function ProposalsDashboard() {
                                 </div>
                               </div>
                             </div>
-                            {/* <DialogFooter>
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  // Simply close dialog without fetching data
-                                  setReviewer1Sent(false);
-                                  setReviewer2Sent(false);
-
-                                  // Only reset form fields if needed
-                                  if (proposal.reviewers.length === 0) {
-                                    setReviewerName1("");
-                                    setReviewerEmail1("");
-                                  }
-                                  setReviewerName2("");
-                                  setReviewerEmail2("");
-                                }}
-                              >
-                                {reviewer2Sent || reviewer1Sent
-                                  ? "Close"
-                                  : "Cancel"}
-                              </Button>
-                            </DialogFooter> */}
                           </DialogContent>
                         </Dialog>
                       ) : proposal.status === 3 ? (
@@ -2163,6 +2229,7 @@ export default function ProposalsDashboard() {
           </TableBody>
         </Table>
       </div>
+
       {/* Allocation Dialog */}
       <Dialog
         open={showAllocationDialog}
@@ -2372,16 +2439,37 @@ export default function ProposalsDashboard() {
                       {reviewer.name || "Unknown Name"}
                     </span>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      reviewer.status === 1
-                        ? "bg-green-100 text-green-800 border-green-200"
-                        : "bg-amber-100 text-amber-800 border-amber-200"
-                    }
-                  >
-                    {reviewer.status === 1 ? "Reviewed" : "Pending"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={
+                        reviewer.status === 1
+                          ? "bg-green-100 text-green-800 border-green-200"
+                          : "bg-amber-100 text-amber-800 border-amber-200"
+                      }
+                    >
+                      {reviewer.status === 1 ? "Reviewed" : "Pending"}
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-red-600 border-red-200 hover:bg-red-50"
+                      title="Remove reviewer"
+                      onClick={() =>
+                        confirmRemoveReviewer(
+                          selectedProposalReviewers.proposal,
+                          reviewer
+                        )
+                      }
+                      disabled={removingReviewer || reviewer.status === 1}
+                    >
+                      {removingReviewer ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="text-sm text-muted-foreground mb-2">
@@ -2428,14 +2516,66 @@ export default function ProposalsDashboard() {
                       )}
                   </div>
                 ) : (
-                  <div className="text-sm flex items-center text-amber-700">
-                    <Clock className="h-3.5 w-3.5 mr-1 text-amber-600" />
-                    Pending review
+                  <div className="space-y-2">
+                    <div className="text-sm flex items-center text-amber-700">
+                      <Clock className="h-3.5 w-3.5 mr-1 text-amber-600" />
+                      Pending review
+                    </div>
+                    {reviewer.expiresIn && (
+                      <div className="text-xs text-muted-foreground">
+                        Expires in: {reviewer.expiresIn} days
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reviewer Delete Confirmation Dialog */}
+      <Dialog
+        open={showDeleteConfirmDialog}
+        onOpenChange={setShowDeleteConfirmDialog}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Reviewer Removal</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this reviewer from the proposal?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-md my-2">
+            <p className="text-sm font-medium">
+              <span className="text-muted-foreground">Reviewer:</span>{" "}
+              {reviewerToDelete?.name || "Unknown"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {reviewerToDelete?.email || "No email available"}
+            </p>
+          </div>
+          <DialogFooter className="flex justify-end gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirmDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={removeReviewer}
+              disabled={removingReviewer}
+              className="flex items-center gap-2"
+            >
+              {removingReviewer ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Remove Reviewer
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
