@@ -33,6 +33,7 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import api from "@/lib/api";
 
+
 export default function AccountsDashboard() {
   const [admins, setAdmins] = useState([]);
   const [noticeManagers, setNoticeManagers] = useState([]);
@@ -71,7 +72,7 @@ export default function AccountsDashboard() {
         setNoticeManagers(noticeManagersResponse.data.admins);
       }
     } catch (error) {
-      console.error("Error fetching accounts:", error);
+      // console.error("Error fetching accounts:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -225,7 +226,7 @@ export default function AccountsDashboard() {
         resetFormData();
       }
     } catch (error) {
-      console.error("Error creating account:", error);
+      // console.error("Error creating account:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -254,7 +255,7 @@ export default function AccountsDashboard() {
         } deleted successfully`,
       });
     } catch (error) {
-      console.error("Error deleting account:", error);
+      // console.error("Error deleting account:", error);
       toast({
         variant: "destructive",
         title: "Error",

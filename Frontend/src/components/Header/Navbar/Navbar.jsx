@@ -162,7 +162,7 @@ const Navbar = () => {
                   <div className="p-3 rounded-md text-gray-600 dark:text-gray-300">
                     <div className="font-medium mb-2 flex items-center gap-2">
                       <FileText size={20} />
-                      <span>Submit</span>
+                      <span>Submit Proposal</span>
                     </div>
                     <div className="pl-7 flex flex-col gap-2">
                       <NavLink

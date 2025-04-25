@@ -18,30 +18,33 @@ export default function NoticeManagerLogin() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const response = await api.post("/api/admin/noticer/login", credentials);
-      
+
       if (response.data.success) {
         // Store token in cookie
         Cookies.set("noticeManagerToken", response.data.token, { expires: 1 }); // expires in 1 day
-        
+
         // Store admin noticer data in localStorage
-        localStorage.setItem("noticeManagerData", JSON.stringify({
-          name: response.data.adminNoticer.name,
-          email: response.data.adminNoticer.email,
-          id: response.data.adminNoticer.id
-        }));
-        
+        localStorage.setItem(
+          "noticeManagerData",
+          JSON.stringify({
+            name: response.data.adminNoticer.name,
+            email: response.data.adminNoticer.email,
+            id: response.data.adminNoticer.id,
+          })
+        );
+
         toast({
           title: "Success",
           description: "Logged in successfully",
         });
-        
+
         navigate("/notice-manager/dashboard");
       }
     } catch (error) {
-      console.error("Login error:", error);
+      // console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Login Failed",
@@ -56,7 +59,9 @@ export default function NoticeManagerLogin() {
     <>
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-full max-w-md p-8 space-y-6 border rounded-xl shadow-lg">
-          <h1 className="text-2xl font-bold text-center">Notice Manager Login</h1>
+          <h1 className="text-2xl font-bold text-center">
+            Notice Manager Login
+          </h1>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Email</label>

@@ -16,6 +16,7 @@ import InvoiceSubmissionPage from './components/Reviewer/InvoiceSubmission';
 import NoticeManagerLogin from './components/NoticeManager/Login';
 import NoticeManagerDashboard from './components/NoticeManager/Dashboard';
 import NoticeManagerProtectedRoute from './components/NoticeManager/ProtectedRoute';
+import DeveloperInfo from "./components/DeveloperInfo/DeveloperInfo";
 import NotFound from './components/NotFound';
 
 import {
@@ -36,6 +37,7 @@ const router = createBrowserRouter(
         <Route path="archive" element={<PrevProposals />} />
         <Route path="review" element={<ReviewerPage />} />
         <Route path="invoice/upload" element={<InvoiceSubmissionPage />} />
+        <Route path="developer-info" element={<DeveloperInfo />} />
         {/* Catch-all route for the Layout */}
         <Route path="*" element={<NotFound />} />
       </Route>

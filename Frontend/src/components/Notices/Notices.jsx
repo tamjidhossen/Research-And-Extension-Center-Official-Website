@@ -115,7 +115,7 @@ const Notices = () => {
 
         // return () => clearTimeout(timer);
       } catch (err) {
-        console.error("Failed to fetch notices:", err);
+        // console.error("Failed to fetch notices:", err);
         setError(err.response?.data?.message || "Failed to load notices");
         setLoading(false);
       }
@@ -242,25 +242,46 @@ const Notices = () => {
                   {/* Show buttons for each file attachment if exists */}
                   {notice.files &&
                     notice.files.length > 0 &&
-                    notice.files.map((file, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all duration-300 mr-2 mb-2"
-                      >
-                        <a
-                          href={`${serverRoot}/${file.url}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2"
+                    notice.files.map((file, index) => {
+                      // Convert regular number to Bengali numeral
+                      const bengaliNumerals = [
+                        "০",
+                        "১",
+                        "২",
+                        "৩",
+                        "৪",
+                        "৫",
+                        "৬",
+                        "৭",
+                        "৮",
+                        "৯",
+                      ];
+                      const bengaliIndex = (index + 1)
+                        .toString()
+                        .split("")
+                        .map((digit) => bengaliNumerals[parseInt(digit)])
+                        .join("");
+
+                      return (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all duration-300 mr-2 mb-2"
                         >
-                          <Download className="h-4 w-4" />
-                          Attachment {index + 1}
-                        </a>
-                      </Button>
-                    ))}
+                          <a
+                            href={`${serverRoot}/${file.url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2"
+                          >
+                            <Download className="h-4 w-4" />
+                            বিজ্ঞপ্তি {bengaliIndex}
+                          </a>
+                        </Button>
+                      );
+                    })}
                 </CardContent>
               </Card>
             );

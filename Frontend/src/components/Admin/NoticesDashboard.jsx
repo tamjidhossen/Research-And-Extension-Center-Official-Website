@@ -60,7 +60,7 @@ export default function NoticesDashboard() {
       );
       setNotices(sortedNotices);
     } catch (error) {
-      console.error("Failed to fetch notices:", error);
+      // console.error("Failed to fetch notices:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -177,7 +177,7 @@ export default function NoticesDashboard() {
         });
       }
     } catch (error) {
-      console.error("Failed to add notice:", error);
+      // console.error("Failed to add notice:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -198,7 +198,7 @@ export default function NoticesDashboard() {
         description: "Notice deleted successfully",
       });
     } catch (error) {
-      console.error("Failed to delete notice:", error);
+      // console.error("Failed to delete notice:", error);
       toast({
         variant: "destructive",
         title: "Error",

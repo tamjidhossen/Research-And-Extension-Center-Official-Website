@@ -127,8 +127,8 @@ export default function Home() {
               <ul className="space-y-2 text-left list-disc list-inside">
                 <li>Sustainable Development</li>
                 <li>Information Technology</li>
-                <li>Environmental Science</li>
-                <li>Social Sciences</li>
+                <li>Environmental Issues</li>
+                <li>Social Science</li>
                 <li>Business and Law</li>
                 <li>Arts and Humanities</li>
                 <li>Fine Arts</li>

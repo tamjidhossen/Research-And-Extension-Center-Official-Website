@@ -42,7 +42,7 @@ export default function InvoiceSubmission() {
 
     if (token) {
       // Store token in cookie
-      Cookies.set("invoiceToken", token, { secure: true, sameSite: 'strict' });
+      Cookies.set("invoiceToken", token, { secure: true, sameSite: "strict" });
       verifyToken(token);
     } else {
       // Check if token exists in cookie
@@ -70,10 +70,10 @@ export default function InvoiceSubmission() {
 
       if (response.data && response.data.success) {
         setAuthorized(true);
-        if(response.data.reviewer) {
+        if (response.data.reviewer) {
           setReviewer(response.data.reviewer);
         }
-        if(response.data.fiscal_year) {
+        if (response.data.fiscal_year) {
           setFiscalYear(response.data.fiscal_year);
         }
       } else {
@@ -85,7 +85,7 @@ export default function InvoiceSubmission() {
         });
       }
     } catch (error) {
-      console.error("Token verification error:", error);
+      // console.error("Token verification error:", error);
       setAuthorized(false);
       toast({
         title: "Authentication Failed",
@@ -189,7 +189,7 @@ export default function InvoiceSubmission() {
         throw new Error("Submission failed");
       }
     } catch (error) {
-      console.error("Submission error:", error);
+      // console.error("Submission error:", error);
       toast({
         title: "Submission Failed",
         description:
@@ -226,9 +226,9 @@ export default function InvoiceSubmission() {
           </CardHeader>
           <CardContent className="pt-6">
             <p className="text-center text-gray-600 dark:text-gray-300">
-              To submit an invoice, you need a valid invitation link.
-              Please check your email for an invitation or contact the Research
-              and Extension Center.
+              To submit an invoice, you need a valid invitation link. Please
+              check your email for an invitation or contact the Research and
+              Extension Center.
             </p>
           </CardContent>
         </Card>
@@ -251,7 +251,8 @@ export default function InvoiceSubmission() {
           </CardHeader>
           <CardContent className="pt-6">
             <p className="text-center text-gray-600 dark:text-gray-300">
-              Thank you for submitting your signed invoice. You can now close this window.
+              Thank you for submitting your signed invoice. You can now close
+              this window.
             </p>
           </CardContent>
         </Card>
@@ -317,7 +318,9 @@ export default function InvoiceSubmission() {
           {/* Upload Section */}
           <form onSubmit={handleSubmit}>
             <div>
-              <h3 className="font-medium mb-3">Step 2: Upload Signed Invoice</h3>
+              <h3 className="font-medium mb-3">
+                Step 2: Upload Signed Invoice
+              </h3>
               <div className="grid gap-4 mb-4">
                 <input
                   type="file"

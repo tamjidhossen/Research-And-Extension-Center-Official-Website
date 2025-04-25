@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 
 // Get the base URL from environment or use the default
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/v1";
+  import.meta.env.VITE_API_URL || "http://localhost:4000/v1";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -35,7 +35,7 @@ api.interceptors.request.use((config) => {
   }
 
   // For notice manager endpoints, prioritize notice manager token
-  if (url && url.includes("/api/admin/noticer")) {
+  if (url && (url.includes("/api/admin/noticer") || url.includes("/api/notice/"))) {
     const noticeManagerToken = Cookies.get("noticeManagerToken");
     if (noticeManagerToken) {
       config.headers.Authorization = `Bearer ${noticeManagerToken}`;
