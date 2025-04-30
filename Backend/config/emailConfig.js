@@ -3,22 +3,6 @@ require("dotenv").config();
 const fs = require('fs')
 const path = require("path");
 
-// // Configure transporter for Gmail
-// const transporter = nodemailer.createTransport({
-//   host: 'mail.jkkniu.edu.bd',  // SMTP host from your output
-//   port: 465,                   // SSL port (use 587 for TLS if needed)
-//   secure: true,
-//   auth: {
-//     user: process.env.EMAIL_USERNAME, // Your Gmail address
-//     pass: process.env.EMAIL_PASSWORD, // Your Gmail app password
-//   },
-//   tls: {
-//     rejectUnauthorized: false,  // Accept self-signed certificates
-//   },
-//   logger: true,   // Enable detailed logging
-//   debug: true,
-// });
-
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -248,11 +232,111 @@ const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => 
   }
 };
 
+const sendUpdateRequestEmail = async (to, proposalTitle, message, updateLink, expiryDays, evaluationSheetUrls = []) => {
+  try {
+    // Format message text with proper HTML line breaks
+    const formattedMessage = message
+      .replace(/\n\d+\.\s/g, '</p><p style="margin-bottom: 8px;"><strong>•</strong> ') // Convert numbered list to bullet points
+      .replace(/\n/g, '<br>'); // Convert remaining line breaks to <br> tags
 
+    // Create HTML for evaluation sheets list - without reviewer numbering
+    let evaluationSheetsHtml = '';
+    if (evaluationSheetUrls && evaluationSheetUrls.length > 0) {
+      evaluationSheetsHtml = `
+        <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+          <h3 style="margin-top: 0; color: #065f46;">Evaluation Sheets:</h3>
+          <ul style="list-style-type: none; padding-left: 10px;">
+            ${evaluationSheetUrls.map((sheet) =>
+        `<li style="margin-bottom: 12px;">
+                <a href="${process.env.BACKEND_URL || 'http://localhost:5000'}/${sheet.url}" 
+                   style="color: #065f46; text-decoration: none; display: inline-block; 
+                   border: 1px solid #065f46; padding: 8px 15px; border-radius: 4px;">
+                   <span style="vertical-align: middle;">📄</span> 
+                   <span style="vertical-align: middle; margin-left: 5px;">View Evaluation Sheet</span>
+                </a>
+              </li>`
+      ).join('')}
+          </ul>
+        </div>
+      `;
+    }
 
+    // Rest of the email content with properly formatted message
+    const emailContent = `
+      <div style="background-color: #065f46; color: white; padding: 40px 30px; text-align: center;">
+        <h1 style="font-size: 28px; font-weight: bold; margin: 0;">Research Proposal Update Request</h1>
+        <p style="font-size: 18px; margin-top: 10px;">Jatiya Kabi Kazi Nazrul Islam University</p>
+      </div>
+      
+      <div style="padding: 30px; background-color: #fafefd; color: #065f46; font-family: Arial, sans-serif;">
+        <p style="font-size: 16px; line-height: 1.6;">Dear Researcher,</p>
+        
+        <p style="font-size: 16px; line-height: 1.6;">
+          The Research and Extension Center has requested updates to your proposal: <strong>${proposalTitle}</strong>
+        </p>
+        
+        <div style="font-size: 16px; line-height: 1.6; border-left: 4px solid #065f46; padding: 15px; margin: 20px 0; background-color: #f0f9f6;">
+          <p style="margin-top: 0;">${formattedMessage}</p>
+        </div>
+        
+        ${evaluationSheetsHtml}
+        
+        <p style="font-size: 16px; line-height: 1.6;">
+          Please click the button below to view details and submit your updates:
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${updateLink}" style="background-color: #065f46; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+            Submit Updates
+          </a>
+        </div>
+        
+        <p style="font-size: 14px; line-height: 1.6;">
+          This link will expire in <strong>${expiryDays} days</strong>. Please submit your updates before then.
+        </p>
+        
+        <p style="font-size: 14px; line-height: 1.6; margin-top: 30px; color: #555;">
+          If you have any questions, please contact us at:
+          <a href="mailto:habiburfbjkkniu@gmail.com" style="color: #065f46; text-decoration: none;">habiburfbjkkniu@gmail.com</a>
+        </p>
+        
+        <p style="margin: 0;">Best regards,<br/>
+        <strong>Research And Extension Center</strong><br/>
+        <span style="font-size: 14px;">Jatiya Kabi Kazi Nazrul Islam University</span></p>
+      </div>
+    `;
+
+    const htmlContent = createResponsiveEmailTemplate(emailContent);
+
+    // Create attachments array with unique filenames
+    const attachments = evaluationSheetUrls
+      .filter(sheet => sheet.url)
+      .map((sheet, index) => ({
+        filename: `evaluation_sheet_${index + 1}.pdf`, // Add unique numbering
+        path: path.resolve(__dirname, '..', sheet.url)
+      }));
+
+    const mailOptions = {
+      from: `"Research And Extension Center" <${process.env.EMAIL_USERNAME}>`,
+      to,
+      subject: "Research Proposal Update Request",
+      text: `Dear Researcher,\n\nThe Research and Extension Center has requested updates to your proposal: "${proposalTitle}"\n\n${message}\n\nPlease visit this link to submit your updates: ${updateLink}\n\nThis link will expire in ${expiryDays} days.\n\nBest regards,\nResearch And Extension Center\nJatiya Kabi Kazi Nazrul Islam University`,
+      html: htmlContent,
+      ...(attachments.length > 0 && { attachments })
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Update request email sent successfully:", info.response);
+    return info;
+  } catch (error) {
+    console.error("Error sending update request email:", error);
+    throw error;
+  }
+};
 
 module.exports = {
   sendPasswordResetMail,
   sendMailToReviewer,
-  sendMailInvoiceToReviewer
+  sendMailInvoiceToReviewer,
+  sendUpdateRequestEmail
 };

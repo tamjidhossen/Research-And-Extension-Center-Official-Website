@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const mongoose = require("mongoose");
 const ProposalDocument = require('../models/proposal.document.model.js');
-const ProposalUpdateRequest = require('../models/update.request.model.js');
 const { TeacherProposal } = require('../models/teacher.proposal.model.js');
 const { StudentProposal } = require('../models/student.proposal.model.js');
 const { ReviewerAssignment } = require("../models/reviewer.assignment.model.js");
@@ -336,39 +335,6 @@ const getAllAdmins = async (req, res) => {
 
 
 
-
-const updateRequestStatus = async (req, res) => {
-    try {
-        const { request_id } = req.params;
-        const { status, admin_response, requester_type } = req.body;
-
-        // 🔹 Check if Update Request Exists
-        const request = await ProposalUpdateRequest.findById(request_id);
-        let proposal;
-        if (requester_type === "student") {
-            proposal = await StudentProposal.findById(request.proposal_id);
-        }
-        if (requester_type === "teacher") {
-            proposal = await TeacherProposal.findById(request.proposal_id);
-        }
-        if (!request) {
-            return res.status(404).json({ error: "Update request not found" });
-        }
-        if (!proposal) {
-            return res.status(404).json({ error: "Proposal request not found" });
-        }
-        request.status = status;
-        request.admin_response = admin_response;
-        const token = proposal.generateUpdateToken();
-        await request.save();
-
-        res.status(200).json({ message: `Request ${status} successfully`, token: token });
-
-    } catch (error) {
-        console.error("Error updating request status:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-};
 const getProposal = async (req, res) => {
     try {
         const studentProposals = await StudentProposal.find();
@@ -886,7 +852,7 @@ const deleteReviewerAssignment = async (req, res) => {
 
 
 module.exports = {
-    updatedDocument, updateRequestStatus, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
+    updatedDocument, getProposal, registerAdmin, loginAdmin, requestPasswordReset, resetPassword,
     sentToReviewer, updateFiscalYear, addReviewer, updateReviewer, deleteReviewer, getReviewerById, getAllReviewers, getProposalOverviews,
     updateProposalStatus, updateRegistrationOpen, updateApprovalBudget, getAllReviewerAssignments, sendInvoice, getAllInvoices, deleteInvoice,
     getAdmin, deleteAdmin, getAllAdmins, deleteReviewerAssignment

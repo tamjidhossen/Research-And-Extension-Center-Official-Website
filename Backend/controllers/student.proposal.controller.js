@@ -1,7 +1,6 @@
 const fs = require('fs');
 const { StudentProposal } = require('../models/student.proposal.model.js');
 const ProposalDocument = require('../models/proposal.document.model.js');
-const ProposalUpdateRequest = require('../models/update.request.model.js');
 
 const submitProposal = async (req, res) => {
     try {
@@ -44,29 +43,6 @@ const submitProposal = async (req, res) => {
     }
 };
 
-const requestUpdate = async (req, res) => {
-    try {
-        const { proposal_id, reason } = req.body;
-        // 🔹 Check if Proposal Exists
-        const proposalExists = await StudentProposal.findById(proposal_id);
-        if (!proposalExists) {
-            return res.status(404).json({ error: "Proposal not found" });
-        }
-
-        const newRequest = new ProposalUpdateRequest({
-            proposal_id,
-            requester_type: "student",
-            reason
-        });
-
-        await newRequest.save();
-        res.status(201).json({ message: "Update request submitted successfully", newRequest });
-
-    } catch (error) {
-        console.error("Error submitting update request:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-};
 
 const updateProposal = async (req, res) => {
     try {
@@ -143,4 +119,4 @@ const getApprovedProposals = async (req, res, next) => {
     }
 };
 
-module.exports = { submitProposal, requestUpdate, updateProposal, getApprovedProposals };
+module.exports = { submitProposal, updateProposal, getApprovedProposals };
