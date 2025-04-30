@@ -615,7 +615,7 @@ export default function ProposalsDashboard() {
     }
 
     // Validate expiration days
-    if (!reviewer1Expiration || reviewer1Expiration < 1) {
+    if (!reviewer1Expiration || reviewer1Expiration === "" || parseInt(reviewer1Expiration) < 1) {
       toast.error("Please enter a valid expiration period (minimum 1 day)");
       return;
     }
@@ -685,7 +685,6 @@ export default function ProposalsDashboard() {
 
       // Fetch reviewer assignments to update status info
       fetchReviewerAssignments();
-      
     } catch (error) {
       // console.error("Failed to assign reviewer 1:", error);
       toast.error(
@@ -710,7 +709,7 @@ export default function ProposalsDashboard() {
     }
 
     // Validate expiration days
-    if (!reviewer2Expiration || reviewer2Expiration < 1) {
+    if (!reviewer2Expiration || reviewer2Expiration === "" || parseInt(reviewer2Expiration) < 1) {
       toast.error("Please enter a valid expiration period (minimum 1 day)");
       return;
     }
@@ -1647,12 +1646,19 @@ export default function ProposalsDashboard() {
                                         min="1"
                                         max="90"
                                         placeholder="Days until expiration"
-                                        value={reviewer1Expiration}
-                                        onChange={(e) =>
-                                          setReviewer1Expiration(
-                                            Number(e.target.value)
-                                          )
+                                        value={
+                                          reviewer1Expiration === 0
+                                            ? ""
+                                            : reviewer1Expiration
                                         }
+                                        onChange={(e) => {
+                                          const value = e.target.value;
+                                          setReviewer1Expiration(
+                                            value === ""
+                                              ? ""
+                                              : parseInt(value, 10)
+                                          );
+                                        }}
                                         disabled={reviewer1Sent}
                                       />
                                     </div>
@@ -1961,12 +1967,17 @@ export default function ProposalsDashboard() {
                                     min="1"
                                     max="90"
                                     placeholder="Days until expiration"
-                                    value={reviewer2Expiration}
-                                    onChange={(e) =>
-                                      setReviewer2Expiration(
-                                        Number(e.target.value)
-                                      )
+                                    value={
+                                      reviewer2Expiration === 0
+                                        ? ""
+                                        : reviewer2Expiration
                                     }
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      setReviewer2Expiration(
+                                        value === "" ? "" : parseInt(value, 10)
+                                      );
+                                    }}
                                     disabled={reviewer2Sent}
                                   />
                                 </div>
