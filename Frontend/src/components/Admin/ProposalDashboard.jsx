@@ -26,6 +26,7 @@ import {
   Star,
   Info,
   UserCheck,
+  RefreshCw,
 } from "lucide-react";
 import {
   Card,
@@ -79,6 +80,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import { RequestUpdateDialog } from "./RequestUpdateDialog";
 
 export default function ProposalsDashboard() {
   // State variables
@@ -144,6 +146,10 @@ export default function ProposalsDashboard() {
   const [selectedProposalForAllocation, setSelectedProposalForAllocation] =
     useState(null);
   const [allocatedAmount, setAllocatedAmount] = useState("");
+
+  const [showUpdateRequestDialog, setShowUpdateRequestDialog] = useState(false);
+  const [selectedProposalForUpdate, setSelectedProposalForUpdate] =
+    useState(null);
 
   useEffect(() => {
     fetchProposals();
@@ -322,6 +328,7 @@ export default function ProposalsDashboard() {
     setLoading(true);
     try {
       const response = await api.get("/api/admin/research-proposal");
+      // console.log(response)
 
       if (response.data) {
         const { studentProposals, teacherProposals } = response.data;
@@ -333,6 +340,7 @@ export default function ProposalsDashboard() {
             proposalNumber: p.proposal_number,
             title: p.project_title,
             applicant: p.project_director.name_en,
+            applicant_email: p.project_director.email,
             applicantType: "Student",
             department: p.department,
             faculty: p.faculty,
@@ -380,6 +388,7 @@ export default function ProposalsDashboard() {
             proposalNumber: p.proposal_number,
             title: p.project_title,
             applicant: p.project_director.name_en,
+            applicant_email: p.project_director.email,
             applicantType: "Teacher",
             department: p.department,
             faculty: p.faculty,
@@ -615,7 +624,11 @@ export default function ProposalsDashboard() {
     }
 
     // Validate expiration days
-    if (!reviewer1Expiration || reviewer1Expiration === "" || parseInt(reviewer1Expiration) < 1) {
+    if (
+      !reviewer1Expiration ||
+      reviewer1Expiration === "" ||
+      parseInt(reviewer1Expiration) < 1
+    ) {
       toast.error("Please enter a valid expiration period (minimum 1 day)");
       return;
     }
@@ -709,7 +722,11 @@ export default function ProposalsDashboard() {
     }
 
     // Validate expiration days
-    if (!reviewer2Expiration || reviewer2Expiration === "" || parseInt(reviewer2Expiration) < 1) {
+    if (
+      !reviewer2Expiration ||
+      reviewer2Expiration === "" ||
+      parseInt(reviewer2Expiration) < 1
+    ) {
       toast.error("Please enter a valid expiration period (minimum 1 day)");
       return;
     }
@@ -973,6 +990,15 @@ export default function ProposalsDashboard() {
     setReviewerToDelete(reviewer);
     setProposalForReviewerDelete(proposal);
     setShowDeleteConfirmDialog(true);
+  };
+
+  const handleRequestUpdate = (proposal) => {
+    setSelectedProposalForUpdate(proposal);
+    setShowUpdateRequestDialog(true);
+  };
+
+  const handleUpdateRequestSuccess = () => {
+    fetchProposals();
   };
 
   return (
@@ -1850,7 +1876,7 @@ export default function ProposalsDashboard() {
                                         );
                                       })()}
                                     </div>
-                                    {/* Add delete button */}
+                                    {/* delete button */}
                                     <Button
                                       variant="outline"
                                       size="sm"
@@ -2155,12 +2181,12 @@ export default function ProposalsDashboard() {
                       )} */}
 
                       {/* Status Update Buttons */}
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex gap-2">
                         {/* Only show the Allocate button - other statuses should be automatic */}
                         {proposal.status !== 3 && proposal.status === 2 && (
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="icon"
                             onClick={() => {
                               setSelectedProposalForAllocation(proposal);
                               setAllocatedAmount(
@@ -2171,10 +2197,20 @@ export default function ProposalsDashboard() {
                             className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700"
                             title="Allocate Funding"
                           >
-                            <DollarSign className="h-3 w-3 mr-1" /> Allocate
+                            <DollarSign className="h-3 w-3" />
                           </Button>
                         )}
                       </div>
+
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700"
+                        title="Request Updates"
+                        onClick={() => handleRequestUpdate(proposal)}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                      </Button>
 
                       {/* Delete Proposal */}
                       <Dialog>
@@ -2589,6 +2625,13 @@ export default function ProposalsDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <RequestUpdateDialog
+        proposal={selectedProposalForUpdate}
+        isOpen={showUpdateRequestDialog}
+        onClose={() => setShowUpdateRequestDialog(false)}
+        onSuccess={handleUpdateRequestSuccess}
+      />
     </div>
   );
 }
