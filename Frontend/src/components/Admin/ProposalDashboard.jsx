@@ -152,9 +152,10 @@ export default function ProposalsDashboard() {
     useState(null);
 
   useEffect(() => {
-    fetchProposals();
-    fetchReviewers();
-    fetchReviewerAssignments();
+    // First fetch reviewers and assignments then proposals
+    Promise.all([fetchReviewers(), fetchReviewerAssignments()]).then(() => {
+      fetchProposals();
+    });
   }, []);
 
   const fetchReviewers = async () => {
@@ -328,7 +329,7 @@ export default function ProposalsDashboard() {
     setLoading(true);
     try {
       const response = await api.get("/api/admin/research-proposal");
-      // console.log(response)
+      console.log("OG Response ->", response);
 
       if (response.data) {
         const { studentProposals, teacherProposals } = response.data;
@@ -371,6 +372,9 @@ export default function ProposalsDashboard() {
                       a.reviewer_id._id.toString() === reviewerId.toString() &&
                       a.proposal_id.toString() === p._id.toString()
                   );
+                  console.log("reviewerId: ", reviewerId);
+                  console.log("reviewerDetails: ", reviewerDetails);
+                  console.log("assignment: ", assignment);
 
                   return {
                     id: reviewerId,

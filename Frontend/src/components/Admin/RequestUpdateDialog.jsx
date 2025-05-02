@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
 
 export function RequestUpdateDialog({ proposal, isOpen, onClose, onSuccess }) {
-    console.log(proposal)
+  console.log("Proposals-> ", proposal)
   const [message, setMessage] = useState("");
   const [expiryDays, setExpiryDays] = useState(7);
   const [includeEvaluations, setIncludeEvaluations] = useState(true);
