@@ -226,7 +226,6 @@ const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => 
     };
 
     await transporter.sendMail(mailOptions);
-    console.log("Invoice email sent successfully to:", reviewerEmail);
   } catch (error) {
     console.error("Error sending invoice email:", error);
   }
@@ -326,7 +325,6 @@ const sendUpdateRequestEmail = async (to, proposalTitle, message, updateLink, ex
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log("Update request email sent successfully:", info.response);
     return info;
   } catch (error) {
     console.error("Error sending update request email:", error);

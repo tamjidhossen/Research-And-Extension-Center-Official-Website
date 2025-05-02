@@ -15,11 +15,5 @@ router.delete('/:id', adminMiddleware.authAdmin, updateRequestController.deleteR
 
 // Public routes
 router.get('/verify/:token', updateRequestController.verifyRequestToken);
-router.put('/status/:id', updateRequestController.updateRequestStatus);
-router.post(
-    '/submit/:id',
-    upload.fields([{ name: 'partA' }, { name: 'partB' }]),
-    updateRequestController.submitRequestResponse
-);
 
 module.exports = router;

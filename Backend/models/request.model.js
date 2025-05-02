@@ -13,16 +13,6 @@ const requestSchema = new Schema({
         required: true,
         enum: ['student', 'teacher', 'extension'] // Adjust based on your proposal types
     },
-    recipient_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        refPath: 'recipient_type'
-    },
-    recipient_type: {
-        type: String,
-        required: true,
-        enum: ['Student', 'Teacher'] // The model to use for recipient_id
-    },
     recipient_email: {
         type: String,
         required: true
@@ -33,8 +23,7 @@ const requestSchema = new Schema({
         ref: 'Admin'
     },
     message: {
-        type: String,
-        required: true
+        type: String
     },
     created_at: {
         type: Date,
@@ -46,7 +35,7 @@ const requestSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['sent', 'viewed', 'in_progress', 'completed', 'expired'],
+        enum: ['sent', 'viewed', 'updated'],
         default: 'sent'
     },
     valid_until: {

@@ -21,9 +21,8 @@ const createRequest = async (req, res) => {
             expiry_days
         } = req.body;
         proposal_id = new mongoose.Types.ObjectId(proposal_id); // Ensure proposal_id is a valid ObjectId
-        console.log(proposal_id, proposal_type, message, expiry_days);
         // Validate inputs
-        if (!proposal_id || !proposal_type || !message) {
+        if (!proposal_id || !proposal_type || !expiry_days) {
             return res.status(400).json({
                 success: false,
                 message: "Missing required fields"
@@ -50,8 +49,6 @@ const createRequest = async (req, res) => {
             });
         }
         let recipient_email = proposal.project_director.email;
-        // Get recipient ID based on proposal
-        const recipient_id = proposal._id;
 
         // Calculate expiry date
         const valid_until = new Date();
@@ -65,7 +62,6 @@ const createRequest = async (req, res) => {
             proposal_type: proposal_type,
             status: 1 // Completed reviews
         }).populate('reviewer_id', 'name email');
-        console.log(reviewerAssignments);
         if (reviewerAssignments && reviewerAssignments.length > 0) {
             // Get all available evaluation sheets from reviewers
             evaluation_sheet_urls = reviewerAssignments
@@ -75,7 +71,6 @@ const createRequest = async (req, res) => {
                     url: assignment.evaluation_sheet_url,
                     reviewer_name: assignment.reviewer_id.name || 'Anonymous Reviewer'
                 }));
-            console.log(evaluation_sheet_urls);
         }
         recipient_email = proposal.project_director.email;
         // Create request
@@ -83,8 +78,6 @@ const createRequest = async (req, res) => {
             proposal_id,
             proposal_type,
             recipient_email,
-            recipient_id,
-            recipient_type: proposal_type === 'student' ? 'Student' : 'Teacher',
             admin_id: req.user._id,
             message,
             valid_until,
@@ -96,7 +89,7 @@ const createRequest = async (req, res) => {
         // Generate JWT token for secure access
         const token = jwt.sign(
             { request_id: request._id },
-            process.env.SECRET_KEY_UPDATE_REQUEST || 'update-request-secret',
+            process.env.SECRET_KEY_UPDATE_REQUEST,
             { expiresIn: `${expiry_days}d` }
         );
 
@@ -127,37 +120,19 @@ const createRequest = async (req, res) => {
     }
 };
 
-// Get all requests (with filters)
+// Get all requests (no filters, no pagination)
 const getAllRequests = async (req, res) => {
     try {
-        const { status, proposal_type, page = 1, limit = 10 } = req.query;
-
-        const query = {};
-        if (status) query.status = status;
-        if (proposal_type) query.proposal_type = proposal_type;
-
-        // Paginate results
-        const options = {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            sort: { created_at: -1 },
-            populate: [
-                { path: 'proposal_id', select: 'project_title project_director' },
-                { path: 'admin_id', select: 'name email' }
-            ]
-        };
-
-        const requests = await Request.paginate(query, options);
+        // Get all requests without any filters
+        const requests = await Request.find()
+            .sort({ created_at: -1 })
+            .populate('proposal_id', 'project_title project_director')
+            .populate('admin_id', 'name email');
 
         res.status(200).json({
             success: true,
-            requests: requests.docs,
-            pagination: {
-                total: requests.totalDocs,
-                page: requests.page,
-                pages: requests.totalPages,
-                limit: requests.limit
-            }
+            count: requests.length,
+            requests: requests
         });
     } catch (error) {
         console.error("Get requests error:", error);
@@ -199,7 +174,7 @@ const verifyRequestToken = async (req, res) => {
         try {
             decoded = jwt.verify(
                 token,
-                process.env.SECRET_KEY_UPDATE_REQUEST || 'update-request-secret'
+                process.env.SECRET_KEY_UPDATE_REQUEST
             );
         } catch (error) {
             return res.status(401).json({ success: false, message: "Invalid or expired token" });
@@ -211,9 +186,15 @@ const verifyRequestToken = async (req, res) => {
             return res.status(404).json({ success: false, message: "Request not found" });
         }
 
-        // Check if expired
+        // Check if expired and delete if it is
         if (new Date() > new Date(request.valid_until)) {
-            return res.status(400).json({ success: false, message: "Request has expired" });
+            // Delete the expired request
+            await Request.findByIdAndDelete(request._id);
+            return res.status(400).json({
+                success: false,
+                message: "Request has expired!",
+                expired: true
+            });
         }
 
         // If status is sent, update to viewed
@@ -230,11 +211,53 @@ const verifyRequestToken = async (req, res) => {
             proposal = await TeacherProposal.findById(request.proposal_id);
         }
 
+        // Filter out sensitive or unnecessary fields
+        const filteredProposal = proposal.toObject();
+
+        // Fields to remove from frontend response
+        const fieldsToRemove = [
+            'status',
+            'reviewer',
+            'createdAt',
+            'approval_status',
+            'reviewer_avg_mark',
+            '__v',
+            'updatedAt',
+            'approval_budget',
+        ];
+
+        // Remove each field from the proposal object
+        fieldsToRemove.forEach(field => {
+            if (filteredProposal.hasOwnProperty(field)) {
+                delete filteredProposal[field];
+            }
+        });
+
+        // ===== Add to queue management =====
+        // Import the queue controller
+        const queueController = require('../controllers/request.queue.controller.js');
+
+        try {
+            // Check if request is already in queue
+            const inQueue = await queueController.checkInQueue(request._id);
+
+            // If already in queue, remove it first
+            if (inQueue) {
+                await queueController.removeFromQueue(request._id);
+            }
+
+            // Add to queue with fresh expiration time
+            await queueController.addToQueue(request._id);
+        } catch (queueError) {
+            console.error("Queue management error:", queueError);
+            // Continue even if queue management fails
+        }
+
         res.status(200).json({
             success: true,
             message: "Token valid",
-            request,
-            proposal
+            request_id: request._id,
+            proposal: filteredProposal
         });
     } catch (error) {
         console.error("Verify token error:", error);

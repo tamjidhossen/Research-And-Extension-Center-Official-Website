@@ -202,11 +202,9 @@ const submitInvoice = async (req, res) => {
         if (!invoice) {
             if (req.file) {
                 const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
-                console.log("Attempting to delete:", filePath);
 
                 try {
                     fs.unlink(filePath);
-                    console.log("File deleted successfully.");
                 } catch (unlinkError) {
                     console.error("Error deleting file:", unlinkError);
                 }
@@ -215,7 +213,6 @@ const submitInvoice = async (req, res) => {
         }
         else {
             if (fs.existsSync(invoice.invoice_url)) {
-                console.log("Deleted  :", invoice.invoice_url);
                 fs.unlinkSync(invoice.invoice_url);
             }
         }
@@ -230,11 +227,8 @@ const submitInvoice = async (req, res) => {
         if (!updatedInvoice) {
             if (req.file) {
                 const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
-                console.log("Attempting to delete:", filePath);
-
                 try {
                     fs.unlink(filePath);
-                    console.log("File deleted successfully.");
                 } catch (unlinkError) {
                     console.error("Error deleting file:", unlinkError);
                 }
@@ -248,11 +242,9 @@ const submitInvoice = async (req, res) => {
 
         if (req.file) {
             const filePath = path.join(__dirname, "..", "uploads", "invoice", req.file.filename);
-            console.log("Attempting to delete:", filePath);
 
             try {
                 fs.unlink(filePath);
-                console.log("File deleted successfully.");
             } catch (unlinkError) {
                 console.error("Error deleting file:", unlinkError);
             }

@@ -105,8 +105,6 @@ const addMember = async (req, res) => {
             fs.unlink(filePath, (err) => {
                 if (err) {
                     console.error(`Failed to delete file: ${filePath}`);
-                } else {
-                    console.log(`Rolled back: Deleted file ${filePath}`);
                 }
             });
         }

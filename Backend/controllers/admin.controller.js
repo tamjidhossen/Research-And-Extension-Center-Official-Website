@@ -414,7 +414,6 @@ const sentToReviewer = async (req, res) => {
         try {
             // Try sending the email
             await sendMailToReviewer(reviewer.email, reviewer.name, token, (expiresIn ? expiresIn : 45));
-            console.log("Email sent successfully");
 
             return res.status(200).json({ success: true, message: "Reviewer assigned! Email sent successfully." });
 
@@ -740,7 +739,6 @@ const sendInvoice = async (req, res) => {
         setImmediate(async () => {
             try {
                 await sendMailInvoiceToReviewer(reviewer.email, filePath, uploadUrl);
-                console.log(`Invoice email sent successfully to ${reviewer.email}`);
             } catch (emailError) {
                 console.error("Error sending invoice email:", emailError);
             }
