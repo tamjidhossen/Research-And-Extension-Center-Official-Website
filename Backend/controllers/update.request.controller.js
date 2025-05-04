@@ -2,7 +2,7 @@ const Request = require('../models/request.model.js');
 const { StudentProposal } = require('../models/student.proposal.model.js');
 const { TeacherProposal } = require('../models/teacher.proposal.model.js');
 const { ReviewerAssignment } = require('../models/reviewer.assignment.model.js');
-const Admin = require('../models/admin.model.js');
+const RequestQueueModel = require('../models/request.queue.model.js');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const fs = require('fs');
@@ -252,11 +252,12 @@ const verifyRequestToken = async (req, res) => {
             console.error("Queue management error:", queueError);
             // Continue even if queue management fails
         }
-
+        const queueEntry = await RequestQueueModel.findOne({ request_id: request._id });
         res.status(200).json({
             success: true,
             message: "Token valid",
             request_id: request._id,
+            expire_time: queueEntry ? queueEntry.expire_time : null,
             proposal: filteredProposal
         });
     } catch (error) {
