@@ -233,31 +233,25 @@ const verifyRequestToken = async (req, res) => {
             }
         });
 
-        // ===== Add to queue management =====
-        // Import the queue controller
-        const queueController = require('../controllers/request.queue.controller.js');
 
-        try {
-            // Check if request is already in queue
-            const inQueue = await queueController.checkInQueue(request._id);
+        // Generate special update token with necessary data and expiry
+        const updateToken = jwt.sign(
+            {
+                request_id: request._id,
+                proposal_id: request.proposal_id,
+                proposal_type: request.proposal_type,
+                expires: new Date(request.valid_until).getTime()
+            },
+            process.env.SECRET_KEY_UPDATE_REQUEST,
+            { expiresIn: '24h' } // Token expires in 24 hours or sooner based on request expiry
+        );
 
-            // If already in queue, remove it first
-            if (inQueue) {
-                await queueController.removeFromQueue(request._id);
-            }
-
-            // Add to queue with fresh expiration time
-            await queueController.addToQueue(request._id);
-        } catch (queueError) {
-            console.error("Queue management error:", queueError);
-            // Continue even if queue management fails
-        }
-        const queueEntry = await RequestQueueModel.findOne({ request_id: request._id });
         res.status(200).json({
             success: true,
             message: "Token valid",
             request_id: request._id,
-            expire_time: queueEntry ? queueEntry.expire_time : null,
+            update_token: updateToken, // Send update token to frontend
+            expire_time: request.valid_until,
             proposal: filteredProposal
         });
     } catch (error) {

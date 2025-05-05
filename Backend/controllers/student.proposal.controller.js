@@ -50,26 +50,13 @@ const updateProposal = async (req, res) => {
     try {
         const { proposal_id, request_id } = req.body;
 
-        // Require request_id for all updates
-        if (!request_id) {
-            // Delete any uploaded files
-            if (req.files) {
-                Object.values(req.files).flat().forEach(file => {
-                    fs.unlink(file.path, (err) => {
-                        if (err) console.error(`Failed to delete file: ${file.path}`, err);
-                    });
-                });
-            }
-            return res.status(400).json({
-                success: false,
-                message: "Request ID is required to update a proposal"
-            });
-        }
+        // Verification now done by middleware - token already verified
+        // Access decoded token data from middleware
+        const { proposal_id: token_proposal_id, request_id: token_request_id } = req.updateData;
 
-        // If request_id provided, check if it's in the queue
-        const inQueue = await queueController.checkInQueue(request_id);
-        if (!inQueue) {
-            // Delete any uploaded filesons
+        // Double check IDs match token data
+        if (proposal_id !== token_proposal_id.toString() || request_id !== token_request_id.toString()) {
+            // Delete any uploaded files
             if (req.files) {
                 Object.values(req.files).flat().forEach(file => {
                     fs.unlink(file.path, (err) => {
@@ -79,12 +66,10 @@ const updateProposal = async (req, res) => {
             }
             return res.status(403).json({
                 success: false,
-                message: "Update request not verified or has expired"
+                message: "Token doesn't match proposal or request"
             });
         }
 
-        // After successful update, remove from queue
-        await queueController.removeFromQueue(request_id);
 
         const updates = req.body.updates ? JSON.parse(req.body.updates) : {};
 
@@ -94,23 +79,6 @@ const updateProposal = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 error: "Proposal not found"
-            });
-        }
-
-        // If request_id is provided, validate that it exists
-        const request = await Request.findById(request_id);
-        if (!request) {
-            // Delete any uploaded files and return error
-            if (req.files) {
-                Object.values(req.files).flat().forEach(file => {
-                    fs.unlink(file.path, (err) => {
-                        if (err) console.error(`Failed to delete file: ${file.path}`, err);
-                    });
-                });
-            }
-            return res.status(404).json({
-                success: false,
-                error: "Request not found. Update operation cancelled."
             });
         }
 
@@ -150,10 +118,13 @@ const updateProposal = async (req, res) => {
         const updatedProposal = await proposal.save();
 
         // Update request status if request_id is provided
-        request.status = 'updated';
-        request.submitted_at = new Date();
-        request.update_notes = updates.update_notes || 'Proposal updated successfully';
-        await request.save();
+        const request = await Request.findById(request_id);
+        if (request) {
+            request.status = 'updated';
+            request.submitted_at = new Date();
+            request.update_notes = updates.update_notes || 'Proposal updated successfully';
+            await request.save();
+        }
 
         res.status(200).json({
             success: true,
