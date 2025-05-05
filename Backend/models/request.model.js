@@ -6,7 +6,18 @@ const requestSchema = new Schema({
     proposal_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'Proposal' // Reference to your existing proposal model
+        refPath: 'proposal_type_model' // Use refPath for dynamic references
+    },
+    proposal_type_model: {
+        type: String,
+        required: true,
+        enum: ['StudentProposal', 'TeacherProposal'],
+        default: function () {
+            // Default mapping based on proposal_type
+            if (this.proposal_type === 'student') return 'StudentProposal';
+            if (this.proposal_type === 'teacher') return 'TeacherProposal';
+            return 'StudentProposal';
+        }
     },
     proposal_type: {
         type: String,
