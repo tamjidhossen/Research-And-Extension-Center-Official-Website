@@ -95,7 +95,7 @@ const createRequest = async (req, res) => {
 
         // Create update link
         const baseUrl = process.env.FRONTEND_BASE_URL;
-        const updateLink = `${baseUrl}/update-request?token=${token}`;
+        const updateLink = `${baseUrl}/update-proposal/${proposal_type}?token=${token}`;
 
         // Send email
         await sendUpdateRequestEmail(
