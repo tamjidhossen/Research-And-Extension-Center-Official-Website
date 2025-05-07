@@ -151,9 +151,17 @@ export default function ProposalsDashboard() {
   const [selectedProposalForUpdate, setSelectedProposalForUpdate] =
     useState(null);
 
+  const [updateRequests, setUpdateRequests] = useState([]);
+  const [showUpdateRequestStatusDialog, setShowUpdateRequestStatusDialog] =
+    useState(false);
+
   useEffect(() => {
     // First fetch reviewers and assignments then proposals
-    Promise.all([fetchReviewers(), fetchReviewerAssignments()]).then(() => {
+    Promise.all([
+      fetchReviewers(),
+      fetchReviewerAssignments(),
+      fetchUpdateRequests(),
+    ]).then(() => {
       fetchProposals();
     });
   }, []);
@@ -161,11 +169,115 @@ export default function ProposalsDashboard() {
   const fetchReviewers = async () => {
     try {
       const response = await api.get("/api/admin/get-reviewers");
+      console.log("fetchReviewers Function: ", response)
       if (response.data && response.data.reviewers) {
         setExistingReviewers(response.data.reviewers);
       }
     } catch (error) {
       // console.error("Failed to fetch reviewers:", error);
+    }
+  };
+
+  const fetchUpdateRequests = async () => {
+    try {
+      const response = await api.get("/api/update-request/all");
+      if (response.data && response.data.requests) {
+        setUpdateRequests(response.data.requests);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch update requests",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteUpdateRequest = async (requestId) => {
+    try {
+      await api.delete(`/api/update-request/${requestId}`);
+
+      // Refresh update requests
+      fetchUpdateRequests();
+
+      toast.success("Update request deleted successfully");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to delete update request"
+      );
+    }
+  };
+
+  const getUpdateRequestStatus = (proposalId) => {
+    const updateRequest = updateRequests.find(
+      (req) =>
+        req.proposal_id._id === proposalId || req.proposal_id === proposalId
+    );
+
+    if (!updateRequest) return null;
+
+    return {
+      status: updateRequest.status,
+      validUntil: updateRequest.valid_until,
+      requestId: updateRequest._id,
+      submittedAt: updateRequest.submitted_at,
+      message: updateRequest.message,
+      updateNotes: updateRequest.update_notes,
+    };
+  };
+
+  const getUpdateStatusBadge = (updateStatus) => {
+    if (!updateStatus) return null;
+
+    const now = new Date();
+    const validUntil = new Date(updateStatus.validUntil);
+    const isExpired = now > validUntil;
+
+    if (isExpired && updateStatus.status !== "updated") {
+      return (
+        <Badge
+          variant="outline"
+          className="bg-red-100 text-red-800 border-red-200"
+        >
+          <Clock className="h-3 w-3 mr-1" />
+          Expired
+        </Badge>
+      );
+    }
+
+    switch (updateStatus.status) {
+      case "sent":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-amber-100 text-amber-800 border-amber-200"
+          >
+            <Mail className="h-3 w-3 mr-1" />
+            Update Requested
+          </Badge>
+        );
+      case "viewed":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-blue-100 text-blue-800 border-blue-200"
+          >
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Viewed
+          </Badge>
+        );
+      case "updated":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-100 text-green-800 border-green-200"
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Updated
+          </Badge>
+        );
+      default:
+        return null;
     }
   };
 
@@ -257,6 +369,7 @@ export default function ProposalsDashboard() {
   const fetchReviewerAssignments = async () => {
     try {
       const response = await api.get("/api/admin/reviewer/review-details");
+      console.log("fetchReviewerAssignment: ", response)
       if (response.data) {
         setReviewAssignments(response.data);
       }
@@ -329,7 +442,7 @@ export default function ProposalsDashboard() {
     setLoading(true);
     try {
       const response = await api.get("/api/admin/research-proposal");
-      // console.log("OG Response ->", response);
+      console.log("OG Response ->", response);
 
       if (response.data) {
         const { studentProposals, teacherProposals } = response.data;
@@ -816,6 +929,7 @@ export default function ProposalsDashboard() {
       setSending2Email(false);
     }
   };
+  console.log("Proposal before filter: ", proposals)
   // Filter and sort proposals
   const filteredProposals = proposals
     .filter((proposal) => {
@@ -994,8 +1108,14 @@ export default function ProposalsDashboard() {
   };
 
   const handleRequestUpdate = (proposal) => {
+    const updateStatus = getUpdateRequestStatus(proposal.id);
     setSelectedProposalForUpdate(proposal);
-    setShowUpdateRequestDialog(true);
+
+    if (updateStatus) {
+      setShowUpdateRequestStatusDialog(true);
+    } else {
+      setShowUpdateRequestDialog(true);
+    }
   };
 
   const handleUpdateRequestSuccess = () => {
@@ -1860,8 +1980,7 @@ export default function ProposalsDashboard() {
                                                     >
                                                       <Download className="h-3 w-3 mr-1" />
                                                       <span>
-                                                        View Proposal Review
-                                                        Form
+                                                        View Reviewers Comments
                                                       </span>
                                                     </Button>
                                                   </div>
@@ -2203,15 +2322,44 @@ export default function ProposalsDashboard() {
                         )}
                       </div>
 
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700"
-                        title="Request Updates"
-                        onClick={() => handleRequestUpdate(proposal)}
-                      >
-                        <RefreshCw className="h-3 w-3" />
-                      </Button>
+                      <div className="relative">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700"
+                          onClick={() => handleRequestUpdate(proposal)}
+                          title="Request Update"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          {(() => {
+                            const updateStatus = getUpdateRequestStatus(
+                              proposal.id
+                            );
+                            if (!updateStatus) return null;
+
+                            const now = new Date();
+                            const validUntil = new Date(
+                              updateStatus.validUntil
+                            );
+                            const isExpired = now > validUntil;
+
+                            // Status dot with colors based on status
+                            return (
+                              <span
+                                className={`absolute -top-0 -right-0 w-2 h-2 rounded-full ${
+                                  isExpired && updateStatus.status !== "updated"
+                                    ? "bg-red-500"
+                                    : updateStatus.status === "updated"
+                                    ? "bg-green-500"
+                                    : updateStatus.status === "viewed"
+                                    ? "bg-blue-500"
+                                    : "bg-amber-500"
+                                }`}
+                              />
+                            );
+                          })()}
+                        </Button>
+                      </div>
 
                       {/* Delete Proposal */}
                       <Dialog>
@@ -2624,6 +2772,118 @@ export default function ProposalsDashboard() {
               Remove Reviewer
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Update Request Status Dialog */}
+      <Dialog
+        open={showUpdateRequestStatusDialog}
+        onOpenChange={setShowUpdateRequestStatusDialog}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Update Request Status</DialogTitle>
+            <DialogDescription>
+              Details about the update request for this proposal.
+            </DialogDescription>
+          </DialogHeader>
+
+          {(() => {
+            const updateStatus = getUpdateRequestStatus(
+              selectedProposalForUpdate?.id
+            );
+            if (!updateStatus) return null;
+
+            const validUntil = new Date(updateStatus.validUntil);
+            const now = new Date();
+            const isExpired = now > validUntil;
+            const timeRemaining = isExpired
+              ? "Expired"
+              : `${Math.floor(
+                  (validUntil - now) / (1000 * 60 * 60 * 24)
+                )} days remaining`;
+
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Status:</span>
+                  {getUpdateStatusBadge(updateStatus)}
+                </div>
+
+                <div>
+                  <span className="text-sm font-medium">Expiration:</span>
+                  <p
+                    className={`mt-1 ${
+                      isExpired ? "text-red-600" : "text-amber-600"
+                    }`}
+                  >
+                    {new Date(validUntil).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}{" "}
+                    ({timeRemaining})
+                  </p>
+                </div>
+
+                {updateStatus.message && (
+                  <div>
+                    <span className="text-sm font-medium">
+                      Message to applicant:
+                    </span>
+                    <p className="mt-1 text-gray-700 whitespace-pre-line">
+                      {updateStatus.message}
+                    </p>
+                  </div>
+                )}
+
+                {updateStatus.updateNotes && (
+                  <div>
+                    <span className="text-sm font-medium">
+                      Applicant's response:
+                    </span>
+                    <p className="mt-1 text-gray-700 whitespace-pre-line">
+                      {updateStatus.updateNotes}
+                    </p>
+                    {updateStatus.submittedAt && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        Submitted on{" "}
+                        {new Date(updateStatus.submittedAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "numeric",
+                          }
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <DialogFooter className="mt-4">
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      deleteUpdateRequest(updateStatus.requestId);
+                      setShowUpdateRequestStatusDialog(false);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Request
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowUpdateRequestStatusDialog(false)}
+                  >
+                    Close
+                  </Button>
+                </DialogFooter>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 

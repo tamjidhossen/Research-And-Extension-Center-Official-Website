@@ -71,8 +71,7 @@ export function RequestUpdateDialog({ proposal, isOpen, onClose, onSuccess }) {
           <DialogHeader>
             <DialogTitle>Request Proposal Updates</DialogTitle>
             <DialogDescription>
-              Send a request to the applicant to update their proposal. Specify
-              what changes are needed.
+              Send a request to the applicant to update their proposal
             </DialogDescription>
           </DialogHeader>
 
@@ -90,7 +89,7 @@ export function RequestUpdateDialog({ proposal, isOpen, onClose, onSuccess }) {
 
             {/* Message Field */}
             <div className="grid gap-2">
-              <Label htmlFor="message">Message to Applicant</Label>
+              <Label htmlFor="message">Message to Applicant (optional)</Label>
               <Textarea
                 id="message"
                 placeholder="Please explain what changes are needed..."
@@ -98,10 +97,6 @@ export function RequestUpdateDialog({ proposal, isOpen, onClose, onSuccess }) {
                 onChange={(e) => setMessage(e.target.value)}
                 className="min-h-[120px]"
               />
-              <p className="text-xs text-muted-foreground">
-                Clearly describe the changes the applicant needs to make to
-                their proposal.
-              </p>
             </div>
 
             {/* Expiration Field */}
@@ -111,9 +106,10 @@ export function RequestUpdateDialog({ proposal, isOpen, onClose, onSuccess }) {
                 id="expiryDays"
                 type="number"
                 value={expiryDays}
-                onChange={(e) => setExpiryDays(parseInt(e.target.value) || 7)}
+                onChange={(e) => setExpiryDays(parseInt(e.target.value))}
                 min="1"
                 max="90"
+                required
               />
               <p className="text-xs text-muted-foreground">
                 Number of days the update request will remain valid.

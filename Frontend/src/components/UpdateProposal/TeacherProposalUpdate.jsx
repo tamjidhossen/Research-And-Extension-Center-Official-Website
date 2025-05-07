@@ -110,6 +110,7 @@ export default function TeacherProposalUpdate() {
     minutes: 0,
     expired: false,
   });
+  const [updateToken, setUpdateToken] = useState("");
 
   // Initialize form
   const form = useForm({
@@ -199,11 +200,16 @@ export default function TeacherProposalUpdate() {
           setTokenVerified(true);
           const proposal = response.data.proposal;
           setProposalData(proposal);
-          setRequestData(response.data.request);
           setFiscalYear(proposal.fiscal_year || "0000-0000");
+          setUpdateToken(response.data.update_token);
+          const requestObj = {
+            _id: response.data.request_id,
+            valid_until: response.data.expire_time,
+          };
+          setRequestData(requestObj);
 
           // Calculate time remaining
-          const validUntil = new Date(response.data.request.valid_until);
+          const validUntil = new Date(response.data.expire_time);
           const now = new Date();
           const timeLeft = validUntil - now;
 
@@ -221,7 +227,7 @@ export default function TeacherProposalUpdate() {
             setTimeRemaining({ days, hours, minutes, expired: false });
           }
           // Load proposal data
-          if (response.data.request.proposal_type === "teacher") {
+          if (response.data.proposal.proposal_type === "teacher") {
             // Populate form with existing data
             form.reset({
               project_director_name_en: proposal.project_director.name_en || "",
@@ -351,6 +357,8 @@ export default function TeacherProposalUpdate() {
     try {
       // Create FormData object for file upload
       const formData = new FormData();
+
+      formData.append("update_token", updateToken);
 
       // Add files only if they exist
       if (files.partA) {
@@ -562,15 +570,6 @@ export default function TeacherProposalUpdate() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-4">
-                {/* <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-md border border-amber-200 dark:border-amber-900/50 mb-4">
-                  <h3 className="font-medium mb-2 text-amber-800 dark:text-amber-400">
-                    Message from Administration:
-                  </h3>
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                    {requestData?.message ||
-                      "Please update your proposal as requested."}
-                  </p>
-                </div> */}
                 <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900 mt-4">
                   <AlertDescription className="text-blue-700 dark:text-blue-400">
                     <p className="text-sm mb-2">
@@ -1146,7 +1145,7 @@ export default function TeacherProposalUpdate() {
                   </Card>
                   <Card>
                     <CardHeader>
-                      <CardTitle>Update Notes</CardTitle>
+                      <CardTitle>Update Notes (optional)</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <FormField
@@ -1156,15 +1155,11 @@ export default function TeacherProposalUpdate() {
                           <FormItem>
                             <FormControl>
                               <Textarea
-                                placeholder="Please describe the changes you have made to the proposal"
+                                placeholder="Description of the changes you have made to the proposal"
                                 className="min-h-[100px]"
                                 {...field}
                               />
                             </FormControl>
-                            <FormDescription>
-                              Explain what changes you've made in response to
-                              the reviewer feedback
-                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
