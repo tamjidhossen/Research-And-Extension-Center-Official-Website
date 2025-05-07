@@ -45,17 +45,17 @@ const submitProposal = async (req, res) => {
     }
 };
 
-
 const updateProposal = async (req, res) => {
     try {
-        const { proposal_id, request_id } = req.body;
+        const { proposal_id } = req.body;
 
         // Verification now done by middleware - token already verified
         // Access decoded token data from middleware
         const { proposal_id: token_proposal_id, request_id: token_request_id } = req.updateData;
+        const request_id = token_request_id;
 
         // Double check IDs match token data
-        if (proposal_id !== token_proposal_id.toString() || request_id !== token_request_id.toString()) {
+        if (proposal_id !== token_proposal_id.toString()) {
             // Delete any uploaded files
             if (req.files) {
                 Object.values(req.files).flat().forEach(file => {
@@ -69,7 +69,6 @@ const updateProposal = async (req, res) => {
                 message: "Token doesn't match proposal or request"
             });
         }
-
 
         const updates = req.body.updates ? JSON.parse(req.body.updates) : {};
 
@@ -85,17 +84,20 @@ const updateProposal = async (req, res) => {
         // Track uploaded files
         const uploadedFiles = [];
 
-        // Function to handle file updates
+        // Function to handle file updates with safer checks - now inside updateProposal scope
         const updateFileField = (fieldName, existingPath) => {
-            if (req.files[fieldName]) {
+            // First check if req.files exists and has the field
+            if (req.files && req.files[fieldName] && req.files[fieldName].length > 0) {
                 const filePath = req.files[fieldName][0].path;
                 uploadedFiles.push(filePath);
 
                 // Delete the old file if it exists
                 if (existingPath) {
-                    fs.unlink(existingPath, (err) => {
-                        if (err) console.error(`Failed to delete old file: ${existingPath}`, err);
-                    });
+                    try {
+                        fs.unlinkSync(existingPath); // Synchronous delete to ensure completion
+                    } catch (err) {
+                        console.error(`Failed to delete old file: ${existingPath}`, err);
+                    }
                 }
 
                 return filePath;

@@ -9,16 +9,16 @@ router.post('/teacher/submit', upload.fields([{ name: 'partA' }, { name: 'partB'
 
 // Add middleware to update routes
 router.post('/teacher/update',
-    verifyUpdateToken,
     upload.fields([{ name: 'partA' }, { name: 'partB' }]),
+    verifyUpdateToken,
     teacherProposalController.updateProposal
 );
 
 router.post('/student/submit', upload.fields([{ name: 'partA' }, { name: 'partB' }]), studentProposalController.submitProposal);
 
 router.post('/student/update',
-    verifyUpdateToken,
     upload.fields([{ name: 'partA' }, { name: 'partB' }]),
+    verifyUpdateToken,
     studentProposalController.updateProposal
 );
 

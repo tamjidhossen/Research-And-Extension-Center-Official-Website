@@ -245,7 +245,6 @@ const verifyRequestToken = async (req, res) => {
             process.env.SECRET_KEY_UPDATE_REQUEST,
             { expiresIn: '24h' } // Token expires in 24 hours or sooner based on request expiry
         );
-
         res.status(200).json({
             success: true,
             message: "Token valid",

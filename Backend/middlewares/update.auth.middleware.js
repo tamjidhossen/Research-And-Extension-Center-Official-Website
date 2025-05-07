@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const verifyUpdateToken = async (req, res, next) => {
     try {
         const { update_token } = req.body;
-
         if (!update_token) {
             // Delete any uploaded files
             if (req.files) {
@@ -22,7 +21,6 @@ const verifyUpdateToken = async (req, res, next) => {
         try {
             // Verify the token
             const decoded = jwt.verify(update_token, process.env.SECRET_KEY_UPDATE_REQUEST);
-
             // Add decoded data to request
             req.updateData = decoded;
             next();

@@ -53,8 +53,12 @@ const submitProposal = async (req, res, next) => {
 
 const updateProposal = async (req, res) => {
     try {
-        const { proposal_id, request_id } = req.body;
+        const { proposal_id } = req.body;
 
+        // Verification now done by middleware - token already verified
+        // Access decoded token data from middleware
+        const { proposal_id: token_proposal_id, request_id: token_request_id } = req.updateData;
+        const request_id = token_request_id;
         // Require request_id for all updates
         if (!request_id) {
             // Delete any uploaded files
@@ -68,23 +72,6 @@ const updateProposal = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Request ID is required to update a proposal"
-            });
-        }
-
-        // If request_id provided, check if it's in the queue
-        const inQueue = await queueController.checkInQueue(request_id);
-        if (!inQueue) {
-            // Delete any uploaded files
-            if (req.files) {
-                Object.values(req.files).flat().forEach(file => {
-                    fs.unlink(file.path, (err) => {
-                        if (err) console.error(`Failed to delete file: ${file.path}`, err);
-                    });
-                });
-            }
-            return res.status(403).json({
-                success: false,
-                message: "Update request not verified or has expired"
             });
         }
 
@@ -119,9 +106,10 @@ const updateProposal = async (req, res) => {
         // Track uploaded files
         const uploadedFiles = [];
 
-        // Function to handle file updates
+        // Function to handle file updates with safer checks
         const updateFileField = (fieldName, existingPath) => {
-            if (req.files[fieldName]) {
+            // First check if req.files exists and has the field
+            if (req.files && req.files[fieldName] && req.files[fieldName].length > 0) {
                 const filePath = req.files[fieldName][0].path;
                 uploadedFiles.push(filePath);
 
