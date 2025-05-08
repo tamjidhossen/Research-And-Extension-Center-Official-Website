@@ -2706,8 +2706,7 @@ export default function ProposalsDashboard() {
                             window.open(fileUrl, "_blank");
                           }}
                         >
-                          <Download className="h-3 w-3 mr-1" /> View Proposal
-                          Review
+                          <Download className="h-3 w-3 mr-1" /> View Reviewers Comments
                         </Button>
                       )}
                   </div>
