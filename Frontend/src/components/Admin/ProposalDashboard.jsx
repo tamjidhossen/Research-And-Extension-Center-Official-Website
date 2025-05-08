@@ -1109,8 +1109,67 @@ export default function ProposalsDashboard() {
 
   const handleRequestUpdate = (proposal) => {
     const updateStatus = getUpdateRequestStatus(proposal.id);
-    setSelectedProposalForUpdate(proposal);
 
+    // Find related reviewer assignments for this proposal
+    const proposalAssignments = reviewAssignments.filter((assignment) => {
+      const proposalIdStr = proposal.id.toString();
+      const assignmentProposalIdStr = (
+        typeof assignment.proposal_id === "object" && assignment.proposal_id._id
+          ? assignment.proposal_id._id
+          : assignment.proposal_id
+      ).toString();
+  
+      return proposalIdStr === assignmentProposalIdStr;
+    });
+    
+    // Create enhanced proposal with complete reviewer details
+    const enhancedProposal = {
+      ...proposal,
+      reviewers: proposal.reviewers ? proposal.reviewers.map((reviewer) => {
+        // Ensure consistent string ID for comparison
+        const reviewerId =
+          typeof reviewer.id === "object"
+            ? reviewer.id._id?.toString() || reviewer.id.toString()
+            : reviewer.id.toString();
+        
+        // Get reviewer name and email from existing data
+        let reviewerName = reviewer.name || "Unknown";
+        let reviewerEmail = reviewer.email || "";
+        
+        // Try to find in existingReviewers by ID
+        const fullDetailsById = existingReviewers.find(
+          (r) => r._id && r._id.toString() === reviewerId
+        );
+        
+        if (fullDetailsById) {
+          reviewerName = fullDetailsById.name;
+          reviewerEmail = fullDetailsById.email;
+        }
+        
+        // Find matching assignment to get marks and files
+        const assignment = proposalAssignments.find((a) => {
+          const assignmentReviewerId =
+            typeof a.reviewer_id === "object"
+              ? a.reviewer_id._id?.toString() || a.reviewer_id.toString()
+              : a.reviewer_id.toString();
+          
+          return assignmentReviewerId === reviewerId;
+        });
+        
+        return {
+          id: reviewerId,
+          name: reviewerName,
+          email: reviewerEmail,
+          marks: assignment?.total_mark || null,
+          status: assignment?.status || 0,
+          markSheetUrl: assignment?.mark_sheet_url || null,
+          evaluationSheetUrl: assignment?.evaluation_sheet_url || null,
+        };
+      }) : []
+    };
+    
+    setSelectedProposalForUpdate(enhancedProposal);
+  
     if (updateStatus) {
       setShowUpdateRequestStatusDialog(true);
     } else {
@@ -2779,7 +2838,7 @@ export default function ProposalsDashboard() {
         open={showUpdateRequestStatusDialog}
         onOpenChange={setShowUpdateRequestStatusDialog}
       >
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Update Request Status</DialogTitle>
             <DialogDescription>

@@ -13,7 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Toaster } from "@/components/ui/toaster";
-import { Loader2, Send } from "lucide-react";
+import {
+  Loader2,
+  Send,
+  FileText,
+  Download,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
 
@@ -64,11 +71,29 @@ export function RequestUpdateDialog({ proposal, isOpen, onClose, onSuccess }) {
     onClose();
   };
 
+  const handleViewEvaluation = (url) => {
+    if (!url || url === "/") return;
+
+    const baseUrl = import.meta.env.VITE_API_URL || "";
+    const serverRoot = baseUrl.replace(/\/v1$/, "");
+    const fileUrl = `${serverRoot}/${url}`;
+    window.open(fileUrl, "_blank");
+  };
+
+  // Check if there are any reviewers with evaluation sheets
+  const reviewersWithEvaluations =
+    proposal?.reviewers?.filter(
+      (reviewer) =>
+        reviewer.evaluationSheetUrl && reviewer.evaluationSheetUrl !== "/"
+    ) || [];
+
+  const hasReviewerComments = reviewersWithEvaluations.length > 0;
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[525px] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Request Proposal Updates</DialogTitle>
             <DialogDescription>
               Send a request to the applicant to update their proposal
@@ -99,6 +124,64 @@ export function RequestUpdateDialog({ proposal, isOpen, onClose, onSuccess }) {
               />
             </div>
 
+            {/* Reviewer Comments Section */}
+            {proposal?.reviewers && proposal.reviewers.length > 0 && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                  Reviewer Evaluations
+                </Label>
+
+                <div className="border rounded-md p-3 space-y-3 bg-slate-50 dark:bg-slate-900/20">
+                  {hasReviewerComments ? (
+                    reviewersWithEvaluations.map((reviewer, index) => (
+                      <div
+                        key={reviewer.id || index}
+                        className="flex items-start justify-between p-2 border-b last:border-b-0"
+                      >
+                        <div className="flex items-start space-x-2">
+                          <div>
+                            <p className="text-sm font-medium">
+                              Reviewer {index + 1}:{" "}
+                              {reviewer.name || "Anonymous"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-blue-600"
+                          onClick={() =>
+                            handleViewEvaluation(reviewer.evaluationSheetUrl)
+                          }
+                        >
+                          <Download className="h-3.5 w-3.5 mr-1" />
+                          View
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex items-center justify-center py-3 text-sm text-gray-500">
+                      <AlertCircle className="h-4 w-4 mr-2 text-amber-500" />
+                      No reviewer comments available
+                    </div>
+                  )}
+
+                  {hasReviewerComments && (
+                    <div className="mt-2 pt-2 border-t text-xs text-blue-700 flex items-center">
+                      <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                      <span>
+                        Reviewer comments will be sent with proposal update
+                        request
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Expiration Field */}
             <div className="grid gap-2">
               <Label htmlFor="expiryDays">Expiration Period (Days)</Label>
@@ -112,7 +195,7 @@ export function RequestUpdateDialog({ proposal, isOpen, onClose, onSuccess }) {
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Number of days the update request will remain valid.
+                Number of days the proposal update request will remain valid.
               </p>
             </div>
 
