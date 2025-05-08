@@ -371,7 +371,6 @@ export default function TeacherProposalUpdate() {
 
       // Add required IDs for the backend to identify the proposal and request
       formData.append("proposal_id", proposalData._id);
-      formData.append("request_id", requestData._id);
 
       // Create the updates object with only the fields that have been changed
       const updatesObj = {};

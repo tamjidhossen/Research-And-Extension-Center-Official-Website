@@ -169,7 +169,7 @@ export default function ProposalsDashboard() {
   const fetchReviewers = async () => {
     try {
       const response = await api.get("/api/admin/get-reviewers");
-      console.log("fetchReviewers Function: ", response)
+      console.log("fetchReviewers Function: ", response);
       if (response.data && response.data.reviewers) {
         setExistingReviewers(response.data.reviewers);
       }
@@ -369,7 +369,7 @@ export default function ProposalsDashboard() {
   const fetchReviewerAssignments = async () => {
     try {
       const response = await api.get("/api/admin/reviewer/review-details");
-      console.log("fetchReviewerAssignment: ", response)
+      console.log("fetchReviewerAssignment: ", response);
       if (response.data) {
         setReviewAssignments(response.data);
       }
@@ -929,7 +929,7 @@ export default function ProposalsDashboard() {
       setSending2Email(false);
     }
   };
-  console.log("Proposal before filter: ", proposals)
+  console.log("Proposal before filter: ", proposals);
   // Filter and sort proposals
   const filteredProposals = proposals
     .filter((proposal) => {
@@ -2804,62 +2804,125 @@ export default function ProposalsDashboard() {
                 )} days remaining`;
 
             return (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Status:</span>
-                  {getUpdateStatusBadge(updateStatus)}
+              <div className="space-y-6">
+                {/* Status Card */}
+                <div className="rounded-lg border bg-card p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <RefreshCw className="h-4 w-4 text-primary" />
+                      </div>
+                      <h3 className="font-medium">Update Request Status</h3>
+                    </div>
+                    {getUpdateStatusBadge(updateStatus)}
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-muted-foreground">
+                        Expires on
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                        <time className="font-medium">
+                          {new Date(validUntil).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </time>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-muted-foreground">
+                        Time remaining
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <Clock
+                          className={`h-3.5 w-3.5 ${
+                            isExpired ? "text-red-500" : "text-amber-500"
+                          }`}
+                        />
+                        <span
+                          className={`font-medium ${
+                            isExpired ? "text-red-600" : "text-amber-600"
+                          }`}
+                        >
+                          {timeRemaining}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <span className="text-sm font-medium">Expiration:</span>
-                  <p
-                    className={`mt-1 ${
-                      isExpired ? "text-red-600" : "text-amber-600"
-                    }`}
-                  >
-                    {new Date(validUntil).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}{" "}
-                    ({timeRemaining})
-                  </p>
-                </div>
-
+                {/* Message Card */}
                 {updateStatus.message && (
-                  <div>
-                    <span className="text-sm font-medium">
-                      Message to applicant:
-                    </span>
-                    <p className="mt-1 text-gray-700 whitespace-pre-line">
-                      {updateStatus.message}
-                    </p>
+                  <div className="rounded-lg border bg-blue-50/50 p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-blue-600" />
+                        <h3 className="font-medium text-blue-800">
+                          Message to Applicant
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div className="border-l-2 border-blue-200 pl-3 mt-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent">
+                        <p className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
+                          {updateStatus.message}
+                        </p>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-blue-50/90 to-transparent pointer-events-none"></div>
+                    </div>
                   </div>
                 )}
 
+                {/* Response Card */}
                 {updateStatus.updateNotes && (
-                  <div>
-                    <span className="text-sm font-medium">
-                      Applicant's response:
-                    </span>
-                    <p className="mt-1 text-gray-700 whitespace-pre-line">
-                      {updateStatus.updateNotes}
-                    </p>
+                  <div className="rounded-lg border bg-green-50/50 p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-4 w-4 text-green-600" />
+                        <h3 className="font-medium text-green-800">
+                          Applicant's Response
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div className="border-l-2 border-green-200 pl-3 mt-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-green-200 scrollbar-track-transparent">
+                        <p className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
+                          {updateStatus.updateNotes}
+                        </p>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-green-50/90 to-transparent pointer-events-none"></div>
+                    </div>
                     {updateStatus.submittedAt && (
-                      <p className="mt-1 text-xs text-gray-500">
-                        Submitted on{" "}
-                        {new Date(updateStatus.submittedAt).toLocaleDateString(
-                          "en-US",
-                          {
+                      <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-500 pl-5">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                          Submitted on{" "}
+                          {new Date(
+                            updateStatus.submittedAt
+                          ).toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
                             hour: "numeric",
                             minute: "numeric",
-                          }
-                        )}
-                      </p>
+                          })}
+                        </span>
+                      </div>
                     )}
+                  </div>
+                )}
+
+                {!updateStatus.updateNotes && !updateStatus.message && (
+                  <div className="rounded-lg border bg-amber-50/50 p-4 shadow-sm flex items-center gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-500" />
+                    <p className="text-amber-800 text-sm">
+                      No messages have been exchanged for this update request.
+                    </p>
                   </div>
                 )}
 

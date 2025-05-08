@@ -391,7 +391,6 @@ export default function StudentProposalUpdate() {
 
     // Add required fields for the backend
     formData.append("proposal_id", proposalData._id);
-    formData.append("request_id", requestData._id);
 
     // Create the updates object based on backend expectations
     const updatesObj = {
