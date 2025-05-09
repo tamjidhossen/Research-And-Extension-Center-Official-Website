@@ -169,7 +169,7 @@ export default function ProposalsDashboard() {
   const fetchReviewers = async () => {
     try {
       const response = await api.get("/api/admin/get-reviewers");
-      console.log("fetchReviewers Function: ", response);
+      // console.log("fetchReviewers Function: ", response);
       if (response.data && response.data.reviewers) {
         setExistingReviewers(response.data.reviewers);
       }
@@ -369,7 +369,7 @@ export default function ProposalsDashboard() {
   const fetchReviewerAssignments = async () => {
     try {
       const response = await api.get("/api/admin/reviewer/review-details");
-      console.log("fetchReviewerAssignment: ", response);
+      // console.log("fetchReviewerAssignment: ", response);
       if (response.data) {
         setReviewAssignments(response.data);
       }
@@ -442,7 +442,7 @@ export default function ProposalsDashboard() {
     setLoading(true);
     try {
       const response = await api.get("/api/admin/research-proposal");
-      console.log("OG Response ->", response);
+      // console.log("OG Response ->", response);
 
       if (response.data) {
         const { studentProposals, teacherProposals } = response.data;
@@ -929,7 +929,7 @@ export default function ProposalsDashboard() {
       setSending2Email(false);
     }
   };
-  console.log("Proposal before filter: ", proposals);
+  // console.log("Proposal before filter: ", proposals);
   // Filter and sort proposals
   const filteredProposals = proposals
     .filter((proposal) => {
