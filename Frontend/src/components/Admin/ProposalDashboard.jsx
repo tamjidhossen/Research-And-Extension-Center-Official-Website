@@ -1179,6 +1179,7 @@ export default function ProposalsDashboard() {
 
   const handleUpdateRequestSuccess = () => {
     fetchProposals();
+    fetchUpdateRequests();
   };
 
   return (
