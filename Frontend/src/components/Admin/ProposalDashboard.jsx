@@ -2931,7 +2931,6 @@ export default function ProposalsDashboard() {
                           {updateStatus.message}
                         </p>
                       </div>
-                      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-blue-50/90 to-transparent pointer-events-none"></div>
                     </div>
                   </div>
                 )}
@@ -2953,7 +2952,6 @@ export default function ProposalsDashboard() {
                           {updateStatus.updateNotes}
                         </p>
                       </div>
-                      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-green-50/90 to-transparent pointer-events-none"></div>
                     </div>
                     {updateStatus.submittedAt && (
                       <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-500 pl-5">
