@@ -167,7 +167,7 @@ export default function ReviewerPage() {
       setSelectedReviewForm(file);
       toast({
         title: "File selected",
-        description: "Reviewers comments form has been selected",
+        description: "Proposal review form has been selected",
       });
     } else if (fileType === "invoice") {
       setSelectedInvoice(file);
@@ -445,12 +445,12 @@ export default function ReviewerPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      Reviewers Comments Form
+                      Proposal Review Form
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pb-4 pt-0">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      Download the reviewers comments form to complete.
+                      Download the review form to complete.
                     </p>
                     <Button
                       variant="outline"
@@ -531,17 +531,17 @@ export default function ReviewerPage() {
               </div>
             </div>
 
-            {/* Upload Section 2: Proposal Evaluation Sheet */}
+            {/* Upload Section 2: Proposal Review Sheet */}
             <div className="space-y-4">
               <h3 className="font-medium text-lg">
-                Step 3: Upload Proposal Evaluation Sheet
+                Step 3: Upload Proposal Review Sheet
               </h3>
 
               <div className="rounded-md border border-dashed border-gray-300 dark:border-gray-700 px-6 py-8 text-center">
                 <label className="flex flex-col items-center cursor-pointer text-sm">
                   <ClipboardList className="h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" />
                   <span className="font-medium text-blue-800 dark:text-blue-300 mb-1">
-                    Upload Reviewers Comments Form (PDF)
+                    Upload Proposal Review Sheet (PDF)
                   </span>
                   <span className="text-gray-500 dark:text-gray-400 text-xs mb-4">
                     Max size: 5MB

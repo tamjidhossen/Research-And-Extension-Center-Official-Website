@@ -1,0 +1,58 @@
+name: rec-prod
+
+services:
+  rec_mongo:
+    image: mongo:8.0.4
+    volumes:
+      - rec_mongo_data:/data/db
+    networks:
+      - rec-network
+    restart: unless-stopped
+
+  rec_backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./Backend/.env
+    volumes:
+      - ../uploads/proposal:/app/uploads/proposal
+      - ../uploads/document:/app/uploads/document
+      - ../uploads/marksheet:/app/uploads/marksheet
+      - ../uploads/evaluation_sheet:/app/uploads/evaluation_sheet
+      - ../uploads/invoice:/app/uploads/invoice
+      - ../uploads/notices:/app/uploads/notices
+    ports:
+      - "5000:4000"
+    networks:
+      - rec-network
+    depends_on:
+      - rec_mongo
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://researchcenter.jkkniu.edu.bd/v1
+        - VITE_REVIEWER_HONORIUM=600
+        - VITE_MAX_FILE_SIZE=5242880
+        - VITE_JWT_TOKEN_KEY=adminToken
+    restart: unless-stopped
+    ports:
+      - "5001:80"
+    env_file: ./Frontend/.env
+    volumes:
+      - rec_frontend_build:/srv
+    networks:
+      - rec-network
+    depends_on:
+      - rec_backend
+
+volumes:
+  rec_mongo_data:
+  rec_frontend_build:
+
+networks:
+  rec-network:
+    driver: bridge
