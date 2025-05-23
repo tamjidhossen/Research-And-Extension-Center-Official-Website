@@ -15,11 +15,13 @@ const adminRoutes = require('./routes/admin.routes.js')
 const adminNoticerRoutes = require('./routes/admin.noticer.routes.js')
 const reviewerRoutes = require('./routes/reviewer.routes.js')
 const noticeRoutes = require('./routes/notice.routes.js')
+const updateRequestRoutes = require('./routes/update.request.routes.js')
 
 app.use('/v1/api/research-proposal/', proposalRoutes);
 app.use('/v1/api/admin/', adminRoutes);
 app.use('/v1/api/admin/noticer', adminNoticerRoutes);
 app.use('/v1/api/reviewer/', reviewerRoutes);
 app.use('/v1/api/notice/', noticeRoutes);
+app.use('/v1/api/update-request/', updateRequestRoutes);
 
 module.exports = app;

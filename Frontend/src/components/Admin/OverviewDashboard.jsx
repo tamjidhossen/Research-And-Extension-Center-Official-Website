@@ -111,7 +111,7 @@ const OverviewDashboard = () => {
     },
     {
       id: "review_form",
-      name: "Proposal Review Form Template",
+      name: "Reviewers Comments Form Template",
       category: "reviewer",
       uploaded: false,
       url: null,
@@ -925,7 +925,7 @@ const OverviewDashboard = () => {
                               {doc.id === "proposal_mark_sheet" &&
                                 "Update Marking Sheet Template"}
                               {doc.id === "review_form" &&
-                                "Update Review Form Template"}
+                                "Update Reviewers Comments Form Template"}
                               {doc.id === "invoice" &&
                                 "Update Honorarium Template"}
                             </DialogTitle>
@@ -943,7 +943,7 @@ const OverviewDashboard = () => {
                               {doc.id === "proposal_mark_sheet" &&
                                 "New marking sheet file (PDF, DOC, or DOCX)"}
                               {doc.id === "review_form" &&
-                                "New review form file (PDF, DOC, or DOCX)"}
+                                "New comments form file (PDF, DOC, or DOCX)"}
                               {doc.id === "invoice" &&
                                 "New honorarium template file (PDF, DOC, or DOCX)"}
                             </Label>
