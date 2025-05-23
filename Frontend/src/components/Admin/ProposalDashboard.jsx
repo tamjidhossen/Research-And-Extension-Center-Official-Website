@@ -26,7 +26,6 @@ import {
   Star,
   Info,
   UserCheck,
-  RefreshCw,
 } from "lucide-react";
 import {
   Card,
@@ -80,7 +79,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
-import { RequestUpdateDialog } from "./RequestUpdateDialog";
 
 export default function ProposalsDashboard() {
   // State variables
@@ -147,137 +145,20 @@ export default function ProposalsDashboard() {
     useState(null);
   const [allocatedAmount, setAllocatedAmount] = useState("");
 
-  const [showUpdateRequestDialog, setShowUpdateRequestDialog] = useState(false);
-  const [selectedProposalForUpdate, setSelectedProposalForUpdate] =
-    useState(null);
-
-  const [updateRequests, setUpdateRequests] = useState([]);
-  const [showUpdateRequestStatusDialog, setShowUpdateRequestStatusDialog] =
-    useState(false);
-
   useEffect(() => {
-    // First fetch reviewers and assignments then proposals
-    Promise.all([
-      fetchReviewers(),
-      fetchReviewerAssignments(),
-      fetchUpdateRequests(),
-    ]).then(() => {
-      fetchProposals();
-    });
+    fetchProposals();
+    fetchReviewers();
+    fetchReviewerAssignments();
   }, []);
 
   const fetchReviewers = async () => {
     try {
       const response = await api.get("/api/admin/get-reviewers");
-      // console.log("fetchReviewers Function: ", response);
       if (response.data && response.data.reviewers) {
         setExistingReviewers(response.data.reviewers);
       }
     } catch (error) {
       // console.error("Failed to fetch reviewers:", error);
-    }
-  };
-
-  const fetchUpdateRequests = async () => {
-    try {
-      const response = await api.get("/api/update-request/all");
-      if (response.data && response.data.requests) {
-        setUpdateRequests(response.data.requests);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch update requests",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const deleteUpdateRequest = async (requestId) => {
-    try {
-      await api.delete(`/api/update-request/${requestId}`);
-
-      // Refresh update requests
-      fetchUpdateRequests();
-
-      toast.success("Update request deleted successfully");
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to delete update request"
-      );
-    }
-  };
-
-  const getUpdateRequestStatus = (proposalId) => {
-    const updateRequest = updateRequests.find(
-      (req) =>
-        req.proposal_id._id === proposalId || req.proposal_id === proposalId
-    );
-
-    if (!updateRequest) return null;
-
-    return {
-      status: updateRequest.status,
-      validUntil: updateRequest.valid_until,
-      requestId: updateRequest._id,
-      submittedAt: updateRequest.submitted_at,
-      message: updateRequest.message,
-      updateNotes: updateRequest.update_notes,
-    };
-  };
-
-  const getUpdateStatusBadge = (updateStatus) => {
-    if (!updateStatus) return null;
-
-    const now = new Date();
-    const validUntil = new Date(updateStatus.validUntil);
-    const isExpired = now > validUntil;
-
-    if (isExpired && updateStatus.status !== "updated") {
-      return (
-        <Badge
-          variant="outline"
-          className="bg-red-100 text-red-800 border-red-200"
-        >
-          <Clock className="h-3 w-3 mr-1" />
-          Expired
-        </Badge>
-      );
-    }
-
-    switch (updateStatus.status) {
-      case "sent":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-amber-100 text-amber-800 border-amber-200"
-          >
-            <Mail className="h-3 w-3 mr-1" />
-            Update Requested
-          </Badge>
-        );
-      case "viewed":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-blue-100 text-blue-800 border-blue-200"
-          >
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Viewed
-          </Badge>
-        );
-      case "updated":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-green-100 text-green-800 border-green-200"
-          >
-            <RefreshCw className="h-3 w-3 mr-1" />
-            Updated
-          </Badge>
-        );
-      default:
-        return null;
     }
   };
 
@@ -369,7 +250,6 @@ export default function ProposalsDashboard() {
   const fetchReviewerAssignments = async () => {
     try {
       const response = await api.get("/api/admin/reviewer/review-details");
-      // console.log("fetchReviewerAssignment: ", response);
       if (response.data) {
         setReviewAssignments(response.data);
       }
@@ -442,7 +322,6 @@ export default function ProposalsDashboard() {
     setLoading(true);
     try {
       const response = await api.get("/api/admin/research-proposal");
-      // console.log("OG Response ->", response);
 
       if (response.data) {
         const { studentProposals, teacherProposals } = response.data;
@@ -454,7 +333,6 @@ export default function ProposalsDashboard() {
             proposalNumber: p.proposal_number,
             title: p.project_title,
             applicant: p.project_director.name_en,
-            applicant_email: p.project_director.email,
             applicantType: "Student",
             department: p.department,
             faculty: p.faculty,
@@ -502,7 +380,6 @@ export default function ProposalsDashboard() {
             proposalNumber: p.proposal_number,
             title: p.project_title,
             applicant: p.project_director.name_en,
-            applicant_email: p.project_director.email,
             applicantType: "Teacher",
             department: p.department,
             faculty: p.faculty,
@@ -738,11 +615,7 @@ export default function ProposalsDashboard() {
     }
 
     // Validate expiration days
-    if (
-      !reviewer1Expiration ||
-      reviewer1Expiration === "" ||
-      parseInt(reviewer1Expiration) < 1
-    ) {
+    if (!reviewer1Expiration || reviewer1Expiration === "" || parseInt(reviewer1Expiration) < 1) {
       toast.error("Please enter a valid expiration period (minimum 1 day)");
       return;
     }
@@ -836,11 +709,7 @@ export default function ProposalsDashboard() {
     }
 
     // Validate expiration days
-    if (
-      !reviewer2Expiration ||
-      reviewer2Expiration === "" ||
-      parseInt(reviewer2Expiration) < 1
-    ) {
+    if (!reviewer2Expiration || reviewer2Expiration === "" || parseInt(reviewer2Expiration) < 1) {
       toast.error("Please enter a valid expiration period (minimum 1 day)");
       return;
     }
@@ -929,7 +798,6 @@ export default function ProposalsDashboard() {
       setSending2Email(false);
     }
   };
-  // console.log("Proposal before filter: ", proposals);
   // Filter and sort proposals
   const filteredProposals = proposals
     .filter((proposal) => {
@@ -1105,81 +973,6 @@ export default function ProposalsDashboard() {
     setReviewerToDelete(reviewer);
     setProposalForReviewerDelete(proposal);
     setShowDeleteConfirmDialog(true);
-  };
-
-  const handleRequestUpdate = (proposal) => {
-    const updateStatus = getUpdateRequestStatus(proposal.id);
-
-    // Find related reviewer assignments for this proposal
-    const proposalAssignments = reviewAssignments.filter((assignment) => {
-      const proposalIdStr = proposal.id.toString();
-      const assignmentProposalIdStr = (
-        typeof assignment.proposal_id === "object" && assignment.proposal_id._id
-          ? assignment.proposal_id._id
-          : assignment.proposal_id
-      ).toString();
-  
-      return proposalIdStr === assignmentProposalIdStr;
-    });
-    
-    // Create enhanced proposal with complete reviewer details
-    const enhancedProposal = {
-      ...proposal,
-      reviewers: proposal.reviewers ? proposal.reviewers.map((reviewer) => {
-        // Ensure consistent string ID for comparison
-        const reviewerId =
-          typeof reviewer.id === "object"
-            ? reviewer.id._id?.toString() || reviewer.id.toString()
-            : reviewer.id.toString();
-        
-        // Get reviewer name and email from existing data
-        let reviewerName = reviewer.name || "Unknown";
-        let reviewerEmail = reviewer.email || "";
-        
-        // Try to find in existingReviewers by ID
-        const fullDetailsById = existingReviewers.find(
-          (r) => r._id && r._id.toString() === reviewerId
-        );
-        
-        if (fullDetailsById) {
-          reviewerName = fullDetailsById.name;
-          reviewerEmail = fullDetailsById.email;
-        }
-        
-        // Find matching assignment to get marks and files
-        const assignment = proposalAssignments.find((a) => {
-          const assignmentReviewerId =
-            typeof a.reviewer_id === "object"
-              ? a.reviewer_id._id?.toString() || a.reviewer_id.toString()
-              : a.reviewer_id.toString();
-          
-          return assignmentReviewerId === reviewerId;
-        });
-        
-        return {
-          id: reviewerId,
-          name: reviewerName,
-          email: reviewerEmail,
-          marks: assignment?.total_mark || null,
-          status: assignment?.status || 0,
-          markSheetUrl: assignment?.mark_sheet_url || null,
-          evaluationSheetUrl: assignment?.evaluation_sheet_url || null,
-        };
-      }) : []
-    };
-    
-    setSelectedProposalForUpdate(enhancedProposal);
-  
-    if (updateStatus) {
-      setShowUpdateRequestStatusDialog(true);
-    } else {
-      setShowUpdateRequestDialog(true);
-    }
-  };
-
-  const handleUpdateRequestSuccess = () => {
-    fetchProposals();
-    fetchUpdateRequests();
   };
 
   return (
@@ -2040,7 +1833,8 @@ export default function ProposalsDashboard() {
                                                     >
                                                       <Download className="h-3 w-3 mr-1" />
                                                       <span>
-                                                        View Reviewers Comments
+                                                        View Proposal Review
+                                                        Form
                                                       </span>
                                                     </Button>
                                                   </div>
@@ -2056,7 +1850,7 @@ export default function ProposalsDashboard() {
                                         );
                                       })()}
                                     </div>
-                                    {/* delete button */}
+                                    {/* Add delete button */}
                                     <Button
                                       variant="outline"
                                       size="sm"
@@ -2361,12 +2155,12 @@ export default function ProposalsDashboard() {
                       )} */}
 
                       {/* Status Update Buttons */}
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-2">
                         {/* Only show the Allocate button - other statuses should be automatic */}
                         {proposal.status !== 3 && proposal.status === 2 && (
                           <Button
                             variant="outline"
-                            size="icon"
+                            size="sm"
                             onClick={() => {
                               setSelectedProposalForAllocation(proposal);
                               setAllocatedAmount(
@@ -2377,48 +2171,9 @@ export default function ProposalsDashboard() {
                             className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700"
                             title="Allocate Funding"
                           >
-                            <DollarSign className="h-3 w-3" />
+                            <DollarSign className="h-3 w-3 mr-1" /> Allocate
                           </Button>
                         )}
-                      </div>
-
-                      <div className="relative">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700"
-                          onClick={() => handleRequestUpdate(proposal)}
-                          title="Request Update"
-                        >
-                          <RefreshCw className="h-3 w-3" />
-                          {(() => {
-                            const updateStatus = getUpdateRequestStatus(
-                              proposal.id
-                            );
-                            if (!updateStatus) return null;
-
-                            const now = new Date();
-                            const validUntil = new Date(
-                              updateStatus.validUntil
-                            );
-                            const isExpired = now > validUntil;
-
-                            // Status dot with colors based on status
-                            return (
-                              <span
-                                className={`absolute -top-0 -right-0 w-2 h-2 rounded-full ${
-                                  isExpired && updateStatus.status !== "updated"
-                                    ? "bg-red-500"
-                                    : updateStatus.status === "updated"
-                                    ? "bg-green-500"
-                                    : updateStatus.status === "viewed"
-                                    ? "bg-blue-500"
-                                    : "bg-amber-500"
-                                }`}
-                              />
-                            );
-                          })()}
-                        </Button>
                       </div>
 
                       {/* Delete Proposal */}
@@ -2766,7 +2521,8 @@ export default function ProposalsDashboard() {
                             window.open(fileUrl, "_blank");
                           }}
                         >
-                          <Download className="h-3 w-3 mr-1" /> View Reviewers Comments
+                          <Download className="h-3 w-3 mr-1" /> View Proposal
+                          Review
                         </Button>
                       )}
                   </div>
@@ -2833,186 +2589,6 @@ export default function ProposalsDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Update Request Status Dialog */}
-      <Dialog
-        open={showUpdateRequestStatusDialog}
-        onOpenChange={setShowUpdateRequestStatusDialog}
-      >
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Update Request Status</DialogTitle>
-            <DialogDescription>
-              Details about the update request for this proposal.
-            </DialogDescription>
-          </DialogHeader>
-
-          {(() => {
-            const updateStatus = getUpdateRequestStatus(
-              selectedProposalForUpdate?.id
-            );
-            if (!updateStatus) return null;
-
-            const validUntil = new Date(updateStatus.validUntil);
-            const now = new Date();
-            const isExpired = now > validUntil;
-            const timeRemaining = isExpired
-              ? "Expired"
-              : `${Math.floor(
-                  (validUntil - now) / (1000 * 60 * 60 * 24)
-                )} days remaining`;
-
-            return (
-              <div className="space-y-6">
-                {/* Status Card */}
-                <div className="rounded-lg border bg-card p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="bg-primary/10 p-2 rounded-full">
-                        <RefreshCw className="h-4 w-4 text-primary" />
-                      </div>
-                      <h3 className="font-medium">Update Request Status</h3>
-                    </div>
-                    {getUpdateStatusBadge(updateStatus)}
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs text-muted-foreground">
-                        Expires on
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
-                        <time className="font-medium">
-                          {new Date(validUntil).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </time>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs text-muted-foreground">
-                        Time remaining
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <Clock
-                          className={`h-3.5 w-3.5 ${
-                            isExpired ? "text-red-500" : "text-amber-500"
-                          }`}
-                        />
-                        <span
-                          className={`font-medium ${
-                            isExpired ? "text-red-600" : "text-amber-600"
-                          }`}
-                        >
-                          {timeRemaining}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Message Card */}
-                {updateStatus.message && (
-                  <div className="rounded-lg border bg-blue-50/50 p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-blue-600" />
-                        <h3 className="font-medium text-blue-800">
-                          Message to Applicant
-                        </h3>
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <div className="border-l-2 border-blue-200 pl-3 mt-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent">
-                        <p className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
-                          {updateStatus.message}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Response Card */}
-                {updateStatus.updateNotes && (
-                  <div className="rounded-lg border bg-green-50/50 p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <UserCheck className="h-4 w-4 text-green-600" />
-                        <h3 className="font-medium text-green-800">
-                          Applicant's Response
-                        </h3>
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <div className="border-l-2 border-green-200 pl-3 mt-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-green-200 scrollbar-track-transparent">
-                        <p className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
-                          {updateStatus.updateNotes}
-                        </p>
-                      </div>
-                    </div>
-                    {updateStatus.submittedAt && (
-                      <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-500 pl-5">
-                        <Clock className="h-3 w-3" />
-                        <span>
-                          Submitted on{" "}
-                          {new Date(
-                            updateStatus.submittedAt
-                          ).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "numeric",
-                          })}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {!updateStatus.updateNotes && !updateStatus.message && (
-                  <div className="rounded-lg border bg-amber-50/50 p-4 shadow-sm flex items-center gap-3">
-                    <AlertCircle className="h-5 w-5 text-amber-500" />
-                    <p className="text-amber-800 text-sm">
-                      No messages have been exchanged for this update request.
-                    </p>
-                  </div>
-                )}
-
-                <DialogFooter className="mt-4">
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      deleteUpdateRequest(updateStatus.requestId);
-                      setShowUpdateRequestStatusDialog(false);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Request
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowUpdateRequestStatusDialog(false)}
-                  >
-                    Close
-                  </Button>
-                </DialogFooter>
-              </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
-
-      <RequestUpdateDialog
-        proposal={selectedProposalForUpdate}
-        isOpen={showUpdateRequestDialog}
-        onClose={() => setShowUpdateRequestDialog(false)}
-        onSuccess={handleUpdateRequestSuccess}
-      />
     </div>
   );
 }
