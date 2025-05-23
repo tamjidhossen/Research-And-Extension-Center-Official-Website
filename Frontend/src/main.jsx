@@ -7,17 +7,19 @@ import StudentSubmission from "./components/Submit/Student";
 import TeacherSubmission from "./components/Submit/Teacher";
 import Notices from "./components/Notices/Notices";
 import PrevProposals from "./components/Proposals/PrevProposals";
-import AdminLogin from './components/Admin/Login'
-import Dashboard from './components/Admin/Dashboard'
-import ProtectedRoute from './components/Admin/ProtectedRoute'
-import AdminRegister from './components/Admin/Register'
-import ReviewerPage from './components/Reviewer/ReviewerPage';
-import InvoiceSubmissionPage from './components/Reviewer/InvoiceSubmission';
-import NoticeManagerLogin from './components/NoticeManager/Login';
-import NoticeManagerDashboard from './components/NoticeManager/Dashboard';
-import NoticeManagerProtectedRoute from './components/NoticeManager/ProtectedRoute';
+import AdminLogin from "./components/Admin/Login";
+import Dashboard from "./components/Admin/Dashboard";
+import ProtectedRoute from "./components/Admin/ProtectedRoute";
+import AdminRegister from "./components/Admin/Register";
+import ReviewerPage from "./components/Reviewer/ReviewerPage";
+import InvoiceSubmissionPage from "./components/Reviewer/InvoiceSubmission";
+import NoticeManagerLogin from "./components/NoticeManager/Login";
+import NoticeManagerDashboard from "./components/NoticeManager/Dashboard";
+import NoticeManagerProtectedRoute from "./components/NoticeManager/ProtectedRoute";
 import DeveloperInfo from "./components/DeveloperInfo/DeveloperInfo";
-import NotFound from './components/NotFound';
+import NotFound from "./components/NotFound";
+import StudentProposalUpdate from "./components/UpdateProposal/StudentProposalUpdate";
+import TeacherProposalUpdate from "./components/UpdateProposal/TeacherProposalUpdate";
 
 import {
   Route,
@@ -38,32 +40,40 @@ const router = createBrowserRouter(
         <Route path="review" element={<ReviewerPage />} />
         <Route path="invoice/upload" element={<InvoiceSubmissionPage />} />
         <Route path="developer-info" element={<DeveloperInfo />} />
+        <Route
+          path="update-proposal/student"
+          element={<StudentProposalUpdate />}
+        />
+        <Route
+          path="update-proposal/teacher"
+          element={<TeacherProposalUpdate />}
+        />
         {/* Catch-all route for the Layout */}
         <Route path="*" element={<NotFound />} />
       </Route>
       <Route path="/admin" errorElement={<NotFound />}>
         <Route path="register" element={<AdminRegister />} />
         <Route path="login" element={<AdminLogin />} />
-        <Route 
-          path="dashboard" 
+        <Route
+          path="dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } 
+          }
         />
         {/* Catch-all route for the Layout */}
         <Route path="*" element={<NotFound />} />
       </Route>
       <Route path="/notice-manager" errorElement={<NotFound />}>
         <Route path="login" element={<NoticeManagerLogin />} />
-        <Route 
-          path="dashboard" 
+        <Route
+          path="dashboard"
           element={
             <NoticeManagerProtectedRoute>
               <NoticeManagerDashboard />
             </NoticeManagerProtectedRoute>
-          } 
+          }
         />
         <Route path="*" element={<NotFound />} />
       </Route>
