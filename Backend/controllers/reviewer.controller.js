@@ -23,9 +23,9 @@ const verifyReviewer = async (req, res) => {
 
         // Find proposal based on the type
         if (proposal_type === "student") {
-            proposal = await StudentProposal.findById(req.proposal_id).select("pdf_url_part_B fiscal_year");
+            proposal = await StudentProposal.findById(req.proposal_id).select("pdf_url_part_B fiscal_year project_title");
         } else if (proposal_type === "teacher") {
-            proposal = await TeacherProposal.findById(req.proposal_id).select("pdf_url_part_B fiscal_year");
+            proposal = await TeacherProposal.findById(req.proposal_id).select("pdf_url_part_B fiscal_year project_title");
         } else {
             return res.status(401).json({ success: false, message: "Unauthorized" });
         }
