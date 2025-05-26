@@ -102,13 +102,22 @@ const sendPasswordResetMail = async (to, resetLink) => {
   }
 };
 
-const sendMailToReviewer = async (to, name, token, expiresIn = 45) => {
+const sendMailToReviewer = async (to, name, token, expiresIn = 45, project_title, project_description = '') => {
   try {
     // Construct the review link
     const reviewLink = `${process.env.FRONTEND_URL}/review?token=${token}`;
 
     // Convert expiresIn to a more readable format if it's a number
     const expirationText = typeof expiresIn === "number" ? `${expiresIn} Days` : expiresIn;
+
+    // Project details section - only shown if project_title exists
+    const projectDetailsSection = project_title ? `
+      <div style="margin: 20px 0; padding: 15px; background-color: #f0f9f6; border-radius: 5px; border-left: 4px solid #065f46;">
+        <h3 style="margin-top: 0; color: #065f46; font-size: 18px;">Project Details:</h3>
+        <p style="margin-bottom: 5px;"><strong>Title:</strong> ${project_title}</p>
+        ${project_description ? `<p style="margin-top: 10px;"><strong>Description:</strong> ${project_description}</p>` : ''}
+      </div>
+    ` : '';
 
     const emailContent = `
       <div style="background-color: #065f46; color: white; padding: 40px 30px; text-align: center;">
@@ -119,7 +128,11 @@ const sendMailToReviewer = async (to, name, token, expiresIn = 45) => {
       <div style="padding: 30px; background-color: #fafefd; color: #065f46; font-family: Arial, sans-serif;">
         <p style="font-size: 16px; line-height: 1.6;">Dear <strong>${name}</strong>,</p>
         <p style="font-size: 16px; line-height: 1.6;">You have been selected as an esteemed reviewer for a research proposal submitted to
-        the Research and Extension Center, JKKNIU. Please click the button below to evaluate it:</p>
+        the Research and Extension Center, JKKNIU.</p>
+        
+        ${projectDetailsSection}
+
+        <p style="font-size: 16px; line-height: 1.6;">Please click the button below to evaluate it:</p>
 
         <div style="text-align: center; margin: 30px 0;">
           <a href="${reviewLink}" style="background-color: #056e51; color: white; padding: 15px 25px; text-decoration: none; font-size: 18px; border-radius: 5px; display: inline-block; font-weight: bold;">
@@ -129,7 +142,7 @@ const sendMailToReviewer = async (to, name, token, expiresIn = 45) => {
 
         <p style="font-size: 16px; line-height: 1.6;">Please note: The review link will expire in ${expirationText}.</p>
 
-        <p style="font-size: 16px; line-height: 1.6;">If you have any questions or require further assistance, please don’t hesitate to contact us.</p>
+        <p style="font-size: 16px; line-height: 1.6;">If you have any questions or require further assistance, please don't hesitate to contact us.</p>
       </div>
 
       <div style="background-color: #065f46; padding: 25px; text-align: center; font-size: 14px; color: white;">
@@ -148,9 +161,8 @@ const sendMailToReviewer = async (to, name, token, expiresIn = 45) => {
     const mailOptions = {
       from: `"Research And Extension Center" <${process.env.EMAIL_USERNAME}>`,
       to,
-      subject: "Research Proposal Review Request",
-      text: `Dear ${name},\n\nYou have been selected as an esteemed reviewer for a research proposal submitted to
-the Research and Extension Center, JKKNIU.\nPlease click the link below to evaluate it:\n${reviewLink}\n\nThis link will expire in ${expirationText}.`,
+      subject: `Research Proposal Review Request: ${project_title || ''}`,
+      text: `Dear ${name},\n\nYou have been selected as an esteemed reviewer for a research proposal submitted to the Research and Extension Center, JKKNIU.\n\n${project_title ? `Project Title: ${project_title}\n\n` : ''}${project_description ? `Project Description: ${project_description}\n\n` : ''}Please click the link below to evaluate it:\n${reviewLink}\n\nThis link will expire in ${expirationText}.`,
       html: htmlContent,
     };
 

@@ -413,7 +413,7 @@ const sentToReviewer = async (req, res) => {
 
         try {
             // Try sending the email
-            await sendMailToReviewer(reviewer.email, reviewer.name, token, (expiresIn ? expiresIn : 45));
+            await sendMailToReviewer(reviewer.email, reviewer.name, token, (expiresIn ? expiresIn : 45), proposal.project_title);
 
             return res.status(200).json({ success: true, message: "Reviewer assigned! Email sent successfully." });
 
