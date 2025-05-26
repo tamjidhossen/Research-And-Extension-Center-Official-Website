@@ -390,6 +390,32 @@ export default function ReviewerPage() {
               </p>
             </div>
 
+            {/* Proposal Information */}
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-md border border-emerald-200 dark:border-emerald-800/50">
+              <h2 className="text-lg font-medium mb-4 text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Research Proposal Details
+              </h2>
+              <div className="space-y-4">
+                <div className="bg-white dark:bg-emerald-900/20 p-4 rounded-lg border border-emerald-200/50 dark:border-emerald-800/30">
+                  <span className="font-medium text-emerald-700 dark:text-emerald-300 text-sm uppercase tracking-wide">
+                    Title
+                  </span>
+                  <h3 className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mt-2 leading-tight">
+                    {proposal?.project_title || "Research Proposal"}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                    Fiscal Year:
+                  </span>
+                  <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
+                    {proposal?.fiscal_year || "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Download Section */}
             <div className="space-y-4">
               <h3 className="font-medium text-lg">
