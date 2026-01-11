@@ -75,10 +75,12 @@ const sendPasswordResetMail = async (to, resetLink) => {
       <div style="background-color: #065f46; padding: 25px; text-align: center; font-size: 14px; color: white;">
         <p style="margin: 0;">For any inquiries, please contact us at:</p>
         <p style="margin: 10px 0;">
-          <a href="mailto:alumnijkkniucse@gmail.com" style="color: #fafefd; text-decoration: none;">alumnijkkniucse@gmail.com</a>
+          <a href="mailto:researchcenter@jkkniu.edu.bd" style="color: #fafefd; text-decoration: none;">researchcenter@jkkniu.edu.bd</a><br>
+          Director<br>
+          Mobile : +8801738113686
         </p>
         <p style="margin: 0;">Best regards,<br/>
-        <strong>CSE Alumni Community</strong><br/>
+        <strong>Research And Extension Center</strong><br/>
         <span style="font-size: 14px;">Jatiya Kabi Kazi Nazrul Islam University</span></p>
       </div>
     `;
@@ -87,7 +89,7 @@ const sendPasswordResetMail = async (to, resetLink) => {
     const htmlContent = createResponsiveEmailTemplate(emailContent);
 
     const mailOptions = {
-      from: `"CSE Alumni Community" <${process.env.EMAIL_USERNAME}>`,
+      from: `"Research And Extension Center" <${process.env.EMAIL_USERNAME}>`,
       to,
       subject: "Password Reset Request",
       text: `Dear User, \n\nYou have requested to reset your password. Please use the following link: ${resetLink} \n\nIf you did not request this, please ignore this email. This link will expire in 1 hour.`,
@@ -148,7 +150,9 @@ const sendMailToReviewer = async (to, name, token, expiresIn = 45, project_title
       <div style="background-color: #065f46; padding: 25px; text-align: center; font-size: 14px; color: white;">
         <p style="margin: 0;">For any inquiries, please contact us at:</p>
         <p style="margin: 10px 0;">
-          <a href="mailto:habiburfbjkkniu@gmail.com" style="color: #fafefd; text-decoration: none;">habiburfbjkkniu@gmail.com</a>
+          <a href="mailto:researchcenter@jkkniu.edu.bd" style="color: #fafefd; text-decoration: none;">researchcenter@jkkniu.edu.bd</a><br>
+          Director<br>
+          Mobile : +8801738113686
         </p>
         <p style="margin: 0;">Best regards,<br/>
         <strong>Research And Extension Center</strong><br/>
@@ -214,7 +218,9 @@ const sendMailInvoiceToReviewer = async (reviewerEmail, filePath, uploadUrl) => 
       <div style="background-color: #065f46; padding: 25px; text-align: center; font-size: 14px; color: white;">
         <p style="margin: 0;">For any inquiries, please contact us at:</p>
         <p style="margin: 10px 0;">
-          <a href="mailto:alumnijkkniucse@gmail.com" style="color: #fafefd; text-decoration: none;">alumnijkkniucse@gmail.com</a>
+          <a href="mailto:researchcenter@jkkniu.edu.bd" style="color: #fafefd; text-decoration: none;">researchcenter@jkkniu.edu.bd</a><br>
+          Director<br>
+          Mobile : +8801738113686
         </p>
         <p style="margin: 0;">Best regards,<br/>
         <strong>Research Proposal System</strong><br/>
@@ -308,7 +314,9 @@ const sendUpdateRequestEmail = async (to, proposalTitle, message, updateLink, ex
         
         <p style="font-size: 14px; line-height: 1.6; margin-top: 30px; color: #555;">
           If you have any questions, please contact us at:
-          <a href="mailto:habiburfbjkkniu@gmail.com" style="color: #065f46; text-decoration: none;">habiburfbjkkniu@gmail.com</a>
+          <a href="mailto:researchcenter@jkkniu.edu.bd" style="color: #065f46; text-decoration: none;">researchcenter@jkkniu.edu.bd</a><br>
+          Director<br>
+          Mobile : +8801738113686
         </p>
         
         <p style="margin: 0;">Best regards,<br/>
