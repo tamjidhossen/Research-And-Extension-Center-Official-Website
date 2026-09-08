@@ -1,51 +1,48 @@
-const Request = require('../models/request.model.js');
-const { StudentProposal } = require('../models/student.proposal.model.js');
-const { TeacherProposal } = require('../models/teacher.proposal.model.js');
-const { ReviewerAssignment } = require('../models/reviewer.assignment.model.js');
-const RequestQueueModel = require('../models/request.queue.model.js');
-const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
-const fs = require('fs');
-const path = require('path');
+const Request = require("../models/request.model.js");
+const { StudentProposal } = require("../models/student.proposal.model.js");
+const { TeacherProposal } = require("../models/teacher.proposal.model.js");
+const {
+    ReviewerAssignment,
+} = require("../models/reviewer.assignment.model.js");
+const RequestQueueModel = require("../models/request.queue.model.js");
+const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
+const fs = require("fs");
+const path = require("path");
 
 // Email configuration
-const { sendUpdateRequestEmail } = require('../config/emailConfig.js');
+const { sendUpdateRequestEmail } = require("../config/emailConfig.js");
 
 // Create and send a request
 const createRequest = async (req, res) => {
     try {
-        let {
-            proposal_id,
-            proposal_type,
-            message,
-            expiry_days
-        } = req.body;
+        let { proposal_id, proposal_type, message, expiry_days } = req.body;
         proposal_id = new mongoose.Types.ObjectId(proposal_id); // Ensure proposal_id is a valid ObjectId
         // Validate inputs
         if (!proposal_id || !proposal_type || !expiry_days) {
             return res.status(400).json({
                 success: false,
-                message: "Missing required fields"
+                message: "Missing required fields",
             });
         }
 
         // Check if proposal exists
         let proposal;
-        if (proposal_type === 'student') {
+        if (proposal_type === "student") {
             proposal = await StudentProposal.findById(proposal_id);
-        } else if (proposal_type === 'teacher') {
+        } else if (proposal_type === "teacher") {
             proposal = await TeacherProposal.findById(proposal_id);
         } else {
             return res.status(400).json({
                 success: false,
-                message: "Invalid proposal type"
+                message: "Invalid proposal type",
             });
         }
 
         if (!proposal) {
             return res.status(404).json({
                 success: false,
-                message: "Proposal not found"
+                message: "Proposal not found",
             });
         }
         let recipient_email = proposal.project_director.email;
@@ -60,16 +57,17 @@ const createRequest = async (req, res) => {
         const reviewerAssignments = await ReviewerAssignment.find({
             proposal_id: proposal_id,
             proposal_type: proposal_type,
-            status: 1 // Completed reviews
-        }).populate('reviewer_id', 'name email');
+            status: 1, // Completed reviews
+        }).populate("reviewer_id", "name email");
         if (reviewerAssignments && reviewerAssignments.length > 0) {
             // Get all available evaluation sheets from reviewers
             evaluation_sheet_urls = reviewerAssignments
-                .filter(assignment => assignment.evaluation_sheet_url)
-                .map(assignment => ({
+                .filter((assignment) => assignment.evaluation_sheet_url)
+                .map((assignment) => ({
                     reviewer_id: assignment.reviewer_id._id,
                     url: assignment.evaluation_sheet_url,
-                    reviewer_name: assignment.reviewer_id.name || 'Anonymous Reviewer'
+                    reviewer_name:
+                        assignment.reviewer_id.name || "Anonymous Reviewer",
                 }));
         }
         recipient_email = proposal.project_director.email;
@@ -81,7 +79,7 @@ const createRequest = async (req, res) => {
             admin_id: req.user._id,
             message,
             valid_until,
-            evaluation_sheet_urls
+            evaluation_sheet_urls,
         });
 
         await request.save();
@@ -90,7 +88,7 @@ const createRequest = async (req, res) => {
         const token = jwt.sign(
             { request_id: request._id },
             process.env.SECRET_KEY_UPDATE_REQUEST,
-            { expiresIn: `${expiry_days}d` }
+            { expiresIn: `${expiry_days}d` },
         );
 
         // Create update link
@@ -104,19 +102,21 @@ const createRequest = async (req, res) => {
             message,
             updateLink,
             expiry_days,
-            evaluation_sheet_urls
+            evaluation_sheet_urls,
         );
 
         res.status(201).json({
             success: true,
             message: "Request sent successfully",
             request,
-            updateLink
+            updateLink,
         });
-
     } catch (error) {
         console.error("Create request error:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
     }
 };
 
@@ -126,17 +126,20 @@ const getAllRequests = async (req, res) => {
         // Get all requests without any filters
         const requests = await Request.find()
             .sort({ created_at: -1 })
-            .populate('proposal_id', 'project_title project_director')
-            .populate('admin_id', 'name email');
+            .populate("proposal_id", "project_title project_director")
+            .populate("admin_id", "name email");
 
         res.status(200).json({
             success: true,
             count: requests.length,
-            requests: requests
+            requests: requests,
         });
     } catch (error) {
         console.error("Get requests error:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
     }
 };
 
@@ -146,17 +149,22 @@ const getRequestById = async (req, res) => {
         const { id } = req.params;
 
         const request = await Request.findById(id)
-            .populate('proposal_id', 'project_title project_director')
-            .populate('admin_id', 'name email');
+            .populate("proposal_id", "project_title project_director")
+            .populate("admin_id", "name email");
 
         if (!request) {
-            return res.status(404).json({ success: false, message: "Request not found" });
+            return res
+                .status(404)
+                .json({ success: false, message: "Request not found" });
         }
 
         res.status(200).json({ success: true, request });
     } catch (error) {
         console.error("Get request error:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
     }
 };
 
@@ -166,24 +174,27 @@ const verifyRequestToken = async (req, res) => {
         const { token } = req.params;
 
         if (!token) {
-            return res.status(400).json({ success: false, message: "Token is required" });
+            return res
+                .status(400)
+                .json({ success: false, message: "Token is required" });
         }
 
         // Verify token
         let decoded;
         try {
-            decoded = jwt.verify(
-                token,
-                process.env.SECRET_KEY_UPDATE_REQUEST
-            );
+            decoded = jwt.verify(token, process.env.SECRET_KEY_UPDATE_REQUEST);
         } catch (error) {
-            return res.status(401).json({ success: false, message: "Invalid or expired token" });
+            return res
+                .status(401)
+                .json({ success: false, message: "Invalid or expired token" });
         }
 
         // Find request
         const request = await Request.findById(decoded.request_id);
         if (!request) {
-            return res.status(404).json({ success: false, message: "Request not found" });
+            return res
+                .status(404)
+                .json({ success: false, message: "Request not found" });
         }
 
         // Check if expired and delete if it is
@@ -193,19 +204,19 @@ const verifyRequestToken = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Request has expired!",
-                expired: true
+                expired: true,
             });
         }
 
         // If status is sent, update to viewed
-        if (request.status === 'sent') {
-            request.status = 'viewed';
+        if (request.status === "sent") {
+            request.status = "viewed";
             await request.save();
         }
 
         // Get proposal details
         let proposal;
-        if (request.proposal_type === 'student') {
+        if (request.proposal_type === "student") {
             proposal = await StudentProposal.findById(request.proposal_id);
         } else {
             proposal = await TeacherProposal.findById(request.proposal_id);
@@ -216,23 +227,22 @@ const verifyRequestToken = async (req, res) => {
 
         // Fields to remove from frontend response
         const fieldsToRemove = [
-            'status',
-            'reviewer',
-            'createdAt',
-            'approval_status',
-            'reviewer_avg_mark',
-            '__v',
-            'updatedAt',
-            'approval_budget',
+            "status",
+            "reviewer",
+            "createdAt",
+            "approval_status",
+            "reviewer_avg_mark",
+            "__v",
+            "updatedAt",
+            "approval_budget",
         ];
 
         // Remove each field from the proposal object
-        fieldsToRemove.forEach(field => {
+        fieldsToRemove.forEach((field) => {
             if (filteredProposal.hasOwnProperty(field)) {
                 delete filteredProposal[field];
             }
         });
-
 
         // Generate special update token with necessary data and expiry
         const updateToken = jwt.sign(
@@ -240,10 +250,10 @@ const verifyRequestToken = async (req, res) => {
                 request_id: request._id,
                 proposal_id: request.proposal_id,
                 proposal_type: request.proposal_type,
-                expires: new Date(request.valid_until).getTime()
+                expires: new Date(request.valid_until).getTime(),
             },
             process.env.SECRET_KEY_UPDATE_REQUEST,
-            { expiresIn: '24h' } // Token expires in 24 hours or sooner based on request expiry
+            { expiresIn: "24h" }, // Token expires in 24 hours or sooner based on request expiry
         );
         res.status(200).json({
             success: true,
@@ -251,11 +261,14 @@ const verifyRequestToken = async (req, res) => {
             request_id: request._id,
             update_token: updateToken, // Send update token to frontend
             expire_time: request.valid_until,
-            proposal: filteredProposal
+            proposal: filteredProposal,
         });
     } catch (error) {
         console.error("Verify token error:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
     }
 };
 
@@ -265,25 +278,38 @@ const updateRequestStatus = async (req, res) => {
         const { id } = req.params;
         const { status, update_notes } = req.body;
 
-        if (!['viewed', 'in_progress', 'completed', 'expired'].includes(status)) {
-            return res.status(400).json({ success: false, message: "Invalid status" });
+        if (
+            !["viewed", "in_progress", "completed", "expired"].includes(status)
+        ) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Invalid status" });
         }
 
         const request = await Request.findById(id);
         if (!request) {
-            return res.status(404).json({ success: false, message: "Request not found" });
+            return res
+                .status(404)
+                .json({ success: false, message: "Request not found" });
         }
 
         request.status = status;
         if (update_notes) request.update_notes = update_notes;
-        if (status === 'completed') request.submitted_at = new Date();
+        if (status === "completed") request.submitted_at = new Date();
 
         await request.save();
 
-        res.status(200).json({ success: true, message: "Status updated", request });
+        res.status(200).json({
+            success: true,
+            message: "Status updated",
+            request,
+        });
     } catch (error) {
         console.error("Update status error:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
     }
 };
 
@@ -295,18 +321,22 @@ const submitRequestResponse = async (req, res) => {
 
         const request = await Request.findById(id);
         if (!request) {
-            return res.status(404).json({ success: false, message: "Request not found" });
+            return res
+                .status(404)
+                .json({ success: false, message: "Request not found" });
         }
 
         // Check if expired
         if (new Date() > new Date(request.valid_until)) {
-            return res.status(400).json({ success: false, message: "Request has expired" });
+            return res
+                .status(400)
+                .json({ success: false, message: "Request has expired" });
         }
 
         // Handle file uploads if present
         if (req.files) {
             let proposalModel;
-            if (request.proposal_type === 'student') {
+            if (request.proposal_type === "student") {
                 proposalModel = StudentProposal;
             } else {
                 proposalModel = TeacherProposal;
@@ -314,14 +344,20 @@ const submitRequestResponse = async (req, res) => {
 
             const proposal = await proposalModel.findById(request.proposal_id);
             if (!proposal) {
-                return res.status(404).json({ success: false, message: "Proposal not found" });
+                return res
+                    .status(404)
+                    .json({ success: false, message: "Proposal not found" });
             }
 
             // Update PDF files if uploaded
-            if (req.files.partA) {
+            if (req.files && req.files.partA && req.files.partA[0]) {
                 // Delete old file
                 if (proposal.pdf_url_part_A) {
-                    const oldPath = path.join(__dirname, '..', proposal.pdf_url_part_A);
+                    const oldPath = path.join(
+                        __dirname,
+                        "..",
+                        proposal.pdf_url_part_A,
+                    );
                     if (fs.existsSync(oldPath)) {
                         fs.unlinkSync(oldPath);
                     }
@@ -329,10 +365,14 @@ const submitRequestResponse = async (req, res) => {
                 proposal.pdf_url_part_A = req.files.partA[0].path;
             }
 
-            if (req.files.partB) {
+            if (req.files && req.files.partB && req.files.partB[0]) {
                 // Delete old file
                 if (proposal.pdf_url_part_B) {
-                    const oldPath = path.join(__dirname, '..', proposal.pdf_url_part_B);
+                    const oldPath = path.join(
+                        __dirname,
+                        "..",
+                        proposal.pdf_url_part_B,
+                    );
                     if (fs.existsSync(oldPath)) {
                         fs.unlinkSync(oldPath);
                     }
@@ -343,7 +383,7 @@ const submitRequestResponse = async (req, res) => {
             // Update other fields from the request body
             if (req.body.updates) {
                 const updates = JSON.parse(req.body.updates);
-                Object.keys(updates).forEach(key => {
+                Object.keys(updates).forEach((key) => {
                     if (proposal[key] !== undefined) {
                         proposal[key] = updates[key];
                     }
@@ -354,7 +394,7 @@ const submitRequestResponse = async (req, res) => {
         }
 
         // Update request status
-        request.status = 'completed';
+        request.status = "completed";
         request.submitted_at = new Date();
         if (update_notes) request.update_notes = update_notes;
 
@@ -363,21 +403,30 @@ const submitRequestResponse = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Response submitted successfully",
-            request
+            request,
         });
     } catch (error) {
         console.error("Submit response error:", error);
 
         // Delete uploaded files if an error occurs
         if (req.files) {
-            Object.values(req.files).flat().forEach(file => {
-                fs.unlink(file.path, err => {
-                    if (err) console.error(`Failed to delete file: ${file.path}`, err);
+            Object.values(req.files)
+                .flat()
+                .forEach((file) => {
+                    fs.unlink(file.path, (err) => {
+                        if (err)
+                            console.error(
+                                `Failed to delete file: ${file.path}`,
+                                err,
+                            );
+                    });
                 });
-            });
         }
 
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
     }
 };
 
@@ -388,15 +437,23 @@ const deleteRequest = async (req, res) => {
 
         const request = await Request.findById(id);
         if (!request) {
-            return res.status(404).json({ success: false, message: "Request not found" });
+            return res
+                .status(404)
+                .json({ success: false, message: "Request not found" });
         }
 
         await Request.findByIdAndDelete(id);
 
-        res.status(200).json({ success: true, message: "Request deleted successfully" });
+        res.status(200).json({
+            success: true,
+            message: "Request deleted successfully",
+        });
     } catch (error) {
         console.error("Delete request error:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
     }
 };
 
@@ -407,5 +464,5 @@ module.exports = {
     verifyRequestToken,
     updateRequestStatus,
     submitRequestResponse,
-    deleteRequest
+    deleteRequest,
 };

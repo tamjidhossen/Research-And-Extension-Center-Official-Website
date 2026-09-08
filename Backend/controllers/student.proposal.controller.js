@@ -1,21 +1,48 @@
-const fs = require('fs');
-const { StudentProposal } = require('../models/student.proposal.model.js');
-const ProposalDocument = require('../models/proposal.document.model.js');
-const Request = require('../models/request.model.js');
-const queueController = require('../controllers/request.queue.controller.js');
+const fs = require("fs");
+const { StudentProposal } = require("../models/student.proposal.model.js");
+const ProposalDocument = require("../models/proposal.document.model.js");
+const Request = require("../models/request.model.js");
+const queueController = require("../controllers/request.queue.controller.js");
 
 const submitProposal = async (req, res) => {
     try {
         const firstDocument = await ProposalDocument.findOne();
         if (!firstDocument || firstDocument.registrationOpen === false) {
-            if (req.files['partA'] && req.files['partA'][0].path) fs.unlinkSync(req.files['partA'][0].path);
-            if (req.files['partB'] && req.files['partB'][0].path) fs.unlinkSync(req.files['partB'][0].path);
-            return res.status(400).json({ success: false, message: "Application process not started" });
+            if (req.files) {
+                Object.values(req.files)
+                    .flat()
+                    .forEach((file) => {
+                        if (file && file.path && fs.existsSync(file.path)) {
+                            try {
+                                fs.unlinkSync(file.path);
+                            } catch (e) {
+                                console.error(
+                                    `Failed to delete file: ${file.path}`,
+                                    e,
+                                );
+                            }
+                        }
+                    });
+            }
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message: "Application process not started",
+                });
         }
 
         const {
-            project_director, department, faculty, session, roll_no,
-            cgpa_honours, supervisor, project_title, project_details, total_budget
+            project_director,
+            department,
+            faculty,
+            session,
+            roll_no,
+            cgpa_honours,
+            supervisor,
+            project_title,
+            project_details,
+            total_budget,
         } = req.body;
         const proposal = new StudentProposal({
             proposal_number: 0,
@@ -31,17 +58,44 @@ const submitProposal = async (req, res) => {
             project_title: project_title,
             project_details: JSON.parse(project_details),
             total_budget,
-            pdf_url_part_A: req.files['partA'] ? req.files['partA'][0].path : null,
-            pdf_url_part_B: req.files['partB'] ? req.files['partB'][0].path : null
+            pdf_url_part_A:
+                req.files && req.files["partA"] && req.files["partA"][0]
+                    ? req.files["partA"][0].path
+                    : null,
+            pdf_url_part_B:
+                req.files && req.files["partB"] && req.files["partB"][0]
+                    ? req.files["partB"][0].path
+                    : null,
         });
 
         await proposal.save();
-        res.status(201).json({ success: true, message: "Student proposal submitted successfully", proposal });
-
+        res.status(201).json({
+            success: true,
+            message: "Student proposal submitted successfully",
+            proposal,
+        });
     } catch (error) {
-        if (req.files['partA'] && req.files['partA'][0].path) fs.unlinkSync(req.files['partA'][0].path);
-        if (req.files['partB'] && req.files['partB'][0].path) fs.unlinkSync(req.files['partB'][0].path);
-        res.status(500).json({ success: false, error: "Internal Server Error" });
+        console.error("Error submitting student proposal:", error);
+        if (req.files) {
+            Object.values(req.files)
+                .flat()
+                .forEach((file) => {
+                    if (file && file.path && fs.existsSync(file.path)) {
+                        try {
+                            fs.unlinkSync(file.path);
+                        } catch (e) {
+                            console.error(
+                                `Failed to delete file: ${file.path}`,
+                                e,
+                            );
+                        }
+                    }
+                });
+        }
+        res.status(500).json({
+            success: false,
+            error: "Internal Server Error",
+        });
     }
 };
 
@@ -51,22 +105,29 @@ const updateProposal = async (req, res) => {
 
         // Verification now done by middleware - token already verified
         // Access decoded token data from middleware
-        const { proposal_id: token_proposal_id, request_id: token_request_id } = req.updateData;
+        const { proposal_id: token_proposal_id, request_id: token_request_id } =
+            req.updateData;
         const request_id = token_request_id;
 
         // Double check IDs match token data
         if (proposal_id !== token_proposal_id.toString()) {
             // Delete any uploaded files
             if (req.files) {
-                Object.values(req.files).flat().forEach(file => {
-                    fs.unlink(file.path, (err) => {
-                        if (err) console.error(`Failed to delete file: ${file.path}`, err);
+                Object.values(req.files)
+                    .flat()
+                    .forEach((file) => {
+                        fs.unlink(file.path, (err) => {
+                            if (err)
+                                console.error(
+                                    `Failed to delete file: ${file.path}`,
+                                    err,
+                                );
+                        });
                     });
-                });
             }
             return res.status(403).json({
                 success: false,
-                message: "Token doesn't match proposal or request"
+                message: "Token doesn't match proposal or request",
             });
         }
 
@@ -77,7 +138,7 @@ const updateProposal = async (req, res) => {
         if (!proposal) {
             return res.status(404).json({
                 success: false,
-                error: "Proposal not found"
+                error: "Proposal not found",
             });
         }
 
@@ -87,7 +148,11 @@ const updateProposal = async (req, res) => {
         // Function to handle file updates with safer checks - now inside updateProposal scope
         const updateFileField = (fieldName, existingPath) => {
             // First check if req.files exists and has the field
-            if (req.files && req.files[fieldName] && req.files[fieldName].length > 0) {
+            if (
+                req.files &&
+                req.files[fieldName] &&
+                req.files[fieldName].length > 0
+            ) {
                 const filePath = req.files[fieldName][0].path;
                 uploadedFiles.push(filePath);
 
@@ -96,7 +161,10 @@ const updateProposal = async (req, res) => {
                     try {
                         fs.unlinkSync(existingPath); // Synchronous delete to ensure completion
                     } catch (err) {
-                        console.error(`Failed to delete old file: ${existingPath}`, err);
+                        console.error(
+                            `Failed to delete old file: ${existingPath}`,
+                            err,
+                        );
                     }
                 }
 
@@ -113,8 +181,14 @@ const updateProposal = async (req, res) => {
         });
 
         // Handle file uploads (if any)
-        proposal.pdf_url_part_A = updateFileField('partA', proposal.pdf_url_part_A);
-        proposal.pdf_url_part_B = updateFileField('partB', proposal.pdf_url_part_B);
+        proposal.pdf_url_part_A = updateFileField(
+            "partA",
+            proposal.pdf_url_part_A,
+        );
+        proposal.pdf_url_part_B = updateFileField(
+            "partB",
+            proposal.pdf_url_part_B,
+        );
 
         // Save updated proposal
         const updatedProposal = await proposal.save();
@@ -122,9 +196,10 @@ const updateProposal = async (req, res) => {
         // Update request status if request_id is provided
         const request = await Request.findById(request_id);
         if (request) {
-            request.status = 'updated';
+            request.status = "updated";
             request.submitted_at = new Date();
-            request.update_notes = updates.update_notes || 'Proposal updated successfully';
+            request.update_notes =
+                updates.update_notes || "Proposal updated successfully";
             await request.save();
         }
 
@@ -132,36 +207,46 @@ const updateProposal = async (req, res) => {
             success: true,
             message: "Proposal updated successfully",
             updatedProposal,
-            requestUpdated: true
+            requestUpdated: true,
         });
-
     } catch (error) {
         console.error("Error updating proposal:", error);
 
         // If an error occurs, delete any newly uploaded files
         if (req.files) {
-            Object.values(req.files).flat().forEach(file => {
-                fs.unlink(file.path, (err) => {
-                    if (err) console.error(`Failed to delete file: ${file.path}`, err);
+            Object.values(req.files)
+                .flat()
+                .forEach((file) => {
+                    fs.unlink(file.path, (err) => {
+                        if (err)
+                            console.error(
+                                `Failed to delete file: ${file.path}`,
+                                err,
+                            );
+                    });
                 });
-            });
         }
 
         res.status(500).json({
             success: false,
-            error: "Internal Server Error"
+            error: "Internal Server Error",
         });
     }
 };
 
 const getApprovedProposals = async (req, res, next) => {
     try {
-        const studentProposals = await StudentProposal.find({ approval_status: 3 });
+        const studentProposals = await StudentProposal.find({
+            approval_status: 3,
+        });
         req.student_proposals = studentProposals;
         next();
     } catch (error) {
         console.error("Error fetching proposals:", error);
-        res.status(500).json({ success: false, error: "Internal Server Error" });
+        res.status(500).json({
+            success: false,
+            error: "Internal Server Error",
+        });
     }
 };
 
