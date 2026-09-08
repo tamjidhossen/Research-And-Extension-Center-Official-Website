@@ -10,7 +10,7 @@ import PrevProposals from "./components/Proposals/PrevProposals";
 import AdminLogin from "./components/Admin/Login";
 import Dashboard from "./components/Admin/Dashboard";
 import ProtectedRoute from "./components/Admin/ProtectedRoute";
-import AdminRegister from "./components/Admin/Register";
+// import AdminRegister from "./components/Admin/Register";
 import ReviewerPage from "./components/Reviewer/ReviewerPage";
 import InvoiceSubmissionPage from "./components/Reviewer/InvoiceSubmission";
 import NoticeManagerLogin from "./components/NoticeManager/Login";
@@ -22,68 +22,71 @@ import StudentProposalUpdate from "./components/UpdateProposal/StudentProposalUp
 import TeacherProposalUpdate from "./components/UpdateProposal/TeacherProposalUpdate";
 
 import {
-  Route,
-  RouterProvider,
-  createBrowserRouter,
-  createRoutesFromElements,
+    Route,
+    RouterProvider,
+    createBrowserRouter,
+    createRoutesFromElements,
 } from "react-router-dom";
 
 const router = createBrowserRouter(
-  createRoutesFromElements(
-    <>
-      <Route path="/" element={<Layout />} errorElement={<NotFound />}>
-        <Route path="" element={<Home />} />
-        <Route path="submit/student" element={<StudentSubmission />} />
-        <Route path="submit/teacher" element={<TeacherSubmission />} />
-        <Route path="notices" element={<Notices />} />
-        <Route path="archive" element={<PrevProposals />} />
-        <Route path="review" element={<ReviewerPage />} />
-        <Route path="invoice/upload" element={<InvoiceSubmissionPage />} />
-        <Route path="developer-info" element={<DeveloperInfo />} />
-        <Route
-          path="update-proposal/student"
-          element={<StudentProposalUpdate />}
-        />
-        <Route
-          path="update-proposal/teacher"
-          element={<TeacherProposalUpdate />}
-        />
-        {/* Catch-all route for the Layout */}
-        <Route path="*" element={<NotFound />} />
-      </Route>
-      <Route path="/admin" errorElement={<NotFound />}>
-        <Route path="register" element={<AdminRegister />} />
-        <Route path="login" element={<AdminLogin />} />
-        <Route
-          path="dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        {/* Catch-all route for the Layout */}
-        <Route path="*" element={<NotFound />} />
-      </Route>
-      <Route path="/notice-manager" errorElement={<NotFound />}>
-        <Route path="login" element={<NoticeManagerLogin />} />
-        <Route
-          path="dashboard"
-          element={
-            <NoticeManagerProtectedRoute>
-              <NoticeManagerDashboard />
-            </NoticeManagerProtectedRoute>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-      <Route path="*" element={<NotFound />} />
-    </>
-  )
+    createRoutesFromElements(
+        <>
+            <Route path="/" element={<Layout />} errorElement={<NotFound />}>
+                <Route path="" element={<Home />} />
+                <Route path="submit/student" element={<StudentSubmission />} />
+                <Route path="submit/teacher" element={<TeacherSubmission />} />
+                <Route path="notices" element={<Notices />} />
+                <Route path="archive" element={<PrevProposals />} />
+                <Route path="review" element={<ReviewerPage />} />
+                <Route
+                    path="invoice/upload"
+                    element={<InvoiceSubmissionPage />}
+                />
+                <Route path="developer-info" element={<DeveloperInfo />} />
+                <Route
+                    path="update-proposal/student"
+                    element={<StudentProposalUpdate />}
+                />
+                <Route
+                    path="update-proposal/teacher"
+                    element={<TeacherProposalUpdate />}
+                />
+                {/* Catch-all route for the Layout */}
+                <Route path="*" element={<NotFound />} />
+            </Route>
+            <Route path="/admin" errorElement={<NotFound />}>
+                {/* <Route path="register" element={<AdminRegister />} /> */}
+                <Route path="login" element={<AdminLogin />} />
+                <Route
+                    path="dashboard"
+                    element={
+                        <ProtectedRoute>
+                            <Dashboard />
+                        </ProtectedRoute>
+                    }
+                />
+                {/* Catch-all route for the Layout */}
+                <Route path="*" element={<NotFound />} />
+            </Route>
+            <Route path="/notice-manager" errorElement={<NotFound />}>
+                <Route path="login" element={<NoticeManagerLogin />} />
+                <Route
+                    path="dashboard"
+                    element={
+                        <NoticeManagerProtectedRoute>
+                            <NoticeManagerDashboard />
+                        </NoticeManagerProtectedRoute>
+                    }
+                />
+                <Route path="*" element={<NotFound />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+        </>,
+    ),
 );
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>
+    <StrictMode>
+        <RouterProvider router={router} />
+    </StrictMode>,
 );
